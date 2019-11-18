@@ -203,9 +203,9 @@ uie.add("buttonClose", {
 
     style = {
         padding = 16,
-        normalBG = { 0.9, 0.1, 0.2, 1 },
+        normalBG = { 0.9, 0.1, 0.2, 0.3 },
         hoveredBG = { 0.85, 0.25, 0.25, 1 },
-        pressedBG = { 0.6, 0.08, 0.14, 1 }
+        pressedBG = { 0.6, 0.08, 0.14, 1 },
     },
 
     init = function(self)
