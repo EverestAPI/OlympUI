@@ -340,7 +340,8 @@ uie.add("label", {
     cacheable = false,
 
     style = {
-        color = { 1, 1, 1, 1 }
+        color = { 1, 1, 1, 1 },
+        font = love.graphics.getFont()
     },
 
     init = function(self, text)
@@ -360,7 +361,7 @@ uie.add("label", {
 
         if type(value) ~= "userdata" then
             if not self._text then
-                self._text = love.graphics.newText(love.graphics.getFont(), value)
+                self._text = love.graphics.newText(self.style.font, value)
             else
                 self._text:set(value)
             end
