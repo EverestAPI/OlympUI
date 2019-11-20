@@ -233,6 +233,24 @@ function ui.mousereleased(x, y, button, istouch, presses)
     return hovering or dragging
 end
 
+-- Lönn provides these events and expects them to not be propagated further.
+
+function ui.mousedragmoved()
+    return ui.hovering or ui.dragging
+end
+
+function ui.mousedraged()
+    return ui.hovering or ui.dragging
+end
+
+function ui.mousedragged()
+    return ui.hovering or ui.dragging
+end
+
+function ui.mouseclicked()
+    return ui.hovering or ui.dragging
+end
+
 function ui.wheelmoved(dx, dy)
     local ui = ui
     local root = ui.root
