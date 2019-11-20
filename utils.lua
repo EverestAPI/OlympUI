@@ -4,21 +4,38 @@ function uiu.nop()
 end
 
 
+uiu.dataRoots = {}
+
+
 uiu.imageCache = {}
 function uiu.image(path)
-    local cache = uiu.imageCache
+    local root = ""
 
     local split = path:find(":")
     if split then
         if split == 1 then
-            path = path .. ".png"
+            path = path:sub(2)
         else
-            path = path:sub(1, split - 1) .. "/data/" .. path:sub(split + 1) .. ".png"
+            root = path:sub(1, split - 1)
+            path = path:sub(split + 1)
         end
-    else
-        path = "data/" .. path .. ".png"
     end
 
+    root = root or ""
+    local mappedRoot = uiu.dataRoots[root]
+    if mappedRoot then
+        path = mappedRoot .. "/" .. path
+
+    elseif #root > 0 then
+        path = root .. "/data/" .. path
+
+    else
+        path = "data/" .. path
+    end
+
+    path = path .. ".png"
+
+    local cache = uiu.imageCache
     local img = cache[path]
     if img then
         return img
@@ -119,7 +136,7 @@ function uiu.hook(target, nameOrMap, cb)
     local name = nameOrMap
     local orig = target[name] or uiu.nop
     target[name] = function(...)
-        cb(orig, ...)
+        return cb(orig, ...)
     end
 end
 

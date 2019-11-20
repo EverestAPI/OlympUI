@@ -3,13 +3,18 @@ local uin = require("ui.native")
 
 local ui = {}
 
+ui._enabled = true
+
 ui.debug = false
 
-ui.hovering = nil
-ui.dragging = nil
+ui.hovering = false
+ui.dragging = false
 ui.draggingCounter = 0
-ui.focusing = nil
+ui.focusing = false
 ui.mousePresses = 0
+ui.mouseX = false
+ui.mouseY = false
+ui.mouseGlobal = true
 
 local prevWidth
 local prevHeight
@@ -40,19 +45,21 @@ function ui.update()
         end
     end
 
-    local mouseX, mouseY = love.mouse.getPosition()
-    local mouseState = false
-    if uin then
-        mouseX, mouseY, mouseState = uin.getGlobalMouseState()
-        local windowX, windowY = uin.getWindowPosition()
-        mouseX = mouseX - windowX
-        mouseY = mouseY - windowY
-        mouseState = mouseState
-    else
-        mouseState = false
-    end
+    if ui.mouseGlobal then
+        local mouseX, mouseY = love.mouse.getPosition()
+        local mouseState = false
+        if uin then
+            mouseX, mouseY, mouseState = uin.getGlobalMouseState()
+            local windowX, windowY = uin.getWindowPosition()
+            mouseX = mouseX - windowX
+            mouseY = mouseY - windowY
+            mouseState = mouseState
+        else
+            mouseState = false
+        end
 
-    ui.mousemoved(mouseX, mouseY)
+        ui.__mousemoved(mouseX, mouseY)
+    end
 
     ui.delta = love.timer.getDelta()
 
@@ -77,8 +84,10 @@ end
 
 function ui.draw()
     local root = ui.root
-    
+
     root:drawLazy()
+
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 
@@ -106,7 +115,7 @@ function ui.interactiveIterate(el, funcid, ...)
 end
 
 
-function ui.mousemoved(x, y, dx, dy)
+function ui.__mousemoved(x, y, dx, dy)
     local ui = ui
     local root = ui.root
     if not root then
@@ -127,7 +136,7 @@ function ui.mousemoved(x, y, dx, dy)
 
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
-    ui.hovering = hoveringNext
+    ui.hovering = hoveringNext or false
     
     if hoveringPrev ~= hoveringNext then
         if hoveringPrev then
@@ -144,15 +153,20 @@ function ui.mousemoved(x, y, dx, dy)
         end
     end
 
-    if dx ~= 0 or dy ~= 0 then
-        local dragging = ui.dragging
-        if dragging then
-            local cb = dragging.onDrag
-            if cb then
-                cb(dragging, x, y, dx, dy)
-            end
+    local dragging = ui.dragging
+    if (dx ~= 0 or dy ~= 0) and dragging then
+        local cb = dragging.onDrag
+        if cb then
+            cb(dragging, x, y, dx, dy)
         end
     end
+
+    return ui.dragging or hoveringNext
+end
+
+function ui.mousemoved(...)
+    ui.mouseGlobal = false
+    return ui.__mousemoved(...)
 end
 
 function ui.mousepressed(x, y, button, istouch, presses)
@@ -171,13 +185,16 @@ function ui.mousepressed(x, y, button, istouch, presses)
     ui.draggingCounter = ui.draggingCounter + 1
 
     local hovering = root:getChildAt(x, y)
-    if ui.dragging == nil or ui.dragging == hovering then
+    if not ui.dragging or ui.dragging == hovering then
         local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
-        ui.dragging = el
-        ui.focusing = el
+        ui.dragging = el or false
+        ui.focusing = el or false
     else
         ui.interactiveIterate(hovering, "onPress", x, y, button, false)
     end
+
+    print("pressed", hovering or ui.dragging)
+    return hovering or ui.dragging
 end
 
 function ui.mousereleased(x, y, button, istouch, presses)
@@ -196,22 +213,24 @@ function ui.mousereleased(x, y, button, istouch, presses)
     ui.draggingCounter = ui.draggingCounter - 1
 
     local dragging = ui.dragging
+    local hovering = root:getChildAt(x, y)
     if dragging then
         if ui.draggingCounter == 0 then
-            ui.dragging = nil
+            ui.dragging = false
             ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
             if dragging == ui.interactiveIterate(root:getChildAt(x, y)) then
                 ui.interactiveIterate(dragging, "onClick", x, y, button)
             end
+            dragging = false
         else
             ui.interactiveIterate(dragging, "onRelease", x, y, button, true)
         end
-    else
-        local hovering = root:getChildAt(x, y)
-        if hovering then
-            ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
-        end
+    elseif hovering then
+        ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
     end
+
+    print("released", hovering or ui.dragging)
+    return hovering or dragging
 end
 
 function ui.wheelmoved(dx, dy)
@@ -225,32 +244,52 @@ function ui.wheelmoved(dx, dy)
     if hovering then
         ui.interactiveIterate(hovering, "onScroll", ui.mouseX, ui.mouseY, dx, dy)
     end
+
+    return hovering or ui.dragging
 end
 
 
-local hookedLove = false
-function ui.hookLove()
-    if hookedLove then
-        return
+local hookedLoveUpdateDraw = false
+local hookedLoveInput = false
+function ui.hookLove(hookUpdateDraw, hookInput)
+    if hookUpdateDraw ~= false and not hookedLoveUpdateDraw then
+        hookedLoveUpdateDraw = true
+
+        uiu.hook(love, {
+            update = function(orig, ...)
+                local rv = orig(...)
+                ui.update(...)
+                return rv
+            end,
+
+            draw = function(orig, ...)
+                local rv = orig(...)
+                ui.draw(...)
+                return rv
+            end
+        })
     end
-    hookedLove = true
 
-    uiu.hook(love, {
-        mousepressed = function(orig, ...)
-            ui.mousepressed(...)
-            return orig(...)
-        end,
+    if hookInput ~= false and not hookedLoveInput then
+        hookedLoveInput = true
 
-        mousereleased = function(orig, ...)
-            ui.mousereleased(...)
-            return orig(...)
-        end,
+        uiu.hook(love, {
+            mousepressed = function(orig, ...)
+                ui.mousepressed(...)
+                return orig(...)
+            end,
 
-        wheelmoved = function(orig, ...)
-            ui.wheelmoved(...)
-            return orig(...)
-        end
-    })
+            mousereleased = function(orig, ...)
+                ui.mousereleased(...)
+                return orig(...)
+            end,
+
+            wheelmoved = function(orig, ...)
+                ui.wheelmoved(...)
+                return orig(...)
+            end
+        })
+    end
 end
 
 
