@@ -411,26 +411,23 @@ uie.__default = {
 
             local canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
-            love.graphics.setScissor()
+            if sX then
+                love.graphics.setScissor()
+            end
             love.graphics.clear(0, 0, 0, 0)
 
             love.graphics.push()
             love.graphics.origin()
             love.graphics.translate(-x + padding, -y + padding)
 
-            if sX then
-                love.graphics.setScissor()
-            end
-
             self:draw()
 
-            if sX then
-                love.graphics.setScissor(sX, sY, sW, sH)
-            end
-            
             love.graphics.pop()
 
             love.graphics.setCanvas(canvasPrev)
+            if sX then
+                love.graphics.setScissor(sX, sY, sW, sH)
+            end
         end
 
         love.graphics.setColor(1, 1, 1, 1)

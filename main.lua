@@ -83,10 +83,7 @@ end
 
 
 function ui.draw()
-    local root = ui.root
-
-    root:drawLazy()
-
+    ui.root:drawLazy()
     love.graphics.setColor(1, 1, 1, 1)
 end
 
@@ -193,7 +190,6 @@ function ui.mousepressed(x, y, button, istouch, presses)
         ui.interactiveIterate(hovering, "onPress", x, y, button, false)
     end
 
-    print("pressed", hovering or ui.dragging)
     return hovering or ui.dragging
 end
 
@@ -229,7 +225,6 @@ function ui.mousereleased(x, y, button, istouch, presses)
         ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
     end
 
-    print("released", hovering or ui.dragging)
     return hovering or dragging
 end
 
