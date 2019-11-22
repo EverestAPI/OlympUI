@@ -7,7 +7,6 @@ require("ui.elements.layout")
 -- Basic button, behaving like a row with a label.
 uie.add("button", {
     base = "row",
-    cacheable = false,
 
     style = {
         padding = 8,
@@ -161,7 +160,6 @@ uie.add("button", {
 -- Basic text input, behaving like a row with a label.
 uie.add("field", {
     base = "row",
-    cacheable = false,
 
     style = {
         padding = 8,
@@ -307,7 +305,8 @@ uie.add("field", {
 -- Basic list, consisting of multiple list items.
 uie.add("list", {
     base = "column",
-    cacheable = false,
+
+    isList = true,
 
     style = {
         padding = 0,
@@ -321,12 +320,24 @@ uie.add("list", {
         self.enabled = true
         self.selected = false
         self:with(uiu.fillWidth)
-    end
+    end,
+
+    layoutLateChildren = function(self)
+        local children = self.children
+        local width = self.innerWidth
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c.parent = self
+                c.width = width
+                c:layoutLateLazy()
+            end
+        end
+    end,
 })
 
 uie.add("listItem", {
     base = "row",
-    cacheable = false,
     interactive = 1,
 
     style = {
@@ -368,7 +379,6 @@ uie.add("listItem", {
         self.style.bg = {}
         self._label.style.color = {}
         self.style.border = {}
-        self:with(uiu.fillWidth)
     end,
 
     getText = function(self)
@@ -380,6 +390,9 @@ uie.add("listItem", {
     end,
 
     getEnabled = function(self)
+        if not self.parent.isList then
+            return self.__enabled
+        end
         return self.parent.enabled and self.__enabled
     end,
 
@@ -388,14 +401,24 @@ uie.add("listItem", {
     end,
 
     getInteractive = function(self)
+        if not self.parent.isList then
+            return self.__enabled and 1 or -1
+        end
         return self.parent.enabled and self.__enabled and 1 or -1
     end,
 
     getSelected = function(self)
+        if not self.parent.isList then
+            return self.__selected
+        end
         return self.parent.selected == self
     end,
 
     setSelected = function(self, value)
+        if not self.parent.isList then
+            self.__selected = value
+            return
+        end
         self.parent.selected = (value and self or nil)
     end,
 
@@ -493,14 +516,141 @@ uie.add("listItem", {
 
     onClick = function(self, x, y, button)
         if button == 1 then
-            self.selected = true
             local parent = self.parent
+            if parent.isList then
+                self.selected = true
+            end
             local cb = parent.cb
             if cb then
                 cb(parent, self.data or self.text)
             end
         end
     end
+})
+
+
+-- A top menu bar.
+uie.add("topbar", {
+    base = "row",
+    clip = false,
+    interactive = 2,
+
+    style = {
+        padding = 0,
+        spacing = 1
+    },
+
+    init = function(self, list)
+        uie.__row.init(self, uiu.map(list, uie.__menuItem.map))
+        self:with(uiu.fillWidth)
+    end
+})
+
+
+-- Menu items in the top bar, behaving similarly to list items.
+uie.add("menuItem", {
+    base = "listItem",
+    clip = false,
+
+    init = function(self, text, data)
+        uie.__listItem.init(self, text, data)
+    end,
+
+    map = function(item)
+        local text, data = table.unpack(item)
+
+        if not text then
+            return uie.menuItem(""):with({ interactive = -1, height = 2, style = { padding = 0 } }) -- TODO: Divider!
+        end
+
+        return uie.menuItem(text, data)
+    end,
+
+    cb = function(self)
+        local data = self.data
+        if not data then
+            return
+        end
+
+        if uiu.isCallback(data) then
+            data(self)
+            return
+        end
+
+        local submenu = self.submenu
+        if not self.submenu then
+            submenu = uie.menuItemSubmenu(uiu.map(data, uie.__menuItem.map))
+            self.submenu = submenu
+        end
+
+        if self.parent:is("topbar") then
+            submenu.x = self.screenX
+            submenu.y = self.screenY + self.height + self.parent.style.spacing
+        else
+            submenu.x = self.screenX + self.width + self.parent.style.spacing
+            submenu.y = self.screenY
+        end
+
+        table.insert(ui.root.children, submenu)
+        ui.root:recollect()
+        ui.root:reflow()
+    end,
+
+    onClick = function(self, x, y, button)
+        if button == 1 then
+            local cb = self.cb
+            if cb then
+                cb(self)
+            end
+        end
+    end
+})
+
+
+uie.add("menuItemSubmenu", {
+    base = "column",
+    clip = false,
+
+    style = {
+        padding = 0,
+        spacing = 1
+    },
+
+    layoutChildren = function(self)
+        local padding = self.style.padding
+        local y = padding
+        local spacing = self.style.spacing
+        local maxWidth = 0
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c.parent = self
+                c:layoutLazy()
+                y = y + c.y
+                c.realX = c.x + padding
+                c.realY = y
+                y = y + c.height + spacing
+                maxWidth = math.max(maxWidth, c.width)
+            end
+        end
+        self.width = maxWidth + self.style.padding * 2
+        self.innerWidth = maxWidth
+        self.__maxWidth = maxWidth
+    end,
+    
+    layoutLateChildren = function(self)
+        local children = self.children
+        local width = self.__maxWidth
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c.parent = self
+                c.width = width
+                c:layoutLateLazy()
+            end
+        end
+    end,
 })
 
 

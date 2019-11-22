@@ -1,21 +1,24 @@
 local uiu = require("ui.utils")
 local uin = require("ui.native")
 
-local ui = {}
+local ui = {
+    _enabled = true,
 
-ui._enabled = true
+    debug = false,
 
-ui.debug = false
+    hovering = false,
+    dragging = false,
+    draggingCounter = 0,
+    focusing = false,
 
-ui.hovering = false
-ui.dragging = false
-ui.draggingCounter = 0
-ui.focusing = false
-ui.mousePresses = 0
-ui.mouseX = false
-ui.mouseY = false
-ui.mouseGlobal = true
+    mousePresses = 0,
+    mouseX = false,
+    mouseY = false,
+    mouseGlobal = true
+}
 
+
+local updateID = 0
 local prevWidth
 local prevHeight
 function ui.update()
@@ -63,22 +66,33 @@ function ui.update()
 
     ui.delta = love.timer.getDelta()
 
+    ::reupdate::
     local all = root.all
     for i = 1, #all do
         local c = all[i]
-        local cb = c.update
-        if cb then
-            cb(c)
+
+        if c.__updateID ~= updateID then
+            c.__updateID = updateID
+            local cb = c.update
+            if cb then
+                cb(c)
+            end
+        end
+
+        if root.recollecting then
+            root:collect(false)
+            goto reupdate
         end
     end
-
-    root:layoutLazy()
-    root:layoutLateLazy()
 
     if root.recollecting then
         root:collect(false)
     end
 
+    root:layoutLazy()
+    root:layoutLateLazy()
+
+    updateID = updateID + 1
 end
 
 

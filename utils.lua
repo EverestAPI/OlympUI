@@ -47,6 +47,16 @@ function uiu.image(path)
 end
 
 
+function uiu.isCallback(cb)
+    if type(cb) == "function" then
+        return true
+    end
+
+    local mt = getmetatable(cb)
+    return mt and mt.__call and true
+end
+
+
 function uiu.round(x)
     return x + 0.5 - (x + 0.5) % 1
 end
@@ -61,8 +71,10 @@ math.sign = math.siggn or uiu.sign
 
 function uiu.listRange(from, to, step)
     local output = {}
+    local count = 1
     for i = from, to, (step or 1) do
-        output[#output + 1] = i
+        output[count] = i
+        count = count + 1
     end
     return output
 end
@@ -113,11 +125,12 @@ function uiu.magic(fn, ...)
                 arg = input[ii]
                 ii = ii + 1
             end
-            args[#args + 1] = arg
+            args[i] = arg
         end
 
+        local offs = #args + 1
         for i = ii, #input do
-            args[#args + 1] = input[i]
+            args[i - ii + offs] = input[i]
         end
 
         return fn(table.unpack(args))

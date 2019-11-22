@@ -7,7 +7,6 @@ require("ui.elements.layout")
 -- Basic view box.
 uie.add("scrollbox", {
     base = "group",
-    cacheable = false,
     interactive = 2,
 
     init = function(self, inner)
@@ -121,7 +120,6 @@ uie.add("scrollbox", {
 
 -- Shared scroll bar handle code.
 uie.add("scrollhandle", {
-    cacheable = false,
     interactive = 1,
 
     style = {

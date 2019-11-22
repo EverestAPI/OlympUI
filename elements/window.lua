@@ -8,7 +8,6 @@ require("ui.elements.input")
 -- Basic window.
 uie.add("window", {
     base = "column",
-    cacheable = false,
     interactive = 2,
 
     style = {
@@ -94,7 +93,6 @@ uie.add("window", {
 
 uie.add("titlebar", {
     base = "row",
-    cacheable = false,
     interactive = 1,
 
     id = "titlebar",

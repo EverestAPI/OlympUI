@@ -1,4 +1,5 @@
 local ui = require("ui.main")
+local uiu = require("ui.utils")
 
 local uie = {}
 ui.e = uie
@@ -38,6 +39,18 @@ uie.__default = {
         return id
     end,
 
+
+    is = function(self, expected)
+        local base = self
+        while base do
+            if base.__type == expected then
+                return true
+            end
+            base = base.__base
+        end
+        return false
+    end,
+
     getRealX = function(self)
         return self.__realX or self.x
     end,
@@ -57,10 +70,10 @@ uie.__default = {
     getScreenX = function(self)
         local pos = 0
         local el = self
-        while el ~= nil do
+        while el do
             pos = pos + el.realX
             el = el.parent
-            if el ~= nil then
+            if el then
                 local padding = el.padding
                 if padding then
                     pos = pos + padding
@@ -73,10 +86,10 @@ uie.__default = {
     getScreenY = function(self)
         local pos = 0
         local el = self
-        while el ~= nil do
+        while el do
             pos = pos + el.realY
             el = el.parent
-            if el ~= nil then
+            if el then
                 local padding = el.padding
                 if padding then
                     pos = pos + padding
@@ -171,7 +184,7 @@ uie.__default = {
     end,
 
     with = function(self, props, ...)
-        if type(props) == "function" then
+        if uiu.isCallback(props) then
             local rv = props(self, ...)
             return rv or self
         end
@@ -192,7 +205,7 @@ uie.__default = {
         self.reflowingLate = true
         self.cachedCanvas = nil
         local el = self.parent
-        while el ~= nil and not el.reflowing do
+        while el and not el.reflowing do
             el.reflowing = true
             el.reflowingLate = true
             el.cachedCanvas = nil
@@ -223,7 +236,7 @@ uie.__default = {
         self.reflowingLate = true
         self.cachedCanvas = nil
         local el = self.parent
-        while el ~= nil and not el.reflowingLate do
+        while el and not el.reflowingLate do
             el.reflowingLate = true
             el.cachedCanvas = nil
             el = el.parent
@@ -251,7 +264,7 @@ uie.__default = {
 
         self.cachedCanvas = nil
         local el = self.parent
-        while el ~= nil and (not el.cacheable or el.cachedCanvas ~= nil) do
+        while el and (not el.cacheable or el.cachedCanvas) do
             el.cachedCanvas = nil
             el = el.parent
         end
@@ -330,21 +343,12 @@ uie.__default = {
         local eltype = self.__type
         local eltypeBase = eltype
         local calcset = {}
-        while eltypeBase ~= nil do
+        while eltypeBase do
             local default = uie["__" .. eltypeBase].__default
             for k, v in pairs(default) do
                 if k:sub(1, 4) == "calc" then
-                    local calced = false
-                    for i = 1, #calcset do
-                        local c = calcset[i]
-                        if c == k then
-                            calced = true
-                            break
-                        end
-                    end
-
-                    if not calced then
-                        calcset[#calcset + 1] = k
+                    if not calcset[k] then
+                        calcset[k] = true
                         self[k:sub(5, 5):lower() .. k:sub(6)] = v(self)
                     end
                 end
@@ -699,14 +703,16 @@ function uie.add(eltype, default)
     local template
 
     local function new()
-        local el = {}
-        el.__ui = ui
-        el.__type = eltype
-        el.__default = default
-        el.__template = template
+        local el = {
+            __ui = ui,
+            __type = eltype,
+            __default = default,
+            __template = template,
+            __base = uie["__" .. (default.base or "default")] or uie.__default,
+            __propcache = {}
+        }
+
         el.__style = setmetatable({ el = el }, mtStyle)
-        el.__base = uie["__" .. (default.base or "default")] or uie.__default
-        el.__propcache = {}
         el.__rawid = tostring(el):sub(8)
 
         uie.flatten(el)

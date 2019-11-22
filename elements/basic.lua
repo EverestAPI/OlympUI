@@ -49,6 +49,7 @@ uie.add("root", {
     collect = function(self, basic)
         self.recollecting = false
 
+        local count = 1
         local all = {}
 
         local function collectAll(el)
@@ -58,7 +59,8 @@ uie.add("root", {
                     local c = children[i]
                     c.parent = el
                     c.visible = false
-                    all[#all + 1] = c
+                    all[count] = c
+                    count = count + 1
                     collectAll(c)
                 end
             end
@@ -71,7 +73,8 @@ uie.add("root", {
             return
         end
 
-        local allI = {}
+        count = 1
+        all = {}
 
         local function collectAllI(el, px, py, pl, pt, pr, pb, pi)
             local children = el.children
@@ -95,7 +98,8 @@ uie.add("root", {
 
                         if pi and interactive >= 0 then
                             if interactive >= 1 then
-                                allI[#allI + 1] = c
+                                all[count] = c
+                                count = count + 1
                             end
 
                             collectAllI(c, erl, ert, bl, bt, br, bb, true)
@@ -108,18 +112,18 @@ uie.add("root", {
         end
         
         collectAllI(self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
-        self.allI = allI
+        self.allI = all
     end,
 
     getChildAt = function(self, mx, my)
         local allI = self.allI
-        if allI ~= nil then
+        if allI then
             for i = #allI, 1, -1 do
                 local retc = allI[i]
 
                 local c = retc
                 retc = nil
-                while c ~= nil do
+                while c do
                     local ex = c.screenX
                     local ey = c.screenY
                     local ew = c.width
@@ -133,14 +137,11 @@ uie.add("root", {
                         break
                     end
 
-                    if retc == nil then
-                        retc = c
-                    end
-
+                    retc = retc or c
                     c = c.parent
                 end
 
-                if retc ~= nil then
+                if retc then
                     return retc
                 end
             end
