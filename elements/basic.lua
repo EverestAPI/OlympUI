@@ -17,36 +17,47 @@ local function collectAll(all, el)
     return all
 end
 
-local function collectAllI(all, el, px, py, pl, pt, pr, pb, pi)
+local function collectAllI(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
     local children = el.children
     if children then
-        local erl = px + el.realX
-        local ert = py + el.realY
-        local err = erl + el.width
-        local erb = ert + el.height
-
-        local bl = math.max(erl, pl)
-        local bt = math.max(ert, pt)
-        local br = math.min(err, pr)
-        local bb = math.min(erb, pb)
-
-        local intersects = uie.__default.intersects
+        local min = math.min
+        local max = math.max
 
         for i = 1, #children do
             local c = children[i]
-            if intersects(c, bl, bt, br, bb) then
+
+            local crl = prl + c.realX
+            local crt = prt + c.realY
+            local crr = crl + c.width
+            local crb = crt + c.height
+
+            if not (
+                crr < pbl or pbr < crl or
+                crb < pbt or pbb < crt
+            ) then
                 c.visible = true
+
+                local cbl = max(pbl, crl)
+                local cbt = max(pbt, crt)
+                local cbr = min(pbr, crr)
+                local cbb = min(pbb, crb)
 
                 local interactive = c.interactive
 
                 if pi and interactive >= 0 then
+                    local visibleRect = c.__cached.visibleRect
+                    visibleRect[1] = cbl
+                    visibleRect[2] = cbt
+                    visibleRect[3] = cbr
+                    visibleRect[4] = cbb
+
                     if interactive >= 1 then
                         all[#all + 1] = c
                     end
 
-                    collectAllI(all, c, erl, ert, bl, bt, br, bb, true)
+                    collectAllI(all, c, crl, crt, cbl, cbt, cbr, cbb, true)
                 else
-                    collectAllI(all, c, erl, ert, bl, bt, br, bb, false)
+                    collectAllI(all, c, crl, crt, cbl, cbt, cbr, cbb, false)
                 end
             end
         end
@@ -76,11 +87,13 @@ uie.add("root", {
         local width = 0
         local height = 0
 
+        local max = math.max
+
         local children = self.children
         for i = 1, #children do
             local c = children[i]
-            width = math.max(width, c.x + c.width)
-            height = math.max(height, c.y + c.height)
+            width = max(width, c.x + c.width)
+            height = max(height, c.y + c.height)
         end
 
         self.innerWidth = width
@@ -117,15 +130,16 @@ uie.add("root", {
                 local c = allI[i]
                 local retc = nil
 
-                while c do
-                    local ex = c.screenX
-                    local ey = c.screenY
-                    local ew = c.width
-                    local eh = c.height
+                while c and c ~= self do
+                    local visibleRect = c.__cached.visibleRect
+                    local el = visibleRect[1]
+                    local et = visibleRect[2]
+                    local er = visibleRect[3]
+                    local eb = visibleRect[4]
 
                     if
-                        mx < ex or ex + ew < mx or
-                        my < ey or ey + eh < my
+                        mx < el or er < mx or
+                        my < et or eb < my
                     then
                         goto next
                     end
@@ -195,25 +209,28 @@ uie.add("panel", {
         height = forceHeight >= 0 and forceHeight or height or -1
 
         if width < 0 and height < 0 then
+            local max = math.max
             local children = self.children
             for i = 1, #children do
                 local c = children[i]
-                width = math.max(width, c.x + c.width)
-                height = math.max(height, c.y + c.height)
+                width = max(width, c.x + c.width)
+                height = max(height, c.y + c.height)
             end
 
         elseif width < 0 then
+            local max = math.max
             local children = self.children
             for i = 1, #children do
                 local c = children[i]
-                width = math.max(width, c.x + c.width)
+                width = max(width, c.x + c.width)
             end
 
         elseif height < 0 then
+            local max = math.max
             local children = self.children
             for i = 1, #children do
                 local c = children[i]
-                height = math.max(height, c.y + c.height)
+                height = max(height, c.y + c.height)
             end
         end
 
@@ -440,7 +457,7 @@ uie.add("image", {
                 if quad then
                     love.graphics.draw(self._image, quad, transform)
                 else
-                    
+
                     love.graphics.draw(self._image, transform)
                 end
 

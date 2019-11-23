@@ -507,7 +507,7 @@ uie.add("listItem", {
                 borderPrev[3] = border[3]
                 borderPrev[4] = border[4]
             end
-            
+
             self:repaint()
         end
 

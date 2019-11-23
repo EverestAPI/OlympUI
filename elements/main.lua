@@ -22,8 +22,6 @@ uie.__default = {
     cacheable = true,
     cachedCanvas = nil,
     cachePadding = 4,
-    __cachedWidth = 0,
-    __cachedHeight = 0,
 
     getPath = function(self)
         local id = self.id
@@ -378,16 +376,17 @@ uie.__default = {
         width = width + padding * 2
         height = height + padding * 2
 
-        if width ~= self.__cachedWidth or height ~= self.__cachedHeight then
-            local canvas = self.__cachedCanvas
+        local cached = self.__cached
+
+        if width > cached.width or height > cached.height then
+            local canvas = cached.canvas
             if canvas then
                 canvas:release()
-                canvas = nil
-                self.__cachedCanvas = nil
+                cached.canvas = nil
             end
 
-            self.__cachedWidth = width
-            self.__cachedHeight = height
+            cached.width = width
+            cached.height = height
         end
 
         local x = self.screenX
@@ -395,11 +394,11 @@ uie.__default = {
 
         local canvas = self.cachedCanvas
         if not canvas then
-            canvas = self.__cachedCanvas
+            canvas = cached.canvas
 
             if not canvas then
                 canvas = love.graphics.newCanvas(width, height)
-                self.__cachedCanvas = canvas
+                cached.canvas = canvas
             end
             self.cachedCanvas = canvas
 
@@ -701,7 +700,13 @@ function uie.add(eltype, default)
             __default = default,
             __template = template,
             __base = uie["__" .. (default.base or "default")] or uie.__default,
-            __propcache = {}
+            __propcache = {},
+            __cached = {
+                width = 0,
+                height = 0,
+                canvas = nil,
+                visibleRect = { 0, 0, 0, 0 }
+            }
         }
 
         el.__style = setmetatable({ el = el }, mtStyle)
