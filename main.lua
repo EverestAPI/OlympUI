@@ -79,18 +79,20 @@ function ui.update()
             end
         end
 
-        if root.recollecting then
-            root:collect(false)
+        if root.recollecting == 1 then
+            root:collect(true, true)
             goto reupdate
         end
     end
 
-    if root.recollecting then
-        root:collect(false)
+    if root.recollecting == 1 then
+        root:collect(true, true)
     end
 
     root:layoutLazy()
     root:layoutLateLazy()
+
+    root.recollecting = 0
 
     updateID = updateID + 1
 end

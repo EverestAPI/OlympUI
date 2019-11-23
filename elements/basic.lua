@@ -3,6 +3,56 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
+local function collectAll(all, el)
+    local children = el.children
+    if children then
+        for i = 1, #children do
+            local c = children[i]
+            c.parent = el
+            c.visible = false
+            all[#all + 1] = c
+            collectAll(all, c)
+        end
+    end
+    return all
+end
+
+local function collectAllI(all, el, px, py, pl, pt, pr, pb, pi)
+    local children = el.children
+    if children then
+        local erl = px + el.realX
+        local ert = py + el.realY
+        local err = erl + el.width
+        local erb = ert + el.height
+
+        local bl = math.max(erl, pl)
+        local bt = math.max(ert, pt)
+        local br = math.min(err, pr)
+        local bb = math.min(erb, pb)
+
+        for i = 1, #children do
+            local c = children[i]
+            if c:intersects(bl, bt, br, bb) then
+                c.visible = true
+
+                local interactive = c.interactive
+
+                if pi and interactive >= 0 then
+                    if interactive >= 1 then
+                        all[#all + 1] = c
+                    end
+
+                    collectAllI(all, c, erl, ert, bl, bt, br, bb, true)
+                else
+                    collectAllI(all, c, erl, ert, bl, bt, br, bb, false)
+                end
+            end
+        end
+    end
+    return all
+end
+
+
 -- Special root element.
 uie.add("root", {
     id = "root",
@@ -39,80 +89,25 @@ uie.add("root", {
 
     layoutLate = function(self)
         self:layoutLateChildren()
-        self:collect(false)
+        if self.recollecting ~= -1 then
+            self:collect(true, true)
+        end
     end,
 
     recollect = function(self)
-        self.recollecting = true
+        self.recollecting = 1
     end,
 
-    collect = function(self, basic)
-        self.recollecting = false
-
-        local count = 1
-        local all = {}
-
-        local function collectAll(el)
-            local children = el.children
-            if children then
-                for i = 1, #children do
-                    local c = children[i]
-                    c.parent = el
-                    c.visible = false
-                    all[count] = c
-                    count = count + 1
-                    collectAll(c)
-                end
-            end
-        end
-
-        collectAll(self)
-        self.all = all
+    collect = function(self, basic, interactive)
+        self.recollecting = -1
 
         if basic then
-            return
+            self.all = collectAll({}, self)
         end
 
-        count = 1
-        all = {}
-
-        local function collectAllI(el, px, py, pl, pt, pr, pb, pi)
-            local children = el.children
-            if children then
-                local erl = px + el.realX
-                local ert = py + el.realY
-                local err = erl + el.width
-                local erb = ert + el.height
-
-                local bl = math.max(erl, pl)
-                local bt = math.max(ert, pt)
-                local br = math.min(err, pr)
-                local bb = math.min(erb, pb)
-
-                for i = 1, #children do
-                    local c = children[i]
-                    if c:intersects(bl, bt, br, bb) then
-                        c.visible = true
-
-                        local interactive = c.interactive
-
-                        if pi and interactive >= 0 then
-                            if interactive >= 1 then
-                                all[count] = c
-                                count = count + 1
-                            end
-
-                            collectAllI(c, erl, ert, bl, bt, br, bb, true)
-                        else
-                            collectAllI(c, erl, ert, bl, bt, br, bb, false)
-                        end
-                    end
-                end
-            end
+        if interactive then
+            self.allI = collectAllI({}, self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
         end
-        
-        collectAllI(self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
-        self.allI = all
     end,
 
     getChildAt = function(self, mx, my)
@@ -128,7 +123,7 @@ uie.add("root", {
                     local ey = c.screenY
                     local ew = c.width
                     local eh = c.height
-            
+
                     if
                         mx < ex or ex + ew < mx or
                         my < ey or ey + eh < my
