@@ -359,12 +359,16 @@ uie.__default = {
 
     draw = function(self)
         local children = self.children
-        if children then
+        if not self.cacheable then
             for i = 1, #children do
                 local c = children[i]
                 if c.visible then
                     c:drawLazy()
                 end
+            end
+        else
+            for i = 1, #children do
+                children[i]:drawLazy()
             end
         end
     end,

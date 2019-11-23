@@ -291,10 +291,16 @@ uie.add("panel", {
             end
 
             local children = self.children
-            for i = 1, #children do
-                local c = children[i]
-                if c.visible then
-                    c:drawLazy()
+            if not self.cacheable then
+                for i = 1, #children do
+                    local c = children[i]
+                    if c.visible then
+                        c:drawLazy()
+                    end
+                end
+            else
+                for i = 1, #children do
+                    children[i]:drawLazy()
                 end
             end
 

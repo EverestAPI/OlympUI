@@ -69,12 +69,12 @@ uie.add("scrollbox", {
 
     afterScroll = function(self)
         self:repositionChildren()
-        ui.root:recollect()
         self._handleX:repaint()
         self._handleX:layoutLate()
         self._handleY:repaint()
         self._handleY:layoutLate()
         self:repaint()
+        ui.root:recollect()
     end,
 
     onScroll = function(self, x, y, dx, dy, raw)

@@ -85,12 +85,12 @@ function ui.update()
         end
     end
 
+    root:layoutLazy()
+    root:layoutLateLazy()
+
     if root.recollecting == 1 then
         root:collect(true, true)
     end
-
-    root:layoutLazy()
-    root:layoutLateLazy()
 
     root.recollecting = 0
 
