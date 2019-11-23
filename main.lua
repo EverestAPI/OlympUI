@@ -31,7 +31,7 @@ function ui.update()
     local height = love.graphics.getHeight()
 
     root.focused = love.window.hasFocus()
-    
+
     if prevWidth ~= width or prevHeight ~= height then
         prevWidth = width
         prevHeight = height

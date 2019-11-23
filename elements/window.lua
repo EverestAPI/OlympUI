@@ -47,7 +47,7 @@ uie.add("window", {
         local height = self.height
         local parentWidth = parent.innerWidth
         local parentHeight = parent.innerHeight
-        
+
         local max
         max = x + width
         if parentWidth < max then
@@ -67,6 +67,9 @@ uie.add("window", {
 
         self.x = x
         self.y = y
+
+        self.realX = x
+        self.realY = y
     end,
 
     onPress = function(self, x, y, button, dragging)
@@ -74,7 +77,7 @@ uie.add("window", {
         if not parent then
             return
         end
-        
+
         local children = parent.children
         if not children then
             return
@@ -189,7 +192,7 @@ uie.add("titlebar", {
         local parent = self.parent
         parent.x = parent.x + dx
         parent.y = parent.y + dy
-        parent:reflow()
+        parent:repaint()
     end
 })
 

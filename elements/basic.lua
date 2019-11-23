@@ -30,9 +30,11 @@ local function collectAllI(all, el, px, py, pl, pt, pr, pb, pi)
         local br = math.min(err, pr)
         local bb = math.min(erb, pb)
 
+        local intersects = uie.__default.intersects
+
         for i = 1, #children do
             local c = children[i]
-            if c:intersects(bl, bt, br, bb) then
+            if intersects(c, bl, bt, br, bb) then
                 c.visible = true
 
                 local interactive = c.interactive
@@ -114,10 +116,9 @@ uie.add("root", {
         local allI = self.allI
         if allI then
             for i = #allI, 1, -1 do
-                local retc = allI[i]
+                local c = allI[i]
+                local retc = nil
 
-                local c = retc
-                retc = nil
                 while c do
                     local ex = c.screenX
                     local ey = c.screenY
@@ -128,8 +129,7 @@ uie.add("root", {
                         mx < ex or ex + ew < mx or
                         my < ey or ey + eh < my
                     then
-                        retc = nil
-                        break
+                        goto next
                     end
 
                     retc = retc or c
@@ -139,6 +139,8 @@ uie.add("root", {
                 if retc then
                     return retc
                 end
+
+                ::next::
             end
         end
 
@@ -216,7 +218,7 @@ uie.add("panel", {
                 height = math.max(height, c.y + c.height)
             end
         end
-        
+
         if self.minWidth >= 0 and width < self.minWidth then
             width = self.minWidth
         end
