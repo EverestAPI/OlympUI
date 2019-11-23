@@ -91,9 +91,7 @@ uie.add("root", {
 
     layoutLate = function(self)
         self:layoutLateChildren()
-        if self.recollecting ~= -1 then
-            self:collect(true, true)
-        end
+        self:collect(true, true)
     end,
 
     recollect = function(self)
