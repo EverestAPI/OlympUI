@@ -73,12 +73,6 @@ uie.__default = {
         while el do
             pos = pos + el.realX
             el = el.parent
-            if el then
-                local padding = el.padding
-                if padding then
-                    pos = pos + padding
-                end
-            end
         end
         return pos
     end,
@@ -89,12 +83,6 @@ uie.__default = {
         while el do
             pos = pos + el.realY
             el = el.parent
-            if el then
-                local padding = el.padding
-                if padding then
-                    pos = pos + padding
-                end
-            end
         end
         return pos
     end,
@@ -112,7 +100,7 @@ uie.__default = {
         local ey = self.screenY
         local ew = self.width
         local eh = self.height
-    
+
         return not (
             mx < ex or ex + ew < mx or
             my < ey or ey + eh < my
