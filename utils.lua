@@ -146,6 +146,14 @@ end
 
 
 function uiu.hook(target, nameOrMap, cb)
+    if type(target) == "string" or (target and not nameOrMap) then
+        cb = nameOrMap
+        nameOrMap = target
+        return function(target)
+            uiu.hook(target, nameOrMap, cb)
+        end
+    end
+
     if type(nameOrMap) ~= "string" then
         for name, cb in pairs(nameOrMap) do
             uiu.hook(target, name, cb)
@@ -158,6 +166,7 @@ function uiu.hook(target, nameOrMap, cb)
     target[name] = function(...)
         return cb(orig, ...)
     end
+    return target
 end
 
 

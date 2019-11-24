@@ -52,10 +52,10 @@ uie.add("scrollbox", {
         local inner = self._inner
         local origX, origY = inner.x, inner.y
         local x, y = origX, origY
-        
+
         x = math.max(x + inner.width, self.width) - inner.width
         x = math.min(0, x)
-        
+
         y = math.max(y + inner.height, self.height) - inner.height
         y = math.min(0, y)
 

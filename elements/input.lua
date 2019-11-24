@@ -319,17 +319,56 @@ uie.add("list", {
         self.cb = cb
         self.enabled = true
         self.selected = false
-        self:with(uiu.fillWidth)
     end,
 
     layoutLateChildren = function(self)
         local children = self.children
-        local width = self.innerWidth
         if children then
+            local width = self.innerWidth
+            for i = 1, #children do
+                local c = children[i]
+                width = math.max(width, c.width)
+            end
             for i = 1, #children do
                 local c = children[i]
                 c.parent = self
                 c.width = width
+                c:layoutLateLazy()
+            end
+        end
+    end,
+})
+
+uie.add("listH", {
+    base = "row",
+
+    isList = true,
+
+    style = {
+        padding = 0,
+        spacing = 1,
+        -- border = { 0.3, 0.3, 0.3, 1 }
+    },
+
+    init = function(self, items, cb)
+        uie.__row.init(self, uiu.map(items, uie.listItem))
+        self.cb = cb
+        self.enabled = true
+        self.selected = false
+    end,
+
+    layoutLateChildren = function(self)
+        local children = self.children
+        if children then
+            local height = self.innerHeight
+            for i = 1, #children do
+                local c = children[i]
+                height = math.max(height, c.height)
+            end
+            for i = 1, #children do
+                local c = children[i]
+                c.parent = self
+                c.height = height
                 c:layoutLateLazy()
             end
         end
@@ -344,7 +383,7 @@ uie.add("listItem", {
         padding = 4,
         spacing = 4,
         radius = 0,
-        
+
         normalBG = { 0.08, 0.08, 0.08, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },

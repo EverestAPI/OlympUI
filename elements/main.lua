@@ -326,9 +326,19 @@ uie.__default = {
     end,
 
     recalc = function(self)
+        local calcset = {}
+
+        for k, v in pairs(self) do
+            if k:sub(1, 4) == "calc" then
+                if not calcset[k] then
+                    calcset[k] = true
+                    self[k:sub(5, 5):lower() .. k:sub(6)] = v(self)
+                end
+            end
+        end
+
         local eltype = self.__type
         local eltypeBase = eltype
-        local calcset = {}
         while eltypeBase do
             local default = uie["__" .. eltypeBase].__default
             for k, v in pairs(default) do
