@@ -191,14 +191,14 @@ uie.__default = {
         self.reflowingLate = true
         self.cachedCanvas = nil
         local el = self.parent
-        while el and not el.reflowing do
+        while el do
             el.reflowing = true
             el.reflowingLate = true
             el.cachedCanvas = nil
             el = el.parent
         end
 
-        self:repaintDown()
+        -- self:repaintDown()
     end,
 
     reflowDown = function(self)
@@ -222,13 +222,13 @@ uie.__default = {
         self.reflowingLate = true
         self.cachedCanvas = nil
         local el = self.parent
-        while el and not el.reflowingLate do
+        while el do
             el.reflowingLate = true
             el.cachedCanvas = nil
             el = el.parent
         end
 
-        self:repaintDown()
+        -- self:repaintDown()
     end,
 
     reflowLateDown = function(self)
@@ -250,7 +250,7 @@ uie.__default = {
 
         self.cachedCanvas = nil
         local el = self.parent
-        while el and (not el.cacheable or el.cachedCanvas) do
+        while el do
             el.cachedCanvas = nil
             el = el.parent
         end
@@ -267,10 +267,8 @@ uie.__default = {
         end
     end,
 
-    --[[
-    update = function(self)
-    end,
-    --]]
+    -- update = function(self) end,
+    update = false,
 
     layoutLazy = function(self)        
         if not self.reflowing then
@@ -388,11 +386,14 @@ uie.__default = {
 
         local cached = self.__cached
 
+        local canvas = self.cachedCanvas
+
         if width > cached.width or height > cached.height then
-            local canvas = cached.canvas
+            canvas = canvas or cached.canvas
             if canvas then
                 canvas:release()
                 cached.canvas = nil
+                canvas = nil
             end
 
             cached.width = width
@@ -402,7 +403,6 @@ uie.__default = {
         local x = self.screenX
         local y = self.screenY
 
-        local canvas = self.cachedCanvas
         if not canvas then
             canvas = cached.canvas
 
@@ -446,7 +446,7 @@ uie.__default = {
         if interactive == -2 then
             return nil
         end
-    
+
         --[[
         if not self:contains(mx, my) then
             return nil
@@ -464,7 +464,7 @@ uie.__default = {
         then
             return nil
         end
-    
+
         local children = self.children
         if children then
             for i = #children, 1, -1 do
@@ -479,26 +479,24 @@ uie.__default = {
         if interactive == -1 then
             return nil
         end
-    
+
         return self
     end,
 
-    --[[
-    onEnter = function(self)
-    end,
-    onLeave = function(self)
-    end,
-    onPress = function(self, x, y, button, dragging)
-    end,
-    onRelease = function(self, x, y, button, dragging)
-    end,
-    onClick = function(self, x, y, button)
-    end,
-    onDrag = function(self, x, y, dx, dy)
-    end,
-    onScroll = function(self, x, y, dx, dy)
-    end,
-    --]]
+    -- onEnter = function(self) end,
+    onEnter = false,
+    -- onLeave = function(self) end,
+    onLeave = false,
+    -- onPress = function(self, x, y, button, dragging) end,
+    onPress = false,
+    -- onRelease = function(self, x, y, button, dragging) end,
+    onRelease = false,
+    -- onClick = function(self, x, y, button) end,
+    onClick = false,
+    -- onDrag = function(self, x, y, dx, dy) end,
+    onDrag = false,
+    -- onScroll = function(self, x, y, dx, dy) end,
+    onScroll = false,
 }
 
 -- Shared metatable for all style helper tables.

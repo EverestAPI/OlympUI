@@ -122,7 +122,24 @@ uie.add("titlebar", {
         end
         uie.__row.init(self, children)
         self.style.bg = {}
-        self:with(uiu.fillWidth)
+    end,
+
+    layoutLazy = function(self)
+        -- Required to allow the container to shrink again.
+        uie.__row.layoutLazy(self)
+        self.width = 0
+    end,
+
+    layoutLateLazy = function(self)
+        -- Always reflow this child whenever its parent gets reflowed.
+        self:layoutLate()
+    end,
+
+    layoutLate = function(self)
+        local width = self.parent.innerWidth
+        self.width = width
+        self.innerWidth = width - self.style.padding * 2
+        uie.__row.layoutLate(self)
     end,
 
     update = function(self)
