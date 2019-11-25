@@ -307,6 +307,7 @@ uie.add("list", {
     base = "column",
 
     isList = true,
+    grow = true,
 
     style = {
         padding = 0,
@@ -321,13 +322,19 @@ uie.add("list", {
         self.selected = false
     end,
 
+    layoutLateLazy = function(self)
+        self:layoutLate()
+    end,
+
     layoutLateChildren = function(self)
         local children = self.children
         if children then
             local width = self.innerWidth
-            for i = 1, #children do
-                local c = children[i]
-                width = math.max(width, c.width)
+            if self.grow then
+                for i = 1, #children do
+                    local c = children[i]
+                    width = math.max(width, c.width)
+                end
             end
             for i = 1, #children do
                 local c = children[i]
@@ -343,12 +350,9 @@ uie.add("listH", {
     base = "row",
 
     isList = true,
+    grow = true,
 
-    style = {
-        padding = 0,
-        spacing = 1,
-        -- border = { 0.3, 0.3, 0.3, 1 }
-    },
+    style = uie.__list.__default.style,
 
     init = function(self, items, cb)
         uie.__row.init(self, uiu.map(items, uie.listItem))
@@ -357,13 +361,19 @@ uie.add("listH", {
         self.selected = false
     end,
 
+    layoutLateLazy = function(self)
+        self:layoutLate()
+    end,
+
     layoutLateChildren = function(self)
         local children = self.children
         if children then
             local height = self.innerHeight
-            for i = 1, #children do
-                local c = children[i]
-                height = math.max(height, c.height)
+            if self.grow then
+                for i = 1, #children do
+                    local c = children[i]
+                    height = math.max(height, c.height)
+                end
             end
             for i = 1, #children do
                 local c = children[i]
