@@ -198,7 +198,7 @@ uie.__default = {
             el = el.parent
         end
 
-        -- self:repaintDown()
+        self:repaintDown()
     end,
 
     reflowDown = function(self)
@@ -228,7 +228,7 @@ uie.__default = {
             el = el.parent
         end
 
-        -- self:repaintDown()
+        self:repaintDown()
     end,
 
     reflowLateDown = function(self)
