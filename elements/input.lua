@@ -388,6 +388,7 @@ uie.add("listH", {
 uie.add("listItem", {
     base = "row",
     interactive = 1,
+    cacheable = false,
 
     style = {
         padding = 4,

@@ -73,7 +73,25 @@ function ui.update()
 
         if c.__updateID ~= updateID then
             c.__updateID = updateID
-            local cb = c.update
+            local cb
+            local forceUpdate = false
+
+            if not c.__awakened then
+                c.__awakened = true
+                cb = c.awake
+                if cb then
+                    cb(c)
+                else
+                    forceUpdate = true
+                end
+                cb = nil
+            end
+
+            if forceUpdate or c.visible then
+                cb = c.update
+            else
+                cb = c.updateHidden
+            end
             if cb then
                 cb(c)
             end

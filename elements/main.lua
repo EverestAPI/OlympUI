@@ -267,10 +267,16 @@ uie.__default = {
         end
     end,
 
+    -- awake = function(self) end,
+    awake = false,
+    __awakened = false,
+
     -- update = function(self) end,
     update = false,
+    -- updateHidden = function(self) end,
+    updateHidden = false,
 
-    layoutLazy = function(self)        
+    layoutLazy = function(self)
         if not self.reflowing then
             return false
         end
@@ -398,6 +404,12 @@ uie.__default = {
 
             cached.width = width
             cached.height = height
+        end
+
+        -- TODO: Get max supported texture size?
+        if width > 4096 or height > 4096 then
+            self:draw()
+            return
         end
 
         local x = self.screenX
