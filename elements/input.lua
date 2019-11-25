@@ -286,7 +286,7 @@ uie.add("field", {
                 borderPrev[3] = border[3]
                 borderPrev[4] = border[4]
             end
-            
+ 
             self:repaint()
         end
 
@@ -305,6 +305,7 @@ uie.add("field", {
 -- Basic list, consisting of multiple list items.
 uie.add("list", {
     base = "column",
+    cacheable = false,
 
     isList = true,
     grow = true,
@@ -348,6 +349,7 @@ uie.add("list", {
 
 uie.add("listH", {
     base = "row",
+    cacheable = false,
 
     isList = true,
     grow = true,

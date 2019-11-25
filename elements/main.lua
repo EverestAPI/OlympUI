@@ -187,10 +187,7 @@ uie.__default = {
             print("reflow", self)
         end
 
-        self.reflowing = true
-        self.reflowingLate = true
-        self.cachedCanvas = nil
-        local el = self.parent
+        local el = self
         while el do
             el.reflowing = true
             el.reflowingLate = true
@@ -219,9 +216,7 @@ uie.__default = {
             print("reflowLate", self)
         end
 
-        self.reflowingLate = true
-        self.cachedCanvas = nil
-        local el = self.parent
+        local el = self
         while el do
             el.reflowingLate = true
             el.cachedCanvas = nil
@@ -248,8 +243,7 @@ uie.__default = {
             print("repaint", self)
         end
 
-        self.cachedCanvas = nil
-        local el = self.parent
+        local el = self
         while el do
             el.cachedCanvas = nil
             el = el.parent

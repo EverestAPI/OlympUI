@@ -168,7 +168,7 @@ function ui.__mousemoved(x, y, dx, dy)
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
     ui.hovering = hoveringNext or false
-    
+
     if hoveringPrev ~= hoveringNext then
         if hoveringPrev then
             local cb = hoveringPrev.onLeave
