@@ -221,11 +221,12 @@ function uiu.fillWidth(el, arg2, arg3)
             layout = function(orig, self)
                 local width = self.parent.innerWidth - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
+                    local spacing = self.parent.style.spacing
                     local children = self.parent.children
                     for i = 1, #children do
                         local c = children[i]
                         if c ~= self then
-                            width = width - c.width
+                            width = width - c.width - spacing
                         end
                     end
                 end
@@ -283,11 +284,12 @@ function uiu.fillHeight(el, arg2, arg3)
             layoutLate = function(orig, self)
                 local height = self.parent.innerHeight - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
+                    local spacing = self.parent.style.spacing
                     local children = self.parent.children
                     for i = 1, #children do
                         local c = children[i]
                         if c ~= self then
-                            height = height - c.height
+                            height = height - c.height - spacing
                         end
                     end
                 end
