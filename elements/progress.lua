@@ -12,6 +12,8 @@ uie.add("spinner", {
         color = { 1, 1, 1, 1 }
     },
 
+    progress = false,
+
     time = 0,
 
     init = function(self)
@@ -39,19 +41,24 @@ uie.add("spinner", {
 
         local polygon = {}
 
-        local t = 1 - self.time
-
         local edges = 64
 
-        local progA, progB
+        local progA = 0
+        local progB = self.progress
 
-        local offs = edges * t * 2
-        if t < 0.5 then
-            progA = 0 + offs
-            progB = edges * t * 2 + offs
+        if progB then
+            progB = progB * edges
+
         else
-            progA = edges * (t - 0.5) * 2 + offs
-            progB = edges + offs
+            local t = self.time
+            local offs = edges * t * 2
+            if t < 0.5 then
+                progA = offs + 0
+                progB = offs + edges * t * 2
+            else
+                progA = offs + edges * (t - 0.5) * 2
+                progB = offs + edges
+            end
         end
 
         local progAE = math.floor(progA)
@@ -68,7 +75,7 @@ uie.add("spinner", {
                     f = progB
                 end
 
-                f = (f / (edges)) * math.pi * 2
+                f = (1 - f / (edges) + 0.5) * math.pi * 2
                 local x = cX + math.sin(f) * radius
                 local y = cY + math.cos(f) * radius
 
