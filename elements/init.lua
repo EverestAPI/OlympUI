@@ -6,5 +6,6 @@ require("ui.elements.layout")
 require("ui.elements.input")
 require("ui.elements.window")
 require("ui.elements.scroll")
+require("ui.elements.progress")
 
 return uie
