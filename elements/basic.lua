@@ -140,11 +140,17 @@ uie.add("panel", {
 
         if w >= 0 and h >= 0 then
             local sX, sY, sW, sH
-            local clip = self.clip and not self.cachedCanvas
+            local clip = self.clip -- and not self.cachedCanvas
             if clip then
                 sX, sY, sW, sH = love.graphics.getScissor()
-                local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                love.graphics.intersectScissor(scissorX, scissorY, w, h)
+                if self.cachedCanvas then
+                    local padding = self.cachePadding
+                    local scissorX, scissorY = love.graphics.transformPoint(x, y)
+                    love.graphics.setScissor(scissorX, scissorY, w + padding * 2, h + padding * 2)
+                else
+                    local scissorX, scissorY = love.graphics.transformPoint(x, y)
+                    love.graphics.intersectScissor(scissorX, scissorY, w, h)
+                end
             end
 
             local children = self.children
