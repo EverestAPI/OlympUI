@@ -447,6 +447,72 @@ uie.__default = {
         love.graphics.setBlendMode("alpha", "alphamultiply")
     end,
 
+    addChild = function(self, child)
+        local children = self.children
+        for i = 1, #children do
+            local c = children[i]
+            if c == child then
+                return false
+            end
+        end
+        children[#children + 1] = child
+        self:reflow()
+        ui.root:recollect()
+        return true
+    end,
+
+    removeChild = function(self, child)
+        local children = self.children
+        for i = 1, #children do
+            local c = children[i]
+            if c == child then
+                table.remove(children, i)
+                return true
+            end
+        end
+        self:reflow()
+        ui.root:recollect()
+        return false
+    end,
+
+    removeSelf = function(self)
+        return self.parent:removeChild(self)
+    end,
+
+    getChild = function(self, id)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                local cid = c.id
+                if cid and cid == id then
+                    return c
+                end
+            end
+        end
+    end,
+
+    findChild = function(self, id)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                local cid = c.id
+                if cid and cid == id then
+                    return c
+                end
+            end
+
+            for i = 1, #children do
+                local c = children[i]
+                c = c:findChild(id)
+                if c then
+                    return c
+                end
+            end
+        end
+    end,
+
     getChildAt = function(self, mx, my)
         local interactive = self.interactive
         if interactive == -2 then
@@ -565,7 +631,7 @@ local mtEl = {
         local cached = propcache[key]
         if cached then
             local ctype = cached.type
-            
+
             if ctype == "get" then
                 return cached.value(self)
 
@@ -593,7 +659,7 @@ local mtEl = {
             local Key = key:sub(1, 1):upper() .. key:sub(2)
             keyGet = "get" .. Key
         end
-            
+
         local default = rawget(self, "__default")
         if keyGet then
             v = default[keyGet]
@@ -631,7 +697,7 @@ local mtEl = {
         if key == "children" then
             return nil
         end
-        
+
         if keyGet then
             v = uie.__default[keyGet]
             if v ~= nil then
@@ -767,7 +833,7 @@ end
 uie.add("new", {
     init = function(self, props, ...)
         local initOrig = self.init
-        
+
         self:with(props, ...)
 
         local init = self.init

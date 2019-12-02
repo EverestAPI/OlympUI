@@ -10,14 +10,14 @@ uie.add("scrollbox", {
     interactive = 2,
 
     init = function(self, inner)
-        inner:as("inner")
         inner.style.radius = 0
 
-        uie.__group.init(self, {
-            inner,
-            uie.scrollhandleX():as("handleX"),
-            uie.scrollhandleY():as("handleY")
-        })
+        local handleX = uie.scrollhandleX()
+        local handleY = uie.scrollhandleY()
+        uie.__group.init(self, { inner, handleX, handleY })
+        self.inner = inner
+        self.handleX = handleX
+        self.handleY = handleY
 
         self.clip = true
 
@@ -49,7 +49,7 @@ uie.add("scrollbox", {
             self.__dy = dy
         end
 
-        local inner = self._inner
+        local inner = self.inner
         local origX, origY = inner.x, inner.y
         local x, y = origX, origY
 
@@ -69,10 +69,10 @@ uie.add("scrollbox", {
 
     afterScroll = function(self)
         self:repositionChildren()
-        self._handleX:repaint()
-        self._handleX:layoutLate()
-        self._handleY:repaint()
-        self._handleY:layoutLate()
+        self.handleX:repaint()
+        self.handleX:layoutLate()
+        self.handleY:repaint()
+        self.handleY:layoutLate()
         self:repaint()
         ui.root:recollect()
     end,
@@ -82,7 +82,7 @@ uie.add("scrollbox", {
             return
         end
 
-        local inner = self._inner
+        local inner = self.inner
 
         if not raw then
             dx = dx * -32
@@ -243,7 +243,7 @@ uie.add("scrollhandleX", {
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
-        local inner = box._inner
+        local inner = box.inner
 
         local boxSize = box.width
         local innerSize = inner.width
@@ -279,7 +279,7 @@ uie.add("scrollhandleX", {
 
     onDrag = function(self, x, y, dx, dy)
         local box = self.parent
-        local inner = box._inner
+        local inner = box.inner
         self.parent:onScroll(x, y, dx * inner.width / box.width, 0, true)
     end
 })
@@ -298,7 +298,7 @@ uie.add("scrollhandleY", {
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
-        local inner = box._inner
+        local inner = box.inner
 
         local boxSize = box.height
         local innerSize = inner.height
@@ -334,7 +334,7 @@ uie.add("scrollhandleY", {
 
     onDrag = function(self, x, y, dx, dy)
         local box = self.parent
-        local inner = box._inner
+        local inner = box.inner
         self.parent:onScroll(x, y, 0, dy * inner.height / box.height, true)
     end
 })

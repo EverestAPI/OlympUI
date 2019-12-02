@@ -18,21 +18,23 @@ uie.add("window", {
     },
 
     init = function(self, title, inner)
-        inner = inner:as("inner")
         inner.style.radius = 0
 
+        local titlebar = uie.titlebar(title)
         uie.__column.init(self, {
-            uie.titlebar(title),
+            titlebar,
             inner
         })
+        self.titlebar = titlebar
+        self.inner = inner
     end,
 
     getTitle = function(self)
-        return self._titlebar._title._text
+        return self.titlebar._title._text
     end,
 
     setTitle = function(self, value)
-        self._titlebar._title.text = value
+        self.titlebar._title.text = value
     end,
 
     update = function(self)
@@ -98,8 +100,6 @@ uie.add("titlebar", {
     base = "row",
     interactive = 1,
 
-    id = "titlebar",
-
     style = {
         border = { 0, 0, 0, 0 },
         radius = 0,
@@ -114,13 +114,18 @@ uie.add("titlebar", {
     },
 
     init = function(self, title, closeable)
+        local label = uie.label(title)
         local children = {
-            uie.label(title):as("label")
+            label
         }
         if closeable then
             children[#children + 1] = uie.buttonClose()
         end
+
         uie.__row.init(self, children)
+
+        self.label = label
+
         self.style.bg = {}
     end,
 
@@ -144,7 +149,7 @@ uie.add("titlebar", {
 
     update = function(self)
         local style = self.style
-        local label = self._label
+        local label = self.label
         local labelStyle = label.style
         local bgPrev = style.bg
         local fgPrev = labelStyle.color

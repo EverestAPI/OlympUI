@@ -35,11 +35,12 @@ uie.add("button", {
         if not label or not label.__ui then
             label = uie.label(label)
         end
-        uie.__row.init(self, { label:as("label") })
+        uie.__row.init(self, { label })
+        self.label = label
         self.cb = cb
         self.enabled = true
         self.style.bg = {}
-        self._label.style.color = {}
+        self.label.style.color = {}
         self.style.border = {}
     end,
 
@@ -53,16 +54,16 @@ uie.add("button", {
     end,
 
     getText = function(self)
-        return self._label.text
+        return self.label.text
     end,
 
     setText = function(self, value)
-        self._label.text = value
+        self.label.text = value
     end,
 
     update = function(self)
         local style = self.style
-        local label = self._label
+        local label = self.label
         local labelStyle = label.style
         local bgPrev = style.bg
         local fgPrev = labelStyle.color
@@ -184,11 +185,12 @@ uie.add("field", {
         if not label or not label.__ui then
             label = uie.label(label)
         end
-        uie.__row.init(self, { label:as("label") })
+        uie.__row.init(self, { label })
+        self.label = label
         self.cb = cb
         self.enabled = true
         self.style.bg = {}
-        self._label.style.color = {}
+        self.label.style.color = {}
         self.style.border = {}
     end,
 
@@ -202,16 +204,16 @@ uie.add("field", {
     end,
 
     getText = function(self)
-        return self._label.text
+        return self.label.text
     end,
 
     setText = function(self, value)
-        self._label.text = value
+        self.label.text = value
     end,
 
     update = function(self)
         local style = self.style
-        local label = self._label
+        local label = self.label
         local labelStyle = label.style
         local bgPrev = style.bg
         local fgPrev = labelStyle.color
@@ -425,20 +427,22 @@ uie.add("listItem", {
             data = text.data
             text = text.text
         end
-        uie.__row.init(self, { uie.label(text):as("label") })
+        local label = uie.label(text)
+        uie.__row.init(self, { label })
+        self.label = label
         self.data = data
         self.enabled = true
         self.style.bg = {}
-        self._label.style.color = {}
+        self.label.style.color = {}
         self.style.border = {}
     end,
 
     getText = function(self)
-        return self._label.text
+        return self.label.text
     end,
 
     setText = function(self, value)
-        self._label.text = value
+        self.label.text = value
     end,
 
     getEnabled = function(self)
@@ -476,7 +480,7 @@ uie.add("listItem", {
 
     update = function(self)
         local style = self.style
-        local label = self._label
+        local label = self.label
         local labelStyle = label.style
         local bgPrev = style.bg
         local fgPrev = labelStyle.color
