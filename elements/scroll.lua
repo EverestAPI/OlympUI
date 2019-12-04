@@ -29,7 +29,7 @@ uie.add("scrollbox", {
 
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local dx = self.__dx
         local dy = self.__dy
         if dx ~= 0 or dy ~= 0 then
@@ -151,7 +151,7 @@ uie.add("scrollhandle", {
         self:layoutLate()
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local enabled = self.enabled
         if enabled == nil then
             enabled = self.isNeeded
@@ -191,7 +191,7 @@ uie.add("scrollhandle", {
 
         local fadeDuration = style.fadeDuration
         if #colorPrev ~= 0 and fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
+            fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
             color = {
                 colorPrev[1] + (color[1] - colorPrev[1]) * f,

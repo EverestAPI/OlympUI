@@ -265,10 +265,11 @@ uie.__default = {
     awake = false,
     __awakened = false,
 
-    -- update = function(self) end,
+    -- update = function(self, dt) end,
     update = false,
     -- updateHidden = function(self) end,
     updateHidden = false,
+    __dtHidden = 0,
 
     layoutLazy = function(self)
         if not self.reflowing then

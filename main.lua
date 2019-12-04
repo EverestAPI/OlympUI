@@ -64,7 +64,8 @@ function ui.update()
         ui.__mousemoved(mouseX, mouseY)
     end
 
-    ui.delta = love.timer.getDelta()
+    local dt = love.timer.getDelta()
+    ui.dt = dt
 
     ::reupdate::
     local all = root.all
@@ -87,13 +88,22 @@ function ui.update()
                 cb = nil
             end
 
+            local cdt = dt
+
             if forceUpdate or c.visible then
                 cb = c.update
+                if not c.updateHidden then
+                    cdt = cdt + c.__dtHidden
+                    c.__dtHidden = 0
+                end
             else
                 cb = c.updateHidden
+                if not cb then
+                    c.__dtHidden = c.__dtHidden + dt
+                end
             end
             if cb then
-                cb(c)
+                cb(c, cdt)
             end
         end
 

@@ -61,7 +61,7 @@ uie.add("button", {
         self.label.text = value
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local style = self.style
         local label = self.label
         local labelStyle = label.style
@@ -103,7 +103,7 @@ uie.add("button", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
+            fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
 
             if #bgPrev == 0 then
@@ -211,7 +211,7 @@ uie.add("field", {
         self.label.text = value
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local style = self.style
         local label = self.label
         local labelStyle = label.style
@@ -249,7 +249,7 @@ uie.add("field", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
+            fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
 
             if #bgPrev == 0 then
@@ -478,7 +478,7 @@ uie.add("listItem", {
         self.parent.selected = (value and self or nil)
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local style = self.style
         local label = self.label
         local labelStyle = label.style
@@ -524,7 +524,7 @@ uie.add("listItem", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
+            fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
 
             if #bgPrev == 0 then

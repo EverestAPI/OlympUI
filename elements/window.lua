@@ -37,7 +37,7 @@ uie.add("window", {
         self.titlebar._title.text = value
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local parent = self.parent
         if not parent then
             return
@@ -147,7 +147,7 @@ uie.add("titlebar", {
         uie.__row.layoutLate(self)
     end,
 
-    update = function(self)
+    update = function(self, dt)
         local style = self.style
         local label = self.label
         local labelStyle = label.style
@@ -176,7 +176,7 @@ uie.add("titlebar", {
 
         local fadeDuration = style.fadeDuration
         if #bgPrev ~= 0 and fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
+            fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
             bg = {
                 bgPrev[1] + (bg[1] - bgPrev[1]) * f,

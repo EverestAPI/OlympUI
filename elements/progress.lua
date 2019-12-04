@@ -20,8 +20,8 @@ uie.add("spinner", {
         self.__polygon = {}
     end,
 
-    update = function(self)
-        self.time = (self.time + ui.delta * 0.5) % 1
+    update = function(self, dt)
+        self.time = (self.time + dt * 0.5) % 1
         self:repaint()
     end,
 
