@@ -130,13 +130,13 @@ uie.add("scrollhandle", {
         radius = 3,
 
         normalColor = { 0.5, 0.5, 0.5, 0.6 },
-        normalBorder = { 0.5, 0.5, 0.5, 1 },
+        normalBorder = { 0.5, 0.5, 0.5, 1, 1 },
 
         hoveredColor = { 0.6, 0.6, 0.6, 1 },
-        hoveredBorder = { 0.6, 0.6, 0.6, 0.7 },
+        hoveredBorder = { 0.6, 0.6, 0.6, 0.7, 1 },
 
         pressedColor = { 0.55, 0.55, 0.55, 1 },
-        pressedBorder = { 0.55, 0.55, 0.55, 0.7 },
+        pressedBorder = { 0.55, 0.55, 0.55, 0.7, 1 },
 
         fadeDuration = 0.2
     },
@@ -204,6 +204,7 @@ uie.add("scrollhandle", {
                 borderPrev[2] + (border[2] - borderPrev[2]) * f,
                 borderPrev[3] + (border[3] - borderPrev[3]) * f,
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
+                borderPrev[5] + (border[5] - borderPrev[5]) * f,
             }
             self:repaint()
         end
@@ -222,6 +223,7 @@ uie.add("scrollhandle", {
         love.graphics.setColor(self.style.color)
         love.graphics.rectangle("fill", self.screenX, self.screenY, self.width, self.height, radius, radius)
         love.graphics.setColor(self.style.border)
+        love.graphics.setLineWidth(self.style.border[5] or 1)
         love.graphics.rectangle("line", self.screenX, self.screenY, self.width, self.height, radius, radius)
     end
 

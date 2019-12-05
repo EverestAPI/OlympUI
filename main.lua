@@ -90,7 +90,7 @@ function ui.update()
 
             local cdt = dt
 
-            if forceUpdate or c.visible then
+            if forceUpdate or c.onscreen then
                 cb = c.update
                 if not c.updateHidden then
                     cdt = cdt + c.__dtHidden

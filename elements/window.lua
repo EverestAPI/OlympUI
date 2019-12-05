@@ -108,13 +108,19 @@ uie.add("titlebar", {
         focusedFG = { 1, 1, 1, 1 },
 
         unfocusedBG = { 0.1, 0.1, 0.1, 1 },
-        unfocusedFG = { 0.7, 0.7, 0.7, 1 },
+        unfocusedFG = { 0.9, 0.9, 0.9, 0.7 },
 
         fadeDuration = 0.3
     },
 
     init = function(self, title, closeable)
-        local label = uie.label(title)
+        local label
+        if title and title.__ui then
+            label = title
+        else
+            label = uie.label(title)
+        end
+
         local children = {
             label
         }

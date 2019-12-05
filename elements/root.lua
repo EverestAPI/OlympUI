@@ -9,7 +9,7 @@ local function collectAll(all, allMap, el)
         for i = 1, #children do
             local c = children[i]
             c.parent = el
-            c.visible = false
+            c.onscreen = false
             all[#all + 1] = c
             local id = c.id
             if id then
@@ -39,7 +39,7 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                 crr < pbl or pbr < crl or
                 crb < pbt or pbb < crt
             ) then
-                c.visible = true
+                c.onscreen = true
 
                 local cbl = max(pbl, crl)
                 local cbt = max(pbt, crt)

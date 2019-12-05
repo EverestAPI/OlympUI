@@ -116,6 +116,11 @@ function uiu.concat(...)
 end
 
 
+function uiu.countformat(count, one, more)
+    return string.format(count == 1 and one or more, count)
+end
+
+
 function uiu.magic(fn, ...)
     local magic = uiu.magic
     local mask = { ... }

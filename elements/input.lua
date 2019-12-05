@@ -14,19 +14,19 @@ uie.add("button", {
 
         normalBG = { 0.08, 0.08, 0.08, 0.6 },
         normalFG = { 1, 1, 1, 1 },
-        normalBorder = { 0, 0, 0, 0 },
+        normalBorder = { 0, 0, 0, 0, 1 },
 
         disabledBG = { 0.05, 0.05, 0.05, 0.7 },
         disabledFG = { 0.7, 0.7, 0.7, 0.7 },
-        disabledBorder = { 0, 0, 0, 0 },
+        disabledBorder = { 0, 0, 0, 0, 1 },
 
         hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
         hoveredFG = { 1, 1, 1, 1 },
-        hoveredBorder = { 0, 0, 0, 0 },
+        hoveredBorder = { 0, 0, 0, 0, 1 },
 
         pressedBG = { 0.17, 0.17, 0.17, 0.7 },
         pressedFG = { 1, 1, 1, 1 },
-        pressedBorder = { 0, 0, 0, 0 },
+        pressedBorder = { 0, 0, 0, 0, 1 },
 
         fadeDuration = 0.2
     },
@@ -125,6 +125,7 @@ uie.add("button", {
                 borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
                 borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
                 borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
+                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
                 bgPrev[1] = bg[1]
@@ -141,6 +142,7 @@ uie.add("button", {
                 borderPrev[2] = border[2]
                 borderPrev[3] = border[3]
                 borderPrev[4] = border[4]
+                borderPrev[5] = border[5]
             end
 
             self:repaint()
@@ -168,15 +170,15 @@ uie.add("field", {
 
         normalBG = { 0.9, 0.9, 0.9, 0.8 },
         normalFG = { 0, 0, 0, 0.8 },
-        normalBorder = { 0.08, 0.08, 0.08, 0.6 },
+        normalBorder = { 0.08, 0.08, 0.08, 0.6, 1 },
 
         disabledBG = { 0.5, 0.5, 0.5, 0.7 },
         disabledFG = { 0, 0, 0, 0.7 },
-        disabledBorder = { 0, 0, 0, 0.7 },
+        disabledBorder = { 0, 0, 0, 0.7, 1 },
 
         focusedBG = { 1, 1, 1, 0.9 },
         focusedFG = { 0, 0, 0, 0.9 },
-        focusedBorder = { 0, 0, 0, 0.9 },
+        focusedBorder = { 0, 0, 0, 0.9, 1 },
 
         fadeDuration = 0.2
     },
@@ -271,6 +273,7 @@ uie.add("field", {
                 borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
                 borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
                 borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
+                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
                 bgPrev[1] = bg[1]
@@ -287,8 +290,9 @@ uie.add("field", {
                 borderPrev[2] = border[2]
                 borderPrev[3] = border[3]
                 borderPrev[4] = border[4]
+                borderPrev[5] = border[5]
             end
- 
+
             self:repaint()
         end
 
@@ -401,23 +405,23 @@ uie.add("listItem", {
 
         normalBG = { 0.08, 0.08, 0.08, 0.6 },
         normalFG = { 1, 1, 1, 1 },
-        normalBorder = { 0, 0, 0, 0 },
+        normalBorder = { 0, 0, 0, 0, 1 },
 
         disabledBG = { 0.05, 0.05, 0.05, 1 },
         disabledFG = { 0.7, 0.7, 0.7, 0.7 },
-        disabledBorder = { 0, 0, 0, 0 },
+        disabledBorder = { 0, 0, 0, 0, 1 },
 
         hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
         hoveredFG = { 1, 1, 1, 1 },
-        hoveredBorder = { 0, 0, 0, 0 },
+        hoveredBorder = { 0, 0, 0, 0, 1 },
 
         pressedBG = { 0.1, 0.3, 0.6, 0.7 },
         pressedFG = { 1, 1, 1, 1 },
-        pressedBorder = { 0, 0, 0, 0 },
+        pressedBorder = { 0, 0, 0, 0, 1 },
 
         selectedBG = { 0.2, 0.5, 0.7, 0.7 },
         selectedFG = { 1, 1, 1, 1 },
-        selectedBorder = { 0, 0, 0, 0 },
+        selectedBorder = { 0, 0, 0, 0, 1 },
 
         fadeDuration = 0.2
     },
@@ -546,6 +550,7 @@ uie.add("listItem", {
                 borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
                 borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
                 borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
+                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
                 bgPrev[1] = bg[1]
@@ -562,6 +567,7 @@ uie.add("listItem", {
                 borderPrev[2] = border[2]
                 borderPrev[3] = border[3]
                 borderPrev[4] = border[4]
+                borderPrev[5] = border[5]
             end
 
             self:repaint()
@@ -694,7 +700,7 @@ uie.add("menuItemSubmenu", {
         self.innerWidth = maxWidth
         self.__maxWidth = maxWidth
     end,
-    
+
     layoutLateChildren = function(self)
         local children = self.children
         local width = self.__maxWidth

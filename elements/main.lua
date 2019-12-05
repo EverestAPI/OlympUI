@@ -13,6 +13,7 @@ uie.__default = {
     reflowing = true,
     reflowingLate = true,
     visible = true,
+    onscreen = true,
 
     interactive = 0,
 
@@ -357,7 +358,7 @@ uie.__default = {
         if not self.cacheable then
             for i = 1, #children do
                 local c = children[i]
-                if c.visible then
+                if c.onscreen and c.visible then
                     c:drawLazy()
                 end
             end

@@ -157,7 +157,7 @@ uie.add("panel", {
             if not self.cacheable then
                 for i = 1, #children do
                     local c = children[i]
-                    if c.visible then
+                    if c.onscreen and c.visible then
                         c:drawLazy()
                     end
                 end
@@ -174,8 +174,9 @@ uie.add("panel", {
 
 
         local border = self.style.border
-        if border and #border ~= 0 and border[4] ~= 0 then
+        if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 then
             love.graphics.setColor(border)
+            love.graphics.setLineWidth(border[5] or 1)
             love.graphics.rectangle("line", x, y, w, h, radius, radius)
         end
     end
@@ -214,6 +215,7 @@ uie.add("label", {
     init = function(self, text)
         self.text = text or ""
         self.dynamic = false
+        self.wrap = false
     end,
 
     getText = function(self)
@@ -240,6 +242,17 @@ uie.add("label", {
             self:reflow()
         else
             self:repaint()
+        end
+    end,
+
+    layoutLazy = function(self)
+        uie.__default.layoutLazy(self)
+
+        if self.wrap then
+            local width, wrapped = self.style.font:getWrap(self._textStr, self.parent.width)
+            self.width = width
+            self._text:set(uiu.join(wrapped, "\n"))
+            self.height = self:calcHeight()
         end
     end,
 
