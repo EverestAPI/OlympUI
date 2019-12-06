@@ -113,8 +113,17 @@ function ui.update()
         end
     end
 
-    root:layoutLazy()
-    root:layoutLateLazy()
+    ::reflow::
+    repeat
+        root:layoutLazy()
+    until not root.reflowing
+
+    repeat
+        root:layoutLateLazy()
+        if root.reflowing then
+            goto reflow
+        end
+    until not root.reflowingLate
 
     if root.recollecting == 1 then
         root:collect(true, true)

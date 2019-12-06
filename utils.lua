@@ -90,7 +90,12 @@ end
 function uiu.map(input, fn)
     local output = {}
     for k, v in pairs(input) do
-        output[k] = fn(v)
+        local newV, newK = fn(v, k, input)
+        if newK ~= nil then
+            output[newK] = newV
+        else
+            output[k] = newV
+        end
     end
     return output
 end

@@ -245,14 +245,24 @@ uie.add("label", {
         end
     end,
 
-    layoutLazy = function(self)
-        uie.__default.layoutLazy(self)
+    layoutLateLazy = function(self)
+        uie.__default.layoutLateLazy(self)
 
         if self.wrap then
-            local width, wrapped = self.style.font:getWrap(self._textStr, self.parent.width)
-            self.width = width
+            local prevWidth = self.width
+            local prevHeight = self.height
+
+            local _width, wrapped = self.style.font:getWrap(self._textStr, self.parent.innerWidth)
             self._text:set(uiu.join(wrapped, "\n"))
-            self.height = self:calcHeight()
+
+            local width = self:calcWidth()
+            self.width = width
+            local height = self:calcHeight()
+            self.height = height
+
+            if width ~= prevWidth or height ~= prevHeight then
+                self.parent:reflow()
+            end
         end
     end,
 
