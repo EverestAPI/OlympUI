@@ -287,10 +287,6 @@ function ui.mousedragmoved()
     return ui.hovering or ui.dragging
 end
 
-function ui.mousedraged()
-    return ui.hovering or ui.dragging
-end
-
 function ui.mousedragged()
     return ui.hovering or ui.dragging
 end
