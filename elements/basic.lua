@@ -253,7 +253,7 @@ uie.add("label", {
             local prevHeight = self.height
 
             local _width, wrapped = self.style.font:getWrap(self._textStr, self.parent.innerWidth)
-            self._text:set(uiu.join(wrapped, "\n"))
+            self._text:set(table.concat(wrapped, "\n"))
 
             local width = self:calcWidth()
             self.width = width

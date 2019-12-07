@@ -101,26 +101,6 @@ function uiu.map(input, fn)
 end
 
 
-function uiu.join(list, splitter)
-    local output = ""
-    if #list == 0 then
-        return output
-    end
-    for i = 1, #list - 1 do
-        output = output .. tostring(list[i]) .. splitter
-    end
-    for i = #list, #list do
-        output = output .. tostring(list[i])
-    end
-    return output
-end
-
-
-function uiu.concat(...)
-    return uiu.join({ ... }, "")
-end
-
-
 function uiu.countformat(count, one, more)
     return string.format(count == 1 and one or more, count)
 end
@@ -390,7 +370,7 @@ function uiu.rightbound(el)
 
         layoutLate = function(orig, self)
             local parent = self.parent
-            self.realX = parent.innerWidth - self.width
+            self.realX = parent.width - parent.style.padding - self.width
             orig(self)
         end
     })
@@ -406,7 +386,7 @@ function uiu.bottombound(el)
 
         layoutLate = function(orig, self)
             local parent = self.parent
-            self.realY = parent.innerHeight - self.height
+            self.realY = parent.height - parent.style.padding - self.height
             orig(self)
         end
     })
