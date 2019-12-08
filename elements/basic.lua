@@ -290,7 +290,8 @@ uie.add("image", {
     },
 
     quad = nil,
-    transform = nil,
+    scaleX = 1,
+    scaleY = 1,
     drawArgs = nil,
 
     init = function(self, image)
@@ -304,14 +305,17 @@ uie.add("image", {
     calcSize = function(self)
         local image = self._image
         local width, height = image:getWidth(), image:getHeight()
+        self.width = width * self.scaleX
+        self.height = height * self.scaleY
+    end,
 
-        local transform = self.transform
-        if transform then
-            width, height = transform:transformPoint(width, height)
-        end
+    getScale = function(self)
+        return self.scaleX, self.scaleY
+    end,
 
-        self.width = width
-        self.height = height
+    setScale = function(self, sx, sy)
+        self.scaleX = sx
+        self.scaleY = sy or sx
     end,
 
     draw = function(self)
@@ -322,23 +326,12 @@ uie.add("image", {
             love.graphics.draw(self._image, table.unpack(drawArgs))
 
         else
-            local transform = self.transform
+
             local quad = self.quad
-            if transform then
-                if quad then
-                    love.graphics.draw(self._image, quad, transform)
-                else
-
-                    love.graphics.draw(self._image, transform)
-                end
-
+            if quad then
+                love.graphics.draw(self._image, quad, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
             else
-                if quad then
-                    love.graphics.draw(self._image, quad, self.screenX, self.screenY)
-
-                else
-                    love.graphics.draw(self._image, self.screenX, self.screenY)
-                end
+                love.graphics.draw(self._image, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
             end
         end
     end
