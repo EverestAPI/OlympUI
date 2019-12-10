@@ -6,7 +6,13 @@ local uiu = require("ui.utils")
 -- Basic panel with children elements.
 uie.add("panel", {
     init = function(self, children)
-        self.children = children or {}
+        children = children or {}
+        for i = #children, 1, -1 do
+            if not children[i] then
+                table.remove(children, i)
+            end
+        end
+        self.children = children
         self.width = -1
         self.height = -1
         self.minWidth = -1

@@ -450,6 +450,9 @@ uie.__default = {
     end,
 
     addChild = function(self, child)
+        if not child then
+            return false
+        end
         local children = self.children
         for i = 1, #children do
             local c = children[i]
@@ -464,6 +467,9 @@ uie.__default = {
     end,
 
     removeChild = function(self, child)
+        if not child then
+            return false
+        end
         local children = self.children
         for i = 1, #children do
             local c = children[i]
@@ -611,7 +617,7 @@ local mtStyle = {
             end
         end
 
-        error("Unknown styling property: " .. eltype .. " [\"" .. tostring(key) .. "\"]")
+        error("Unknown styling property: " .. eltype .. " [\"" .. tostring(key) .. "\"]", 2)
     end
 }
 
