@@ -371,8 +371,7 @@ uie.__default = {
 
     drawLazy = function(self)
         if not self.cacheable then
-            self:draw()
-            return
+            return self:draw()
         end
 
         local width = self.width
@@ -404,8 +403,7 @@ uie.__default = {
 
         -- TODO: Get max supported texture size?
         if width > 4096 or height > 4096 then
-            self:draw()
-            return
+            return self:draw()
         end
 
         local x = self.screenX

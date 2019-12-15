@@ -635,8 +635,7 @@ uie.add("menuItem", {
         end
 
         if uiu.isCallback(data) then
-            data(self)
-            return
+            return data(self)
         end
 
         local submenu = self.submenu
