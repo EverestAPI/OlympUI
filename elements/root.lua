@@ -3,19 +3,14 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
-local function collectAll(all, allMap, el)
+local function collectAll(all, el)
     local children = el.children
     if children then
         for i = 1, #children do
             local c = children[i]
             c.parent = el
-            c.onscreen = false
             all[#all + 1] = c
-            local id = c.id
-            if id then
-                allMap[id] = c
-            end
-            collectAll(all, allMap, c)
+            collectAll(all, c)
         end
     end
     return all
@@ -63,6 +58,12 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                 else
                     collectAllInteractive(all, c, crl, crt, cbl, cbt, cbr, cbb, false)
                 end
+
+            else
+                c.onscreen = false
+                -- Doesn't need to be set false recursively.
+                -- Anything that has an offscreen parent is already ignored elsewhere.
+                -- Anything that was offscreen before will get its children rechecked later.
             end
         end
     end
@@ -108,18 +109,30 @@ uie.add("root", {
 
     layoutLate = function(self)
         self:layoutLateChildren()
-        self:collect(true, true)
+        self:collect(false, true)
     end,
 
-    recollect = function(self)
-        self.recollecting = 1
+    recollect = function(self, basic, interactive)
+        if basic == nil then
+            self.recollectingBasic = true
+            self.recollectingInteractive = true
+        else
+            self.recollectingBasic = basic
+            self.recollectingInteractive = interactive
+        end
     end,
 
     collect = function(self, basic, interactive)
-        self.recollecting = -1
+        if basic == nil then
+            basic = self.recollectingBasic
+            interactive = self.recollectingInteractive
+        end
+
+        self.recollectingBasic = false
+        self.recollectingInteractive = false
 
         if basic then
-            self.all, self.allMap = collectAll({}, {}, self)
+            self.all = collectAll({}, self)
         end
 
         if interactive then

@@ -221,7 +221,7 @@ uie.add("titlebar", {
         parent.x = parent.x + dx
         parent.y = parent.y + dy
         parent:repaint()
-        ui.root:recollect()
+        ui.root:recollect(false, true)
     end
 })
 

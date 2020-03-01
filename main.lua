@@ -43,6 +43,7 @@ function ui.update()
         root:reflow()
 
         if not root.all then
+            root:collect(true, false)
             root:layoutLazy()
             root:layoutLateLazy()
         end
@@ -107,8 +108,7 @@ function ui.update()
             end
         end
 
-        if root.recollecting == 1 then
-            root:collect(true, true)
+        if root:collect() then
             goto reupdate
         end
     end
@@ -125,11 +125,7 @@ function ui.update()
         end
     until not root.reflowingLate
 
-    if root.recollecting == 1 then
-        root:collect(true, true)
-    end
-
-    root.recollecting = 0
+    root:collect()
 
     updateID = updateID + 1
 end
