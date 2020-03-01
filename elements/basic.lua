@@ -164,12 +164,12 @@ uie.add("panel", {
                 for i = 1, #children do
                     local c = children[i]
                     if c.onscreen and c.visible then
-                        c:drawLazy()
+                        c:redraw()
                     end
                 end
             else
                 for i = 1, #children do
-                    children[i]:drawLazy()
+                    children[i]:redraw()
                 end
             end
 

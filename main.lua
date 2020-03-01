@@ -136,7 +136,7 @@ end
 
 
 function ui.draw()
-    ui.root:drawLazy()
+    ui.root:redraw()
     love.graphics.setColor(1, 1, 1, 1)
 end
 
