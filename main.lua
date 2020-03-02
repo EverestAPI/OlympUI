@@ -153,7 +153,7 @@ function ui.interactiveIterate(el, funcid, ...)
             func(el, ...)
         end
     end
-    
+
     if el.interactive == 0 then
         return parent
     end

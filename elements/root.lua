@@ -138,6 +138,8 @@ uie.add("root", {
         if interactive then
             self.allInteractive = collectAllInteractive({}, self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
         end
+
+        return basic or interactive
     end,
 
     getChildAt = function(self, mx, my)
