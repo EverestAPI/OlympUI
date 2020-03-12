@@ -139,8 +139,7 @@ uie.add("panel", {
 
         local radius = self.style.radius
         local bg = self.style.bg
-        if bg and #bg ~= 0 and bg[4] ~= 0 then
-            love.graphics.setColor(bg)
+        if bg and #bg ~= 0 and bg[4] ~= 0 and uiu.setColor(bg) then
             love.graphics.rectangle("fill", x, y, w, h, radius, radius)
         end
 
@@ -180,8 +179,7 @@ uie.add("panel", {
 
 
         local border = self.style.border
-        if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 then
-            love.graphics.setColor(border)
+        if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
             love.graphics.setLineWidth(border[5] or 1)
             love.graphics.rectangle("line", x, y, w, h, radius, radius)
         end
@@ -281,8 +279,7 @@ uie.add("label", {
     end,
 
     draw = function(self)
-        love.graphics.setColor(self.style.color)
-        love.graphics.draw(self._text, self.screenX, self.screenY)
+        return uiu.setColor(self.style.color) and love.graphics.draw(self._text, self.screenX, self.screenY)
     end
 })
 
@@ -325,14 +322,15 @@ uie.add("image", {
     end,
 
     draw = function(self)
-        love.graphics.setColor(self.style.color)
+        if not uiu.setColor(self.style.color) then
+            return
+        end
 
         local drawArgs = self.drawArgs
         if drawArgs then
             love.graphics.draw(self._image, table.unpack(drawArgs))
 
         else
-
             local quad = self.quad
             if quad then
                 love.graphics.draw(self._image, quad, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)

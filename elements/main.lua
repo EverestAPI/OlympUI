@@ -441,7 +441,7 @@ uie.__default = {
             end
         end
 
-        love.graphics.setColor(1, 1, 1, 1)
+        uiu.setColor(1, 1, 1, 1)
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(canvas, x - padding, y - padding)
         love.graphics.setBlendMode("alpha", "alphamultiply")

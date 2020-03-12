@@ -115,6 +115,46 @@ function uiu.countformat(count, one, more)
     return string.format(count == 1 and one or more, count)
 end
 
+local prevR = -1
+local prevG = -1
+local prevB = -1
+local prevA = -1
+
+function uiu.resetColor()
+    prevR = -1
+end
+
+function uiu.setColor(r, g, b, a)
+    if r then
+        if g then
+            a = a or 1
+
+        else
+            g = r[2]
+            b = r[3]
+            a = r[4]
+            r = r[1]
+        end
+
+    else
+        return false
+    end
+
+    if a < 0.0001 then
+        return false
+    end
+
+    if r ~= prevR or g ~= prevG or b ~= prevB or a ~= prevA then
+        love.graphics.setColor(r, g, b, a)
+        prevR = r
+        prevG = g
+        prevB = b
+        prevA = a
+    end
+
+    return true
+end
+
 
 function uiu.magic(fn, ...)
     local magic = uiu.magic

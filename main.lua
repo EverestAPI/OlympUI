@@ -132,8 +132,10 @@ end
 
 
 function ui.draw()
+    uiu.resetColor()
     ui.root:redraw()
     love.graphics.setColor(1, 1, 1, 1)
+    uiu.resetColor()
 end
 
 

@@ -13,7 +13,6 @@ local function collectAll(all, el)
             collectAll(all, c)
         end
     end
-    return all
 end
 
 local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
@@ -67,7 +66,6 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
             end
         end
     end
-    return all
 end
 
 
@@ -132,21 +130,25 @@ uie.add("root", {
         self.recollectingInteractive = false
 
         if basic then
-            self.all = collectAll({}, self)
+            local all = {}
+            collectAll(all, self)
+            self.all = all
         end
 
         if interactive then
-            self.allInteractive = collectAllInteractive({}, self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
+            local all = {}
+            collectAllInteractive(all, self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
+            self.allInteractive = all
         end
 
         return basic or interactive
     end,
 
     getChildAt = function(self, mx, my)
-        local allInteractive = self.allInteractive
-        if allInteractive then
-            for i = #allInteractive, 1, -1 do
-                local c = allInteractive[i]
+        local all = self.allInteractive
+        if all then
+            for i = #all, 1, -1 do
+                local c = all[i]
                 local retc = nil
 
                 while c and c ~= self do

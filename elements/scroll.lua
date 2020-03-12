@@ -220,11 +220,13 @@ uie.add("scrollhandle", {
         end
 
         local radius = self.style.radius
-        love.graphics.setColor(self.style.color)
-        love.graphics.rectangle("fill", self.screenX, self.screenY, self.width, self.height, radius, radius)
-        love.graphics.setColor(self.style.border)
-        love.graphics.setLineWidth(self.style.border[5] or 1)
-        love.graphics.rectangle("line", self.screenX, self.screenY, self.width, self.height, radius, radius)
+        if uiu.setColor(self.style.color) then
+            love.graphics.rectangle("fill", self.screenX, self.screenY, self.width, self.height, radius, radius)
+        end
+        if uiu.setColor(self.style.border) then
+            love.graphics.setLineWidth(self.style.border[5] or 1)
+            love.graphics.rectangle("line", self.screenX, self.screenY, self.width, self.height, radius, radius)
+        end
     end
 
 })

@@ -26,7 +26,9 @@ uie.add("spinner", {
     end,
 
     draw = function(self)
-        love.graphics.setColor(self.style.color)
+        if not uiu.setColor(self.style.color) then
+            return
+        end
 
         local width = self.width
         local height = self.height
