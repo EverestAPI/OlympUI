@@ -180,6 +180,10 @@ function ui.__mousemoved(x, y, dx, dy)
     ui.mouseX = x
     ui.mouseY = y
 
+    if dx == 0 and dy == 0 then
+        return ui.dragging or ui.hovering
+    end
+
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
     ui.hovering = hoveringNext or false

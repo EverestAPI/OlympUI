@@ -12,6 +12,16 @@ function uiu.default(value, default)
 end
 
 
+function uiu.fract(num, default)
+    if not num then
+        return num, default
+    end
+    local fract
+    fract = num % 1
+    return num - fract, (fract <= 0.0001 or fract >= 0.9999) and (default or 0) or fract
+end
+
+
 uiu.dataRoots = {}
 
 uiu.imageCache = {}
@@ -162,11 +172,13 @@ end
 
 function uiu.fillWidth(el, arg2, arg3)
     local except
+    local fract
     local respectSiblings
     local late
 
     local function apply(el)
         except = uiu.default(except, 0)
+        except, fract = uiu.fract(except, 1)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
@@ -185,7 +197,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local width = self.parent.innerWidth - (except >= 0 and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -209,7 +221,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local width = self.parent.innerWidth - (except >= 0 and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -249,11 +261,13 @@ end
 
 function uiu.fillHeight(el, arg2, arg3)
     local except
+    local fract
     local respectSiblings
     local late
 
     local function apply(el)
         except = uiu.default(except, 0)
+        except, fract = uiu.fract(except, 1)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
@@ -272,7 +286,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local height = self.parent.innerHeight - (except >= 0 and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -297,7 +311,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local height = self.parent.innerHeight - (except >= 0 and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -358,6 +372,47 @@ function uiu.fill(el)
             orig(self)
         end
     })
+end
+
+
+function uiu.at(el, arg2, arg3)
+    local x
+    local xf
+    local y
+    local yf
+
+    local function apply(el)
+        x, xf = uiu.fract(x, 0)
+        y, yf = uiu.fract(y, 0)
+
+        return
+        uiu.hook(el, {
+            layoutLateLazy = function(orig, self)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+
+            layoutLate = function(orig, self)
+                local parent = self.parent
+                if x then
+                    self.realX = x + parent.innerWidth * xf
+                end
+                if y then
+                    self.realY = y + parent.innerHeight * yf
+                end
+                orig(self)
+            end
+        })
+    end
+
+    if type(el) == "number" then
+        x = el
+        y = arg2
+        return apply
+
+    else
+        return apply(el, arg2, arg3)
+    end
 end
 
 
