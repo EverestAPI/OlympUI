@@ -3,14 +3,15 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
-local function collectAll(all, el)
+local function collectAll(all, el, collection)
+    el.__collection = collection
     local children = el.children
     if children then
         for i = 1, #children do
             local c = children[i]
             c.parent = el
             all[#all + 1] = c
-            collectAll(all, c)
+            collectAll(all, c, collection)
         end
     end
 end
@@ -131,7 +132,7 @@ uie.add("root", {
 
         if basic then
             local all = {}
-            collectAll(all, self)
+            collectAll(all, self, self.__collection + 1)
             self.all = all
         end
 

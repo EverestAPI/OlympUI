@@ -639,10 +639,12 @@ uie.add("menuItem", {
         end
 
         local submenu = self.submenu
-        if not self.submenu then
-            submenu = uie.menuItemSubmenu(uiu.map(data, uie.__menuItem.map))
-            self.submenu = submenu
+        if submenu then
+            submenu:removeSelf()
         end
+
+        submenu = uie.menuItemSubmenu(self, uiu.map(data, uie.__menuItem.map))
+        self.submenu = submenu
 
         if self.parent:is("topbar") then
             submenu.x = self.screenX
@@ -676,6 +678,23 @@ uie.add("menuItemSubmenu", {
         padding = 0,
         spacing = 1
     },
+
+    init = function(self, owner, children)
+        uie.__column.init(self, children)
+
+        self.owner = owner
+    end,
+
+    getFocused = function(self)
+        return uie.__default.getFocused(self) or self.owner.focused
+    end,
+
+    update = function(self)
+        if not self.owner.alive or not self.focused then
+            self:removeSelf()
+            return
+        end
+    end,
 
     layoutChildren = function(self)
         local padding = self.style.padding

@@ -118,6 +118,10 @@ uie.__default = {
         )
     end,
 
+    getAlive = function(self)
+        return ui.root.__collection == self.__collection
+    end,
+
     getHovered = function(self)
         local hovering = ui.hovering
         while hovering do
@@ -792,7 +796,8 @@ function uie.add(eltype, default)
                 height = 0,
                 canvas = nil,
                 visibleRect = { 0, 0, 0, 0 }
-            }
+            },
+            __collection = ui.root and ui.root.__collection or 0
         }
 
         el.__style = setmetatable({ el = el }, mtStyle)
