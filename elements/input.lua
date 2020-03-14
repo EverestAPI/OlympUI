@@ -598,6 +598,7 @@ uie.add("topbar", {
     interactive = 2,
 
     style = {
+        bg = { 0.08, 0.08, 0.08, 0.8 },
         padding = 0,
         spacing = 1
     },
@@ -613,6 +614,10 @@ uie.add("topbar", {
 uie.add("menuItem", {
     base = "listItem",
     clip = false,
+
+    style = {
+        bg = { 0.08, 0.08, 0.08, 0.8 }
+    },
 
     init = function(self, text, data)
         uie.__listItem.init(self, text, data)
@@ -638,19 +643,21 @@ uie.add("menuItem", {
             return data(self)
         end
 
-        local submenu = self.submenu
+        local parent = self.parent
+
+        local submenu = parent.submenu
         if submenu then
             submenu:removeSelf()
         end
 
         submenu = uie.menuItemSubmenu(self, uiu.map(data, uie.__menuItem.map))
-        self.submenu = submenu
+        parent.submenu = submenu
 
-        if self.parent:is("topbar") then
+        if parent:is("topbar") then
             submenu.x = self.screenX
-            submenu.y = self.screenY + self.height + self.parent.style.spacing
+            submenu.y = self.screenY + self.height + parent.style.spacing
         else
-            submenu.x = self.screenX + self.width + self.parent.style.spacing
+            submenu.x = self.screenX + self.width + parent.style.spacing
             submenu.y = self.screenY
         end
 
@@ -675,6 +682,7 @@ uie.add("menuItemSubmenu", {
     clip = false,
 
     style = {
+        bg = { 0.08, 0.08, 0.08, 0.8 },
         padding = 0,
         spacing = 1
     },
@@ -686,7 +694,8 @@ uie.add("menuItemSubmenu", {
     end,
 
     getFocused = function(self)
-        return uie.__default.getFocused(self) or self.owner.focused
+        local submenu = self.submenu
+        return uie.__default.getFocused(self) or self.owner.focused or (submenu and submenu.focused)
     end,
 
     update = function(self)
