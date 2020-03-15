@@ -300,10 +300,7 @@ uie.add("field", {
     end,
 
     onClick = function(self, x, y, button)
-        local cb = self.cb
-        if cb and button == 1 then
-            cb(self, x, y, button)
-        end
+
     end
 })
 

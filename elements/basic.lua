@@ -214,10 +214,11 @@ uie.add("label", {
 
     style = {
         color = { 1, 1, 1, 1 },
-        font = love.graphics.getFont()
+        font = {}
     },
 
-    init = function(self, text)
+    init = function(self, text, font)
+        self.style.font = font or love.graphics.getFont()
         self.text = text or ""
         self.dynamic = false
         self.wrap = false
