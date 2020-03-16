@@ -277,7 +277,11 @@ uie.add("label", {
     end,
 
     calcHeight = function(self)
-        return math.ceil(self._text:getHeight())
+        local height = math.ceil(self._text:getHeight())
+        if height == 0 then
+            return math.ceil(self.style.font:getHeight(" "))
+        end
+        return height
     end,
 
     draw = function(self)

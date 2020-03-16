@@ -1,6 +1,7 @@
 local ui = require("ui.main")
 local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
+local utf8 = require("utf8")
 require("ui.elements.basic")
 require("ui.elements.layout")
 
@@ -161,6 +162,8 @@ uie.add("button", {
 
 
 -- Basic text input, behaving like a row with a label.
+-- TODO: Implement oversize text handling
+-- TODO: Implement multiline variant
 uie.add("field", {
     base = "row",
 
@@ -168,25 +171,24 @@ uie.add("field", {
         padding = 8,
         spacing = 4,
 
-        normalBG = { 0.9, 0.9, 0.9, 0.8 },
-        normalFG = { 0, 0, 0, 0.8 },
+        normalBG = { 0.95, 0.95, 0.95, 0.9 },
+        normalFG = { 0, 0, 0, 0.8, 0 },
         normalBorder = { 0.08, 0.08, 0.08, 0.6, 1 },
 
         disabledBG = { 0.5, 0.5, 0.5, 0.7 },
-        disabledFG = { 0, 0, 0, 0.7 },
+        disabledFG = { 0, 0, 0, 0.7, 0 },
         disabledBorder = { 0, 0, 0, 0.7, 1 },
 
         focusedBG = { 1, 1, 1, 0.9 },
-        focusedFG = { 0, 0, 0, 0.9 },
+        focusedFG = { 0, 0, 0, 0.9, 1 },
         focusedBorder = { 0, 0, 0, 0.9, 1 },
 
         fadeDuration = 0.2
     },
 
-    init = function(self, label, cb)
-        if not label or not label.__ui then
-            label = uie.label(label)
-        end
+    init = function(self, text, cb)
+        self.index = 0
+        local label = uie.label(text)
         uie.__row.init(self, { label })
         self.label = label
         self.cb = cb
@@ -194,6 +196,7 @@ uie.add("field", {
         self.style.bg = {}
         self.label.style.color = {}
         self.style.border = {}
+        self.blinkTime = 0
     end,
 
     getEnabled = function(self)
@@ -210,7 +213,12 @@ uie.add("field", {
     end,
 
     setText = function(self, value)
+        local prev = self.label.text
         self.label.text = value
+        local cb = self.cb
+        if cb then
+            cb(value, prev)
+        end
     end,
 
     update = function(self, dt)
@@ -268,6 +276,7 @@ uie.add("field", {
                 fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
                 fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
                 fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
+                fgPrev[5] = fgPrev[5] + (fg[5] - fgPrev[5]) * f
 
                 borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
                 borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
@@ -285,6 +294,7 @@ uie.add("field", {
                 fgPrev[2] = fg[2]
                 fgPrev[3] = fg[3]
                 fgPrev[4] = fg[4]
+                fgPrev[5] = fg[5]
 
                 borderPrev[1] = border[1]
                 borderPrev[2] = border[2]
@@ -296,11 +306,107 @@ uie.add("field", {
             self:repaint()
         end
 
+        local blinkTimePrev = self.blinkTime
+        local blinkTime = (blinkTimePrev + dt) % 1
+        self.blinkTime = blinkTime
+        if blinkTimePrev < 0.5 and blinkTime >= 0.5 or blinkTimePrev >= 0.5 and blinkTime < 0.5 then
+            self:repaint()
+        end
+
         self.__fadeTime = fadeTime
     end,
 
-    onClick = function(self, x, y, button)
+    draw = function(self)
+        local x = self.screenX
+        local y = self.screenY
+        local w = self.width
+        local h = self.height
+        local text = self.text
+        local padding = self.style.padding
+        local labelStyle = self.label.style
+        local font = labelStyle.font
+        local fg = labelStyle.color
 
+        uie.__row.draw(self)
+
+        if self.focused and self.blinkTime < 0.5 and fg and #fg ~= 0 and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
+            local ix = math.ceil(font:getWidth(text:sub(1, self.index))) + 0.5
+            love.graphics.setLineWidth(fg[5] or 1)
+            love.graphics.line(x + ix + padding, y + padding, x + ix + padding, y + h - padding)
+        end
+
+    end,
+
+    onPress = function(self, x, y, button)
+        if not self.focusing then
+            self.__wasKeyRepeat = love.keyboard.hasKeyRepeat()
+            love.keyboard.setKeyRepeat(true)
+            self.index = utf8.len(self.text)
+            self.blinkTime = 0
+            self:repaint()
+
+        else
+            -- TODO: Implement text click pos bisect
+        end
+    end,
+
+    onUnfocus = function(self)
+        love.keyboard.setKeyRepeat(self.__wasKeyRepeat)
+    end,
+
+    onText = function(self, new)
+        local text = self.text
+        local index = self.index
+        if index == 0 then
+            self.text = new .. string.sub(text, utf8.offset(text, index + 1))
+        else
+            self.text = string.sub(text, 1, utf8.offset(text, index)) .. new .. string.sub(text, utf8.offset(text, index + 1))
+        end
+        self.index = self.index + utf8.len(new)
+    end,
+
+    onKeyPress = function(self, key)
+        local text = self.text
+        local index = self.index
+
+        if key == "backspace" then
+            if index == 0 then
+                return
+            elseif index == 1 then
+                self.text = string.sub(text, utf8.offset(text, index + 1))
+            else
+                self.text = string.sub(text, 1, utf8.offset(text, index - 1)) .. string.sub(text, utf8.offset(text, index + 1))
+            end
+            self.index = math.max(0, index - 1)
+            self.blinkTime = 0
+            self:repaint()
+
+        elseif key == "delete" then
+            if index == utf8.len(text) then
+                return
+            end
+            if index == 0 then
+                self.text = string.sub(text, utf8.offset(text, index + 2))
+            else
+                self.text = string.sub(text, 1, utf8.offset(text, index)) .. string.sub(text, utf8.offset(text, index + 2))
+            end
+            self.index = math.min(utf8.len(text), index)
+            self.blinkTime = 0
+            self:repaint()
+
+        elseif key == "left" then
+            self.index = math.max(0, index - 1)
+            self.blinkTime = 0
+            self:repaint()
+
+        elseif key == "right" then
+            self.index = math.min(utf8.len(text), index + 1)
+            self.blinkTime = 0
+            self:repaint()
+
+        elseif key == "return" then
+            self.text = text
+        end
     end
 })
 

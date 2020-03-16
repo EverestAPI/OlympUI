@@ -131,8 +131,11 @@ function uiu.setColor(r, g, b, a)
 
         else
             g = r[2]
+            if not g then
+                return false
+            end
             b = r[3]
-            a = r[4]
+            a = r[4] or 1
             r = r[1]
         end
 

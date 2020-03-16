@@ -569,6 +569,8 @@ uie.__default = {
     onEnter = false,
     -- onLeave = function(self) end,
     onLeave = false,
+    -- onUnfocus = function(self, x, y, button, dragging) end,
+    onUnfocus = false,
     -- onPress = function(self, x, y, button, dragging) end,
     onPress = false,
     -- onRelease = function(self, x, y, button, dragging) end,
@@ -579,6 +581,12 @@ uie.__default = {
     onDrag = false,
     -- onScroll = function(self, x, y, dx, dy) end,
     onScroll = false,
+    -- onKeyPress = function(self, key, scancode, isrepeat) end,
+    onKeyPress = false,
+    -- onKeyRelease = function(self, key, scancode) end,
+    onKeyRelease = false,
+    -- onText = function(self, text) end,
+    onText = false,
 }
 
 -- Shared metatable for all style helper tables.

@@ -238,6 +238,7 @@ function ui.mousepressed(x, y, button, istouch, presses)
 
     local hovering = root:getChildAt(x, y)
     if not ui.dragging or ui.dragging == hovering then
+        ui.interactiveIterate(ui.focusing, "onUnfocus", x, y, button, true)
         local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
         ui.dragging = el or false
         ui.focusing = el or false
@@ -312,6 +313,18 @@ function ui.wheelmoved(dx, dy)
     return hovering or ui.dragging
 end
 
+function ui.keypressed(key, scancode, isrepeat)
+    return ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
+end
+
+function ui.keyreleased(key, scancode)
+    return ui.interactiveIterate(ui.focusing, "onKeyRelease", key, scancode)
+end
+
+function ui.textinput(text)
+    return ui.interactiveIterate(ui.focusing, "onText", text)
+end
+
 
 local hookedLoveUpdateDraw = false
 local hookedLoveInput = false
@@ -350,6 +363,21 @@ function ui.hookLove(hookUpdateDraw, hookInput)
 
             wheelmoved = function(orig, ...)
                 ui.wheelmoved(...)
+                return orig(...)
+            end,
+
+            keypressed = function(orig, ...)
+                ui.keypressed(...)
+                return orig(...)
+            end,
+
+            keyreleased = function(orig, ...)
+                ui.keyreleased(...)
+                return orig(...)
+            end,
+
+            textinput = function(orig, ...)
+                ui.textinput(...)
                 return orig(...)
             end
         })
