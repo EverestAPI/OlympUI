@@ -201,7 +201,7 @@ function uiu.hook(target, nameOrMap, cb)
         for name, cb in pairs(nameOrMap) do
             uiu.hook(target, name, cb)
         end
-        return
+        return target
     end
 
     local name = nameOrMap

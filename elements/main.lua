@@ -187,6 +187,13 @@ uie.__default = {
         return self
     end,
 
+    hook = function(self, ...)
+        uiu.hook(self, ...)
+
+        self:reflow()
+        return self
+    end,
+
     reflow = function(self)
         if ui.debug then
             print("reflow", self)
