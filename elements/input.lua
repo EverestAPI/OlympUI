@@ -330,7 +330,7 @@ uie.add("field", {
         uie.__row.draw(self)
 
         if self.focused and self.blinkTime < 0.5 and fg and #fg ~= 0 and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
-            local ix = math.ceil(font:getWidth(text:sub(1, self.index))) + 0.5
+            local ix = math.ceil(self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))) + 0.5
             love.graphics.setLineWidth(fg[5] or 1)
             love.graphics.line(x + ix + padding, y + padding, x + ix + padding, y + h - padding)
         end
@@ -358,9 +358,9 @@ uie.add("field", {
         local text = self.text
         local index = self.index
         if index == 0 then
-            self.text = new .. string.sub(text, utf8.offset(text, index + 1))
+            self.text = new .. text:sub(utf8.offset(text, index + 1))
         else
-            self.text = string.sub(text, 1, utf8.offset(text, index)) .. new .. string.sub(text, utf8.offset(text, index + 1))
+            self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. new .. text:sub(utf8.offset(text, index + 1))
         end
         self.index = self.index + utf8.len(new)
     end,
@@ -373,9 +373,9 @@ uie.add("field", {
             if index == 0 then
                 return
             elseif index == 1 then
-                self.text = string.sub(text, utf8.offset(text, index + 1))
+                self.text = text:sub(utf8.offset(text, index + 1))
             else
-                self.text = string.sub(text, 1, utf8.offset(text, index - 1)) .. string.sub(text, utf8.offset(text, index + 1))
+                self.text = text:sub(1, utf8.offset(text, index) - 1) .. text:sub(utf8.offset(text, index + 1))
             end
             self.index = math.max(0, index - 1)
             self.blinkTime = 0
@@ -386,9 +386,9 @@ uie.add("field", {
                 return
             end
             if index == 0 then
-                self.text = string.sub(text, utf8.offset(text, index + 2))
+                self.text = text:sub(utf8.offset(text, index + 2))
             else
-                self.text = string.sub(text, 1, utf8.offset(text, index)) .. string.sub(text, utf8.offset(text, index + 2))
+                self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. text:sub(utf8.offset(text, index + 2))
             end
             self.index = math.min(utf8.len(text), index)
             self.blinkTime = 0
