@@ -454,7 +454,9 @@ function uiu.at(el, arg2, arg3)
         return apply
 
     else
-        return apply(el, arg2, arg3)
+        x = arg2
+        y = arg3
+        return apply(el)
     end
 end
 
