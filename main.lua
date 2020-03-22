@@ -4,7 +4,11 @@ local uin = require("ui.native")
 local ui = {
     _enabled = true,
 
-    debug = false,
+    debugLog = false,
+    debugDraw = false,
+    repaintAll = false,
+
+    fontDebug = love.graphics.newFont(8),
 
     hovering = false,
     dragging = false,

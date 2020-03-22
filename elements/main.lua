@@ -195,7 +195,7 @@ uie.__default = {
     end,
 
     reflow = function(self)
-        if ui.debug then
+        if ui.debugLog then
             print("reflow", self)
         end
 
@@ -224,7 +224,7 @@ uie.__default = {
     end,
 
     reflowLate = function(self)
-        if ui.debug then
+        if ui.debugLog then
             print("reflowLate", self)
         end
 
@@ -251,7 +251,7 @@ uie.__default = {
     end,
 
     repaint = function(self)
-        if ui.debug then
+        if ui.debugLog then
             print("repaint", self)
         end
 
@@ -380,7 +380,79 @@ uie.__default = {
         end
     end,
 
+    -- drawDebug = function(self) end,
+    -- drawDebug = false,
+    drawDebug = function(self)
+        local x = self.screenX
+        local y = self.screenY
+        local width = self.width
+        local height = self.height
+
+        love.graphics.setLineWidth(1)
+        love.graphics.setBlendMode("alpha", "premultiplied")
+
+        -- red = outter
+        -- green = inner
+        -- blue = padding orientation
+        -- yellow = outline
+
+        local padding = self.style:get("padding")
+        if padding and padding ~= 0 then
+            uiu.setColor(0.75, 0, 0, 0.5)
+            love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
+
+            uiu.setColor(0, 0, 0.25, 0.25)
+            love.graphics.rectangle("line", x + 0.5, y + 0.5, padding - 1, padding - 1)
+
+            uiu.setColor(0, 0.125, 0, 0.125)
+            love.graphics.rectangle("line", x + 0.5 + padding, y + 0.5 + padding, width - padding * 2 - 1, height - padding * 2 - 1)
+
+        else
+            uiu.setColor(0.75, 0.75, 0, 0.5)
+            love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
+        end
+
+        love.graphics.setBlendMode("alpha", "alphamultiply")
+
+
+        local id = self.id
+        if not id then
+            id = "(" .. self.__type .. ":" .. self.__rawid .. ")"
+        end
+
+        id = id .. " " .. tostring(self.onscreen)
+
+        uiu.setColor(0, 0, 0, 1)
+        local pos = love.math.newTransform(x, y)
+        pos:translate(0, -1)
+        love.graphics.print(id, ui.fontDebug, pos)
+        pos:translate(0, 2)
+        love.graphics.print(id, ui.fontDebug, pos)
+        pos:translate(-1, -1)
+        love.graphics.print(id, ui.fontDebug, pos)
+        pos:translate(2, 0)
+        love.graphics.print(id, ui.fontDebug, pos)
+        pos:translate(-1, 0)
+
+        uiu.setColor(1, 1, 1, 1)
+        love.graphics.print(id, ui.fontDebug, pos)
+
+    end,
+
     redraw = function(self)
+        if ui.repaintAll then
+            self.cachedCanvas = nil
+        end
+
+        if ui.debugDraw then
+            self:draw()
+            local cb = self.drawDebug
+            if cb then
+                cb(self)
+            end
+            return
+        end
+
         if not self.cacheable then
             return self:draw()
         end
@@ -616,6 +688,35 @@ uie.__default = {
 }
 
 -- Shared metatable for all style helper tables.
+local function styleGet(self, key, el)
+    el = el or rawget(self, "el")
+
+    local defaultStyle = el.__default.style
+    if defaultStyle then
+        local v = defaultStyle[key]
+        if v ~= nil then
+            return v
+        end
+    end
+
+    local template = el.__template
+    local templateStyle = template and template.style
+    if templateStyle then
+        local v = styleGet(templateStyle, key)
+        if v ~= nil then
+            return v
+        end
+    end
+
+    local baseStyle = el.__base.style
+    if baseStyle then
+        local v = styleGet(baseStyle, key)
+        if v ~= nil then
+            return v
+        end
+    end
+end
+
 local mtStyle = {
     __name = "ui.element.style",
 
@@ -625,32 +726,16 @@ local mtStyle = {
             return v
         end
 
+        if key == "get" then
+            return styleGet
+        end
+
         local el = rawget(self, "el")
         local eltype = el.__type
 
-        local defaultStyle = el.__default.style
-        if defaultStyle then
-            v = defaultStyle[key]
-            if v ~= nil then
-                return v
-            end
-        end
-
-        local template = el.__template
-        local templateStyle = template and template.style
-        if templateStyle then
-            v = templateStyle[key]
-            if v ~= nil then
-                return v
-            end
-        end
-
-        local baseStyle = el.__base.style
-        if baseStyle then
-            v = baseStyle[key]
-            if v ~= nil then
-                return v
-            end
+        v = styleGet(self, key, el)
+        if v ~= nil then
+            return v
         end
 
         error("Unknown styling property: " .. eltype .. " [\"" .. tostring(key) .. "\"]", 2)
