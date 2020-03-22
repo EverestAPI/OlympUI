@@ -325,6 +325,7 @@ uie.add("image", {
     setScale = function(self, sx, sy)
         self.scaleX = sx
         self.scaleY = sy or sx
+        return self
     end,
 
     draw = function(self)
