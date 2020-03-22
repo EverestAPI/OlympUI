@@ -366,16 +366,18 @@ uie.__default = {
 
     draw = function(self)
         local children = self.children
-        if not self.cacheable then
-            for i = 1, #children do
-                local c = children[i]
-                if c.onscreen and c.visible then
-                    c:redraw()
+        if children then
+            if not self.cacheable then
+                for i = 1, #children do
+                    local c = children[i]
+                    if c.onscreen and c.visible then
+                        c:redraw()
+                    end
                 end
-            end
-        else
-            for i = 1, #children do
-                children[i]:redraw()
+            else
+                for i = 1, #children do
+                    children[i]:redraw()
+                end
             end
         end
     end,
@@ -445,7 +447,11 @@ uie.__default = {
         end
 
         if ui.debugDraw then
-            self:draw()
+            if ui.debugDraw == -1 then
+                uie.__default.draw(self)
+            else
+                self:draw()
+            end
             local cb = self.drawDebug
             if cb then
                 cb(self)

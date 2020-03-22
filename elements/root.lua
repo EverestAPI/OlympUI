@@ -34,12 +34,21 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                 crr < pbl or pbr < crl or
                 crb < pbt or pbb < crt
             ) then
-                c.onscreen = true
+                if not c.onscreen then
+                    c.onscreen = true
+                    c:repaint()
+                end
 
                 local cbl = max(pbl, crl)
                 local cbt = max(pbt, crt)
                 local cbr = min(pbr, crr)
                 local cbb = min(pbb, crb)
+
+                local clip = c.clip
+                local cpbl = clip and cbl or pbl
+                local cpbt = clip and cbt or pbt
+                local cpbr = clip and cbr or pbr
+                local cpbb = clip and cbb or pbb
 
                 local interactive = c.interactive
 
@@ -54,9 +63,9 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                         all[#all + 1] = c
                     end
 
-                    collectAllInteractive(all, c, crl, crt, cbl, cbt, cbr, cbb, true)
+                    collectAllInteractive(all, c, crl, crt, cpbl, cpbt, cpbr, cpbb, true)
                 else
-                    collectAllInteractive(all, c, crl, crt, cbl, cbt, cbr, cbb, false)
+                    collectAllInteractive(all, c, crl, crt, cpbl, cpbt, cpbr, cpbb, false)
                 end
 
             else
