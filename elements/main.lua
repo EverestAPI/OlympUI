@@ -398,6 +398,14 @@ uie.__default = {
         -- blue = padding orientation
         -- yellow = outline
 
+        local visibleRect = self.__cached.visibleRect
+        local el = visibleRect[1]
+        local et = visibleRect[2]
+        local er = visibleRect[3]
+        local eb = visibleRect[4]
+        uiu.setColor(0, 0, 0.5, 0.5)
+        love.graphics.rectangle("line", el + 0.5, et + 0.5, er - el - 1, eb - et - 1)
+
         local padding = self.style:get("padding")
         if padding and padding ~= 0 then
             uiu.setColor(0.75, 0, 0, 0.5)
@@ -421,8 +429,6 @@ uie.__default = {
         if not id then
             id = "(" .. self.__type .. ":" .. self.__rawid .. ")"
         end
-
-        id = id .. " " .. tostring(self.onscreen)
 
         uiu.setColor(0, 0, 0, 1)
         local pos = love.math.newTransform(x, y)
