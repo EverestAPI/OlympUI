@@ -1,3 +1,4 @@
+local spikerStatus, spiker = pcall(require, "spiker")
 local uiu = require("ui.utils")
 local uin = require("ui.native")
 
@@ -31,6 +32,9 @@ function ui.update()
         return
     end
 
+    local spiker = spiker
+    local spike = spiker and spiker("ui.update", 0.01)
+
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
 
@@ -52,6 +56,7 @@ function ui.update()
             root:layoutLateLazy()
         end
     end
+    spike = spike and spike("root resize")
 
     if ui.mouseGlobal then
         local mouseX, mouseY = love.mouse.getPosition()
@@ -68,6 +73,7 @@ function ui.update()
 
         ui.__mousemoved(mouseX, mouseY)
     end
+    spike = spike and spike("mouse")
 
     local dt = love.timer.getDelta()
     ui.dt = dt
@@ -116,6 +122,7 @@ function ui.update()
             goto reupdate
         end
     end
+    spike = spike and spike("update")
 
     ::reflow::
     repeat
@@ -128,10 +135,13 @@ function ui.update()
             goto reflow
         end
     until not root.reflowingLate
+    spike = spike and spike("layout")
 
     root:collect()
+    spike = spike and spike("collect")
 
     updateID = updateID + 1
+    spike = spike and spiker(spike)
 end
 
 
