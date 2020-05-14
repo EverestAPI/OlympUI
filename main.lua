@@ -1,4 +1,5 @@
 local spikerStatus, spiker = pcall(require, "spiker")
+spiker = spikerStatus and spiker
 local uiu = require("ui.utils")
 local uin = require("ui.native")
 
