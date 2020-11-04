@@ -410,8 +410,9 @@ function uiu.fill(el)
             local height = self.parent.innerHeight
             self.width = width
             self.height = height
-            self.innerWidth = width - self.style.padding * 2
-            self.innerHeight = height - self.style.padding * 2
+            local padding = self.style:get("padding") or 0
+            self.innerWidth = width - padding * 2
+            self.innerHeight = height - padding * 2
             orig(self)
         end
     })

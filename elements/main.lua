@@ -21,6 +21,7 @@ uie.__default = {
     id = nil,
 
     cacheable = true,
+    cacheForce = false,
     cachedCanvas = nil,
     cachePadding = 4,
 
@@ -447,25 +448,8 @@ uie.__default = {
 
     end,
 
-    redraw = function(self)
-        if ui.repaintAll then
-            self.cachedCanvas = nil
-        end
-
-        if ui.debugDraw then
-            if ui.debugDraw == -1 then
-                uie.__default.draw(self)
-            else
-                self:draw()
-            end
-            local cb = self.drawDebug
-            if cb then
-                cb(self)
-            end
-            return
-        end
-
-        if not self.cacheable then
+    __draw = function(self, skipCache)
+        if (not self.cacheable or skipCache) and not self.cacheForce then
             return self:draw()
         end
 
@@ -483,6 +467,9 @@ uie.__default = {
         local cached = self.__cached
 
         local canvas = self.cachedCanvas
+        if self.cacheForce then
+            canvas = nil
+        end
 
         if width > cached.width or height > cached.height then
             canvas = canvas or cached.canvas
@@ -540,6 +527,27 @@ uie.__default = {
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(canvas, x - padding, y - padding)
         love.graphics.setBlendMode("alpha", "alphamultiply")
+    end,
+
+    redraw = function(self)
+        if ui.repaintAll then
+            self.cachedCanvas = nil
+        end
+
+        if ui.debugDraw then
+            if ui.debugDraw == -1 then
+                uie.__default.draw(self)
+            else
+                self:__draw(true)
+            end
+            local cb = self.drawDebug
+            if cb then
+                cb(self)
+            end
+            return
+        end
+
+        self:__draw(false)
     end,
 
     addChild = function(self, child)
@@ -700,8 +708,8 @@ uie.__default = {
 }
 
 -- Shared metatable for all style helper tables.
-local function styleGet(self, key, el)
-    el = el or rawget(self, "el")
+local function styleGetParent(self, key)
+    local el = rawget(self, "el")
 
     local defaultStyle = el.__default.style
     if defaultStyle then
@@ -714,7 +722,7 @@ local function styleGet(self, key, el)
     local template = el.__template
     local templateStyle = template and template.style
     if templateStyle then
-        local v = styleGet(templateStyle, key)
+        local v = styleGetParent(templateStyle, key)
         if v ~= nil then
             return v
         end
@@ -722,10 +730,26 @@ local function styleGet(self, key, el)
 
     local baseStyle = el.__base.style
     if baseStyle then
-        local v = styleGet(baseStyle, key)
+        local v = styleGetParent(baseStyle, key)
         if v ~= nil then
             return v
         end
+    end
+end
+
+local function styleGet(self, key)
+    local v = rawget(self, key)
+    if v ~= nil then
+        return v
+    end
+
+    if key == "get" then
+        return styleGet
+    end
+
+    v = styleGetParent(self, key)
+    if v ~= nil then
+        return v
     end
 end
 
@@ -733,24 +757,12 @@ local mtStyle = {
     __name = "ui.element.style",
 
     __index = function(self, key)
-        local v = rawget(self, key)
+        local v = styleGet(self, key)
         if v ~= nil then
             return v
         end
 
-        if key == "get" then
-            return styleGet
-        end
-
-        local el = rawget(self, "el")
-        local eltype = el.__type
-
-        v = styleGet(self, key, el)
-        if v ~= nil then
-            return v
-        end
-
-        error("Unknown styling property: " .. eltype .. " [\"" .. tostring(key) .. "\"]", 2)
+        error("Unknown styling property: " .. rawget(self, "el").__type .. " [\"" .. tostring(key) .. "\"]", 2)
     end
 }
 
