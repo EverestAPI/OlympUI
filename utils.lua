@@ -462,35 +462,75 @@ function uiu.at(el, arg2, arg3)
 end
 
 
-function uiu.rightbound(el)
-    uiu.hook(el, {
-        layoutLateLazy = function(orig, self)
-            -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate()
-        end,
+function uiu.rightbound(el, arg2)
+    local offs
+    local offsf
 
-        layoutLate = function(orig, self)
-            local parent = self.parent
-            self.realX = parent.width - parent.style.padding - self.width
-            orig(self)
+    local function apply(el)
+        offs, offsf = uiu.fract(offs, 0)
+        if not offs then
+            offs = 0
         end
-    })
+
+        return
+        uiu.hook(el, {
+            layoutLateLazy = function(orig, self)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+
+            layoutLate = function(orig, self)
+                local parent = self.parent
+                self.realX = parent.width - parent.style.padding - self.width - offs - parent.innerWidth * offsf
+                orig(self)
+            end
+        })
+    end
+
+    if type(el) == "number" then
+        offs = el
+        return apply
+
+    else
+        offs = arg2
+        return apply(el)
+    end
 end
 
 
-function uiu.bottombound(el)
-    uiu.hook(el, {
-        layoutLateLazy = function(orig, self)
-            -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate()
-        end,
+function uiu.bottombound(el, arg2)
+    local offs
+    local offsf
 
-        layoutLate = function(orig, self)
-            local parent = self.parent
-            self.realY = parent.height - parent.style.padding - self.height
-            orig(self)
+    local function apply(el)
+        offs, offsf = uiu.fract(offs, 0)
+        if not offs then
+            offs = 0
         end
-    })
+
+        return
+        uiu.hook(el, {
+            layoutLateLazy = function(orig, self)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+
+            layoutLate = function(orig, self)
+                local parent = self.parent
+                self.realY = parent.height - parent.style.padding - self.height - offs - parent.innerHeight * offsf
+                orig(self)
+            end
+        })
+    end
+
+    if type(el) == "number" then
+        offs = el
+        return apply
+
+    else
+        offs = arg2
+        return apply(el)
+    end
 end
 
 
