@@ -112,6 +112,74 @@ function uiu.map(input, fn)
 end
 
 
+-- Adapted from https://love2d.org/forums/viewtopic.php?p=196103&sid=ee7a367880e9968d161c042542058a93#p196103
+function uiu.getWrap(font, input, width)
+    local wrap = {}
+
+    _, wrap = font:getWrap(input, width)
+
+    if type(input) == "string" then
+        return table.concat(wrap, "\n")
+    end
+
+    -- Copy the input table to not modify any passed references.
+    local ct = {}
+    for i = 1, #input do
+        ct[i] = input[i]
+    end
+
+    local lines = {}
+
+    local li = 1
+    local ci = 1
+    local cl = #ct
+    local wi = 1
+    local wl = #wrap
+
+    lines[1] = {}
+    while ci <= cl and wi <= wl do
+        local from, to = string.find(wrap[wi], ct[ci + 1], nil, true)
+        if from and to then -- wrap contains full ct line
+            -- copy full ct line with color
+            lines[wi][li] = ct[ci]
+            lines[wi][li + 1] = ct[ci + 1]
+            wrap[wi] = string.sub(wrap[wi], to + 1, -1)
+            li = li + 2
+            ci = ci + 2
+        else -- wrap is not containing a full ct line
+            -- copy wrap line in ct color and modify ct
+            lines[wi][li] = ct[ci]
+            lines[wi][li + 1] = wrap[wi]
+            ct[ci + 1] = string.sub(ct[ci + 1], #wrap[wi] + 1, -1)
+            li = 1
+            wi = wi + 1
+            lines[wi] = {}
+        end
+    end
+
+    -- TODO: Replace the above code from the love2d forums to immediately return a text-compatible table.
+
+    wi = 1
+    wrap = {}
+    local lc = #lines
+    for li = 1, lc - 1 do
+        local line = lines[li]
+        for ci = 1, #line - 1 do
+            wrap[wi] = line[ci]
+            wi = wi + 1
+        end
+        if li < lc - 1 then
+            wrap[wi] = line[#line] .. "\n"
+        else
+            wrap[wi] = line[#line]
+        end
+        wi = wi + 1
+    end
+
+    return wrap
+end
+
+
 function uiu.countformat(count, one, more)
     return string.format(count == 1 and one or more, count)
 end
