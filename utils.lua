@@ -250,8 +250,9 @@ function uiu.fillWidth(el, arg2, arg3)
                         end
                     end
                 end
+                width = math.floor(width)
                 self.width = width
-                self.innerWidth = width - self.style.padding * 2
+                self.innerWidth = width - (self.style:get("padding") or 0) * 2
                 orig(self)
             end
         })
@@ -275,8 +276,9 @@ function uiu.fillWidth(el, arg2, arg3)
                         end
                     end
                 end
+                width = math.floor(width)
                 self.width = width
-                self.innerWidth = width - self.style.padding * 2
+                self.innerWidth = width - (self.style:get("padding") or 0) * 2
                 orig(self)
             end
         })
@@ -340,8 +342,9 @@ function uiu.fillHeight(el, arg2, arg3)
                         end
                     end
                 end
+                height = math.floor(height)
                 self.height = height
-                self.innerHeight = height - self.style.padding * 2
+                self.innerHeight = height - (self.style:get("padding") or 0) * 2
                 orig(self)
             end
         })
@@ -364,8 +367,9 @@ function uiu.fillHeight(el, arg2, arg3)
                         end
                     end
                 end
+                height = math.floor(height)
                 self.height = height
-                self.innerHeight = height - self.style.padding * 2
+                self.innerHeight = height - (self.style:get("padding") or 0) * 2
                 orig(self)
             end
         })
@@ -439,10 +443,10 @@ function uiu.at(el, arg2, arg3)
             layoutLate = function(orig, self)
                 local parent = self.parent
                 if x then
-                    self.realX = x + parent.innerWidth * xf
+                    self.realX = math.floor(x + parent.innerWidth * xf)
                 end
                 if y then
-                    self.realY = y + parent.innerHeight * yf
+                    self.realY = math.floor(y + parent.innerHeight * yf)
                 end
                 orig(self)
             end
@@ -481,7 +485,7 @@ function uiu.rightbound(el, arg2)
 
             layoutLate = function(orig, self)
                 local parent = self.parent
-                self.realX = parent.width - parent.style.padding - self.width - offs - parent.innerWidth * offsf
+                self.realX = math.floor(parent.width - (parent.style:get("padding") or 0) - self.width - offs - parent.innerWidth * offsf)
                 orig(self)
             end
         })
@@ -517,7 +521,7 @@ function uiu.bottombound(el, arg2)
 
             layoutLate = function(orig, self)
                 local parent = self.parent
-                self.realY = parent.height - parent.style.padding - self.height - offs - parent.innerHeight * offsf
+                self.realY = math.floor(parent.height - (parent.style:get("padding") or 0) - self.height - offs - parent.innerHeight * offsf)
                 orig(self)
             end
         })
