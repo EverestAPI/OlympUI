@@ -341,13 +341,35 @@ uie.add("field", {
         if not self.focusing then
             self.__wasKeyRepeat = love.keyboard.hasKeyRepeat()
             love.keyboard.setKeyRepeat(true)
-            self.index = utf8.len(self.text)
-            self.blinkTime = 0
-            self:repaint()
-
-        else
-            -- TODO: Implement text click pos bisect
         end
+
+        local label = self.label
+        local text = self.text
+        local len = utf8.len(self.text)
+        local font = label.style.font
+
+        x = x - label.screenX
+        if x <= 0 then
+            self.index = 0
+        elseif x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
+            self.index = utf8.len(self.text)
+        else
+            local min = 0
+            local max = len
+            while max - min > 1 do
+                local mid = min + math.ceil((max - min) / 2)
+                local midx = font:getWidth(text:sub(1, utf8.offset(text, mid + 1) - 1)) - font:getWidth(text:sub(utf8.offset(text, mid), utf8.offset(text, mid + 1) - 1)) * 0.4
+                if x <= midx then
+                    max = mid
+                else
+                    min = mid
+                end
+            end
+            self.index = min
+        end
+
+        self.blinkTime = 0
+        self:repaint()
     end,
 
     onUnfocus = function(self)
