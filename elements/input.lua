@@ -154,7 +154,7 @@ uie.add("button", {
 
     onClick = function(self, x, y, button)
         local cb = self.cb
-        if cb and button == 1 then
+        if self.enabled and cb and button == 1 then
             cb(self, x, y, button)
         end
     end
@@ -702,7 +702,7 @@ uie.add("listItem", {
     end,
 
     onClick = function(self, x, y, button)
-        if button == 1 then
+        if self.enabled and button == 1 then
             local parent = self.parent
             if parent.isList then
                 self.selected = true
@@ -792,7 +792,7 @@ uie.add("menuItem", {
     end,
 
     onClick = function(self, x, y, button)
-        if button == 1 then
+        if self.enabled and button == 1 then
             local cb = self.cb
             if cb then
                 cb(self)
