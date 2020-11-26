@@ -162,7 +162,7 @@ function uiu.getWrap(font, input, width)
     wi = 1
     wrap = {}
     local lc = #lines
-    for li = 1, lc - 1 do
+    for li = 1, lc do
         local line = lines[li]
         for ci = 1, #line - 1 do
             wrap[wi] = line[ci]
