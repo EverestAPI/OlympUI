@@ -725,7 +725,8 @@ uie.add("topbar", {
     style = {
         bg = { 0.08, 0.08, 0.08, 0.8 },
         padding = 0,
-        spacing = 1
+        spacing = 1,
+        radius = 0
     },
 
     init = function(self, list)
