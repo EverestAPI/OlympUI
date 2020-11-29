@@ -465,30 +465,49 @@ end
 
 
 function uiu.fill(el)
-    uiu.hook(el, {
-        layoutLazy = function(orig, self)
-            -- Required to allow the container to shrink again.
-            orig(self)
-            self.width = 0
-            self.height = 0
-        end,
+    local except
+    local fract
 
-        layoutLateLazy = function(orig, self)
-            -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate()
-        end,
+    local function apply(el)
+        except = uiu.default(except, 0)
+        except, fract = uiu.fract(except, 1)
 
-        layoutLate = function(orig, self)
-            local width = self.parent.innerWidth
-            local height = self.parent.innerHeight
-            self.width = width
-            self.height = height
-            local padding = self.style:get("padding") or 0
-            self.innerWidth = width - padding * 2
-            self.innerHeight = height - padding * 2
-            orig(self)
-        end
-    })
+        return uiu.hook(el, {
+            layoutLazy = function(orig, self)
+                -- Required to allow the container to shrink again.
+                orig(self)
+                self.width = 0
+                self.height = 0
+            end,
+
+            layoutLateLazy = function(orig, self)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+
+            layoutLate = function(orig, self)
+                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
+                self.width = width
+                self.height = height
+                local padding = self.style:get("padding") or 0
+                self.innerWidth = width - padding * 2
+                self.innerHeight = height - padding * 2
+                orig(self)
+            end
+        })
+    end
+
+    if el == nil then
+        return apply
+
+    elseif type(el) == "number" then
+        except = el
+        return apply
+
+    else
+        return apply(el)
+    end
 end
 
 
