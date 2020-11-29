@@ -523,10 +523,10 @@ uie.__default = {
             end
         end
 
-        return self:__drawCachedCanvas(canvas, x, y, padding)
+        return self:__drawCachedCanvas(canvas, x, y, width, height, padding)
     end,
 
-    __drawCachedCanvas = function(self, canvas, x, y, padding)
+    __drawCachedCanvas = function(self, canvas, x, y, width, height, padding)
         uiu.setColor(1, 1, 1, 1)
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(canvas, x - padding, y - padding)
