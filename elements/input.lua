@@ -575,10 +575,11 @@ uie.add("listItem", {
     end,
 
     getEnabled = function(self)
-        if not self.parent.isList then
+        local owner = self.owner or self.parent
+        if not owner.isList then
             return self.__enabled
         end
-        return self.parent.enabled and self.__enabled
+        return owner.enabled and self.__enabled
     end,
 
     setEnabled = function(self, value)
@@ -586,25 +587,28 @@ uie.add("listItem", {
     end,
 
     getInteractive = function(self)
-        if not self.parent.isList then
+        local owner = self.owner or self.parent
+        if not owner.isList then
             return self.__enabled and 1 or -1
         end
-        return self.parent.enabled and self.__enabled and 1 or -1
+        return owner.enabled and self.__enabled and 1 or -1
     end,
 
     getSelected = function(self)
-        if not self.parent.isList then
+        local owner = self.owner or self.parent
+        if not owner.isList then
             return self.__selected
         end
-        return self.parent.selected == self
+        return owner.selected == self
     end,
 
     setSelected = function(self, value)
-        if not self.parent.isList then
+        local owner = self.owner or self.parent
+        if not owner.isList then
             self.__selected = value
             return
         end
-        self.parent.selected = (value and self or nil)
+        owner.selected = value and self or nil
     end,
 
     update = function(self, dt)
@@ -703,13 +707,13 @@ uie.add("listItem", {
 
     onClick = function(self, x, y, button)
         if self.enabled and button == 1 then
-            local parent = self.parent
-            if parent.isList then
+            local owner = self.owner or self.parent
+            if owner.isList then
                 self.selected = true
             end
-            local cb = parent.cb
+            local cb = owner.cb
             if cb then
-                cb(parent, self.data or self.text)
+                cb(owner, self.data or self.text)
             end
         end
     end
@@ -750,7 +754,12 @@ uie.add("menuItem", {
     end,
 
     map = function(item)
-        local text, data = table.unpack(item)
+        local text, data
+        if type(item) == "string" then
+            text = item
+        else
+            text, data = table.unpack(item)
+        end
 
         if not text then
             return uie.menuItem(""):with({ interactive = -1, height = 2, style = { padding = 0 } }) -- TODO: Divider!
@@ -776,20 +785,17 @@ uie.add("menuItem", {
             submenu:removeSelf()
         end
 
-        submenu = uie.menuItemSubmenu(self, uiu.map(data, uie.__menuItem.map))
-        parent.submenu = submenu
+        local x, y
 
         if parent:is("topbar") then
-            submenu.x = self.screenX
-            submenu.y = self.screenY + self.height + parent.style.spacing
+            x = self.screenX
+            y = self.screenY + self.height + parent.style.spacing
         else
-            submenu.x = self.screenX + self.width + parent.style.spacing
-            submenu.y = self.screenY
+            x = self.screenX + self.width + parent.style.spacing
+            y = self.screenY
         end
 
-        table.insert(ui.root.children, submenu)
-        ui.root:recollect()
-        ui.root:reflow()
+        parent.submenu = uie.__menuItemSubmenu.spawn(self, x, y, uiu.map(data, uie.__menuItem.map))
     end,
 
     onClick = function(self, x, y, button)
@@ -817,6 +823,32 @@ uie.add("menuItemSubmenu", {
         uie.__column.init(self, children)
 
         self.owner = owner
+    end,
+
+    spawn = function(owner, x, y, children)
+        local submenu = uie.menuItemSubmenu(owner, children)
+        submenu:reflow()
+
+        ::reflow::
+        repeat
+            submenu:layoutLazy()
+        until not submenu.reflowing
+
+        repeat
+            submenu:layoutLateLazy()
+            if submenu.reflowing then
+                goto reflow
+            end
+        until not submenu.reflowingLate
+
+        submenu.x = x + math.min(0, ui.root.innerWidth - (x + submenu.width))
+        submenu.y = y + math.min(0, ui.root.innerHeight - (y + submenu.height))
+
+        table.insert(ui.root.children, submenu)
+        ui.root:recollect()
+        ui.root:reflow()
+
+        return submenu
     end,
 
     getFocused = function(self)
@@ -866,6 +898,67 @@ uie.add("menuItemSubmenu", {
             end
         end
     end,
+})
+
+
+-- Very primitive dropdown.
+uie.add("dropdown", {
+    base = "button",
+    clip = false,
+    interactive = 2,
+
+    init = function(self, list, cb)
+        self._itemsCache = {}
+        self.selected = self:_itemCached(list[1], 1)
+        uie.__button.init(self, self.selected.text)
+        self.data = list
+        self.cb = cb
+        self.isList = true
+        self:addChild(uie.image("ui:drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
+    end,
+
+    _itemCached = function(self, text, i)
+        local cache = self._itemsCache
+        local item = cache[i]
+        if item then
+            local data
+            if text and text.text and text.data then
+                data = text.data
+                text = text.text
+            end
+            item.text = text
+            item.data = data
+        else
+            item = uie.listItem(text):with({
+                owner = self
+            }):hook({
+                onClick = function(orig, self, x, y, button)
+                    orig(self, x, y, button)
+                    self.owner.selected = self
+                    self.owner.text = self.text
+                    self.owner.submenu:removeSelf()
+                end
+            })
+            cache[i] = item
+        end
+        return item
+    end,
+
+    onClick = function(self, x, y, button)
+        if self.enabled and button == 1 then
+            local submenu = self.submenu
+            if submenu then
+                submenu:removeSelf()
+            end
+
+            x = self.screenX
+            y = self.screenY + self.height + self.parent.style.spacing
+
+            self.submenu = uie.__menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
+                return self:_itemCached(data, i)
+            end))
+        end
+    end
 })
 
 

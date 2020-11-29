@@ -903,9 +903,22 @@ local mtEl = {
         end
 
         if keySet then
-            local cb = self.__default[keySet]
+            local default = self.__default
+            local cb = default[keySet]
             if cb ~= nil then
                 return cb(self, value)
+            end
+
+            local base = default.base
+            if base then
+                base = uie["__" .. default.base]
+
+                if base then
+                    cb = base[keySet]
+                    if cb then
+                        return cb(self, value)
+                    end
+                end
             end
 
             cb = uie.__default[keySet]

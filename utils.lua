@@ -16,9 +16,18 @@ function uiu.fract(num, default)
     if not num then
         return num, default
     end
+
     local fract
     fract = num % 1
-    return num - fract, (fract <= 0.0001 or fract >= 0.9999) and (default or 0) or fract
+    if fract <= 0.0001 or fract >= 0.9999 then
+        fract = default or 0
+    elseif fract <= 0.005 then
+        fract = 0
+    elseif fract >= 0.995 then
+        fract = 1
+    end
+
+    return num - (num % 1), fract
 end
 
 

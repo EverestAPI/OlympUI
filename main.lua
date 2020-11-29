@@ -56,6 +56,9 @@ function ui.update()
             root:layoutLazy()
             root:layoutLateLazy()
         end
+
+        ui.interactiveIterate(ui.focusing, "onUnfocus")
+        ui.focusing = false
     end
     spike = spike and spike("root resize")
 
