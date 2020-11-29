@@ -554,7 +554,7 @@ uie.__default = {
         self:__draw(false)
     end,
 
-    addChild = function(self, child)
+    addChild = function(self, child, index)
         if not child then
             return false
         end
@@ -565,7 +565,11 @@ uie.__default = {
                 return false
             end
         end
-        children[#children + 1] = child
+        if index then
+            table.insert(children, index, child)
+        else
+            children[#children + 1] = child
+        end
         self:reflow()
         ui.root:recollect()
         return true
