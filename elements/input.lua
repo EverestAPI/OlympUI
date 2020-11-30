@@ -104,14 +104,11 @@ uie.add("button", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + dt)
-            local f = fadeTime / fadeDuration
+            fadeTime = fadeTime + dt
 
-            if #bgPrev == 0 then
-                f = 1
-            end
+            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+                local f = fadeTime / fadeDuration
 
-            if f < 1 then
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
                 bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
                 bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
@@ -129,6 +126,8 @@ uie.add("button", {
                 borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
+                fadeTime = fadeDuration
+
                 bgPrev[1] = bg[1]
                 bgPrev[2] = bg[2]
                 bgPrev[3] = bg[3]
@@ -259,14 +258,11 @@ uie.add("field", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + dt)
-            local f = fadeTime / fadeDuration
+            fadeTime = fadeTime + dt
 
-            if #bgPrev == 0 then
-                f = 1
-            end
+            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+                local f = fadeTime / fadeDuration
 
-            if f < 1 then
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
                 bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
                 bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
@@ -285,6 +281,8 @@ uie.add("field", {
                 borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
+                fadeTime = fadeDuration
+
                 bgPrev[1] = bg[1]
                 bgPrev[2] = bg[2]
                 bgPrev[3] = bg[3]
@@ -657,14 +655,11 @@ uie.add("listItem", {
 
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + dt)
-            local f = fadeTime / fadeDuration
+            fadeTime = fadeTime + dt
 
-            if #bgPrev == 0 then
-                f = 1
-            end
+            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+                local f = fadeTime / fadeDuration
 
-            if f < 1 then
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
                 bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
                 bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
@@ -682,6 +677,8 @@ uie.add("listItem", {
                 borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
 
             else
+                fadeTime = fadeDuration
+
                 bgPrev[1] = bg[1]
                 bgPrev[2] = bg[2]
                 bgPrev[3] = bg[3]

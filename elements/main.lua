@@ -323,6 +323,7 @@ uie.__default = {
     end,
 
     layoutLate = function(self)
+        self.style.__propcache = {}
         self:layoutLateChildren()
     end,
 
@@ -723,24 +724,24 @@ local function styleGetParent(self, key)
     if defaultStyle then
         local v = defaultStyle[key]
         if v ~= nil then
-            return v
+            return v, defaultStyle
         end
     end
 
     local template = el.__template
     local templateStyle = template and template.style
     if templateStyle then
-        local v = styleGetParent(templateStyle, key)
+        local v, owner = styleGetParent(templateStyle, key)
         if v ~= nil then
-            return v
+            return v, owner
         end
     end
 
     local baseStyle = el.__base.style
     if baseStyle then
-        local v = styleGetParent(baseStyle, key)
+        local v, owner = styleGetParent(baseStyle, key)
         if v ~= nil then
-            return v
+            return v, owner
         end
     end
 end
@@ -748,15 +749,24 @@ end
 local function styleGet(self, key)
     local v = rawget(self, key)
     if v ~= nil then
-        return v
+        return v, self
     end
 
     if key == "get" then
         return styleGet
     end
 
-    v = styleGetParent(self, key)
+    local propcache = rawget(self, "__propcache")
+    local cached = propcache and propcache[key]
+    if cached ~= nil then
+        return cached[key], cached
+    end
+
+    v, cached = styleGetParent(self, key)
     if v ~= nil then
+        if propcache then
+            propcache[key] = cached
+        end
         return v
     end
 end
@@ -964,7 +974,10 @@ function uie.add(eltype, default)
             __collection = ui.root and ui.root.__collection or 0
         }
 
-        el.__style = setmetatable({ el = el }, mtStyle)
+        el.__style = setmetatable({
+            el = el,
+            __propcache = {}
+        }, mtStyle)
         el.__rawid = tostring(el):sub(8)
 
         uie.flatten(el)
