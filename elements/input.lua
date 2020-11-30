@@ -13,7 +13,7 @@ uie.add("button", {
         padding = 8,
         spacing = 4,
 
-        normalBG = { 0.08, 0.08, 0.08, 0.6 },
+        normalBG = { 0.11, 0.11, 0.11, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0, 1 },
 
@@ -552,7 +552,7 @@ uie.add("listItem", {
     },
 
     init = function(self, text, data)
-        if text and text.text and text.data then
+        if text and text.text and text.data ~= nil then
             data = text.data
             text = text.text
         end
@@ -713,7 +713,11 @@ uie.add("listItem", {
             end
             local cb = owner.cb
             if cb then
-                cb(owner, self.data or self.text)
+                if self.data ~= nil then
+                    cb(owner, self.data)
+                else
+                    cb(owner, self.text)
+                end
             end
         end
     end
@@ -770,7 +774,7 @@ uie.add("menuItem", {
 
     cb = function(self)
         local data = self.data
-        if not data then
+        if data == nil then
             return
         end
 
@@ -922,7 +926,7 @@ uie.add("dropdown", {
         local item = cache[i]
         if item then
             local data
-            if text and text.text and text.data then
+            if text and text.text and text.data ~= nil then
                 data = text.data
                 text = text.text
             end

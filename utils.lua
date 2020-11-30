@@ -495,8 +495,8 @@ function uiu.fill(el)
             end,
 
             layoutLate = function(orig, self)
-                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
-                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
+                local width = math.floor(self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing))
+                local height = math.floor(self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing))
                 self.width = width
                 self.height = height
                 local padding = self.style:get("padding") or 0
