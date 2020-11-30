@@ -944,6 +944,10 @@ uie.add("dropdown", {
         return item
     end,
 
+    getItem = function(self, i)
+        return self:_itemCached(self.data[i], i)
+    end,
+
     onClick = function(self, x, y, button)
         if self.enabled and button == 1 then
             local submenu = self.submenu
