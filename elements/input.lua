@@ -13,7 +13,7 @@ uie.add("button", {
         padding = 8,
         spacing = 4,
 
-        normalBG = { 0.11, 0.11, 0.11, 0.6 },
+        normalBG = { 0.13, 0.13, 0.13, 0.8 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0, 1 },
 
@@ -25,7 +25,7 @@ uie.add("button", {
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0, 1 },
 
-        pressedBG = { 0.17, 0.17, 0.17, 0.7 },
+        pressedBG = { 0.2, 0.2, 0.2, 0.7 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0, 1 },
 
@@ -444,6 +444,7 @@ uie.add("list", {
     style = {
         padding = 0,
         spacing = 1,
+        bg = {},
         -- border = { 0.3, 0.3, 0.3, 1 }
     },
 
@@ -528,7 +529,7 @@ uie.add("listItem", {
         spacing = 4,
         radius = 0,
 
-        normalBG = { 0.08, 0.08, 0.08, 0.6 },
+        normalBG = { 0.13, 0.13, 0.13, 0.8 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0, 1 },
 
