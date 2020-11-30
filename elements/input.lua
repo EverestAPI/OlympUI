@@ -963,7 +963,11 @@ uie.add("dropdown", {
             y = self.screenY + self.height + self.parent.style.spacing
 
             self.submenu = uie.__menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
-                return self:_itemCached(data, i)
+                local item = self:_itemCached(data, i)
+                item.width = false
+                item.height = false
+                item:layout()
+                return item
             end))
         end
     end
