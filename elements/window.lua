@@ -197,6 +197,7 @@ uie.add("titlebar", {
                 fgPrev[4] + (fg[4] - fgPrev[4]) * f,
             }
             self:repaint()
+            label:repaint()
         end
 
         self.__fadeTime = fadeTime

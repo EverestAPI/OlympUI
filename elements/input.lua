@@ -146,6 +146,7 @@ uie.add("button", {
             end
 
             self:repaint()
+            label:repaint()
         end
 
         self.__fadeTime = fadeTime
@@ -302,6 +303,7 @@ uie.add("field", {
             end
 
             self:repaint()
+            label:repaint()
         end
 
         local blinkTimePrev = self.blinkTime
@@ -697,6 +699,7 @@ uie.add("listItem", {
             end
 
             self:repaint()
+            label:repaint()
         end
 
         self.__fadeTime = fadeTime

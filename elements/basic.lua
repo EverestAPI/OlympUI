@@ -210,8 +210,6 @@ uie.add("group", {
 
 -- Basic label.
 uie.add("label", {
-    cacheable = false,
-
     style = {
         color = { 1, 1, 1, 1 },
         font = false
