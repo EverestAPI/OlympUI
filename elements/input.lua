@@ -536,15 +536,15 @@ uie.add("listItem", {
         disabledFG = { 0.7, 0.7, 0.7, 0.7 },
         disabledBorder = { 0, 0, 0, 0, 1 },
 
-        hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
+        hoveredBG = { 0.36, 0.36, 0.36, 0.9 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0, 1 },
 
-        pressedBG = { 0.1, 0.3, 0.6, 0.7 },
+        pressedBG = { 0.1, 0.3, 0.6, 0.9 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0, 1 },
 
-        selectedBG = { 0.2, 0.5, 0.7, 0.7 },
+        selectedBG = { 0.2, 0.5, 0.7, 0.9 },
         selectedFG = { 1, 1, 1, 1 },
         selectedBorder = { 0, 0, 0, 0, 1 },
 
@@ -914,7 +914,7 @@ uie.add("dropdown", {
         self.data = list
         self.cb = cb
         self.isList = true
-        self:addChild(uie.image("ui:drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
+        self:addChild(uie.icon("ui:drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
     end,
 
     _itemCached = function(self, text, i)

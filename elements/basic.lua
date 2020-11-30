@@ -348,4 +348,14 @@ uie.add("image", {
 })
 
 
+-- Basic icon - basically image with separate style.
+uie.add("icon", {
+    base = "image",
+
+    style = {
+        color = { 1, 1, 1, 1 }
+    }
+})
+
+
 return uie
