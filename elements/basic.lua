@@ -30,7 +30,7 @@ uie.add("panel", {
     style = {
         bg = { 0.065, 0.065, 0.065, 0.9 },
         border = { 0, 0, 0, 0 },
-        patch = "ui:patch",
+        patch = "ui:patches/%s",
         padding = 8,
         radius = 3
     },
@@ -147,7 +147,7 @@ uie.add("panel", {
             patch = self._patch
         else
             if patchName then
-                patch = uiu.patch(patchName)
+                patch = uiu.patch(patchName, self.__types)
             end
             self._patchName = patchName
             self._patch = patch

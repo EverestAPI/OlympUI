@@ -961,6 +961,7 @@ function uie.add(eltype, default)
         local el = {
             __ui = ui,
             __type = eltype,
+            __types = { eltype },
             __default = default,
             __template = template,
             __base = uie["__" .. (default.base or "default")] or uie.__default,
@@ -997,25 +998,19 @@ function uie.add(eltype, default)
     return new
 end
 
-local function _flatten(el, default)
-    for k, v in pairs(default) do
-        if k:sub(1, 1) ~= "_" and k ~= "style" and el[k] == nil then
-            el[k] = v
-        end
-    end
-end
-
 function uie.flatten(el)
     local __default = uie.__default
+    local types = el.__types
     local default = el.__default
-    while true do
-        _flatten(el, default)
-        default = uie["__" .. (default.base or "default")] or __default
-        if default == __default then
-            _flatten(el, default)
-            break
+    repeat
+        types[#types + 1] = default.__type
+        for k, v in pairs(default) do
+            if k:sub(1, 1) ~= "_" and k ~= "style" and el[k] == nil then
+                el[k] = v
+            end
         end
-    end
+        default = uie["__" .. (default.base or "default")] or __default
+    until default == __default
 end
 
 uie.add("new", {

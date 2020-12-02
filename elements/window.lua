@@ -240,7 +240,7 @@ uie.add("buttonClose", {
     },
 
     init = function(self)
-       uie.__button.init(self, uie.image("ui:close"))
+       uie.__button.init(self, uie.image("ui:icons/close"))
     end,
 
     layoutLazy = function(self)

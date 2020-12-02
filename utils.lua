@@ -89,18 +89,52 @@ end
 
 
 uiu.patchCache = {}
-function uiu.patch(path)
-    path = uiu.path(path) .. ".9.png"
+function uiu.patch(path, ids)
+    local patch, force
 
-    local cache = uiu.patchCache
-    local patch = cache[path]
-    if patch then
-        return patch
+    if ids then
+        patch, force = uiu.patch(string.format(path, "_" .. ids[1]))
+        if patch or force then
+            return patch, force
+        end
+        for i = 1, #ids do
+            patch, force = uiu.patch(string.format(path, ids[i]))
+            if patch or force then
+                return patch, force
+            end
+        end
+        return uiu.patch(string.format(path, "default"))
     end
 
-    patch = patchy.load(path)
+    force = false
+    ::repath::
+    path = uiu.path(path)
+
+    local txt = love.filesystem.read(path .. ".9.txt")
+    if txt then
+        force = true
+        path = txt:match("^()%s*$") and "" or txt:match("^%s*(.*%S)")
+        if #path == 0 then
+            return false, true
+        end
+        goto repath
+    end
+
+    path = path .. ".9.png"
+
+    local cache = uiu.patchCache
+    patch = cache[path]
+    if patch ~= nil then
+        return patch, force
+    end
+
+    local patchStatus
+    patchStatus, patch = pcall(patchy.load, path)
+    if not patchStatus then
+        patch = false
+    end
     cache[path] = patch
-    return patch
+    return patch, force
 end
 
 
