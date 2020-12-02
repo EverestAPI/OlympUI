@@ -333,6 +333,14 @@ function uiu.fillWidth(el, arg2, arg3)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
+        local exceptSpacing = false
+        if except < 0 then
+            except = 0
+            exceptSpacing = true
+        elseif respectSiblings then
+            exceptSpacing = true
+        end
+
         return
         late and
         uiu.hook(el, {
@@ -348,7 +356,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local width = self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -373,7 +381,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local width = self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -424,6 +432,14 @@ function uiu.fillHeight(el, arg2, arg3)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
+        local exceptSpacing = false
+        if except < 0 then
+            except = 0
+            exceptSpacing = true
+        elseif respectSiblings then
+            exceptSpacing = true
+        end
+
         return
         late and
         uiu.hook(el, {
@@ -439,7 +455,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local height = self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -465,7 +481,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local height = self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -525,8 +541,8 @@ function uiu.fill(el)
             end,
 
             layoutLate = function(orig, self)
-                local width = math.floor(self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing))
-                local height = math.floor(self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing))
+                local width = math.floor(self.parent.innerWidth * fract - except)
+                local height = math.floor(self.parent.innerHeight * fract - except)
                 self.width = width
                 self.height = height
                 local padding = self.style:get("padding") or 0
