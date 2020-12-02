@@ -12,6 +12,7 @@ uie.add("button", {
     style = {
         padding = 8,
         spacing = 4,
+        patch = false,
 
         normalBG = { 0.13, 0.13, 0.13, 0.8 },
         normalFG = { 1, 1, 1, 1 },
@@ -170,6 +171,7 @@ uie.add("field", {
     style = {
         padding = 8,
         spacing = 4,
+        patch = false,
 
         normalBG = { 0.95, 0.95, 0.95, 0.9 },
         normalFG = { 0, 0, 0, 0.8, 0 },
@@ -528,6 +530,7 @@ uie.add("listItem", {
         padding = 4,
         spacing = 4,
         radius = 0,
+        patch = false,
 
         normalBG = { 0.13, 0.13, 0.13, 0.8 },
         normalFG = { 1, 1, 1, 1 },
@@ -733,6 +736,7 @@ uie.add("topbar", {
 
     style = {
         bg = { 0.08, 0.08, 0.08, 0.8 },
+        patch = false,
         padding = 0,
         spacing = 1,
         radius = 0

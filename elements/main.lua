@@ -23,7 +23,7 @@ uie.__default = {
     cacheable = true,
     cacheForce = false,
     cachedCanvas = nil,
-    cachePadding = 4,
+    cachePadding = 16,
 
     getPath = function(self)
         local id = self.id

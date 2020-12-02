@@ -22,11 +22,15 @@ uie.add("panel", {
         self.forceWidth = -1
         self.forceHeight = -1
         self.clip = true
+        self.clipPadding = true
+        self._patchName = false
+        self._patch = false
     end,
 
     style = {
         bg = { 0.065, 0.065, 0.065, 0.9 },
         border = { 0, 0, 0, 0 },
+        patch = "ui:patch",
         padding = 8,
         radius = 3
     },
@@ -137,10 +141,26 @@ uie.add("panel", {
         local w = self.width
         local h = self.height
 
+        local patchName = self.style.patch
+        local patch
+        if patchName == self._patchName then
+            patch = self._patch
+        else
+            if patchName then
+                patch = uiu.patch(patchName)
+            end
+            self._patchName = patchName
+            self._patch = patch
+        end
+
         local radius = self.style.radius
         local bg = self.style.bg
         if bg and #bg ~= 0 and bg[4] ~= 0 and uiu.setColor(bg) then
-            love.graphics.rectangle("fill", x, y, w, h, radius, radius)
+            if patch then
+                patch:draw(x, y, w, h, true)
+            else
+                love.graphics.rectangle("fill", x, y, w, h, radius, radius)
+            end
         end
 
         if w >= 0 and h >= 0 then
@@ -148,13 +168,15 @@ uie.add("panel", {
             local clip = self.clip -- and not self.cachedCanvas
             if clip then
                 sX, sY, sW, sH = love.graphics.getScissor()
+                local padding = self.clipPadding
+                if padding == true then
+                    padding = self.style.padding
+                end
+                local scissorX, scissorY = love.graphics.transformPoint(x, y)
                 if self.cachedCanvas then
-                    local padding = self.cachePadding
-                    local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                    love.graphics.setScissor(scissorX, scissorY, w + padding * 2, h + padding * 2)
+                    love.graphics.setScissor(scissorX - padding, scissorY - padding, w + padding * 2, h + padding * 2)
                 else
-                    local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                    love.graphics.intersectScissor(scissorX, scissorY, w, h)
+                    love.graphics.intersectScissor(scissorX - padding, scissorY - padding, w + padding * 2, h + padding * 2)
                 end
             end
 
@@ -190,8 +212,6 @@ uie.add("panel", {
 -- Panel which doesn't display as one by default.
 uie.add("group", {
     base = "panel",
-
-    cachePadding = 0,
 
     style = {
         bg = {},

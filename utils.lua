@@ -1,5 +1,14 @@
 local uiu = {}
 
+
+local patchyStatus, patchy = pcall(require, "patchy")
+if not patchyStatus then
+    patchy = require("ui.patchy")
+end
+
+uiu.patchy = patchy
+
+
 function uiu.nop()
 end
 
@@ -33,8 +42,7 @@ end
 
 uiu.dataRoots = {}
 
-uiu.imageCache = {}
-function uiu.image(path)
+function uiu.path(path)
     local root = ""
 
     local split = path:find(":")
@@ -59,7 +67,13 @@ function uiu.image(path)
         path = "data/" .. path
     end
 
-    path = path .. ".png"
+    return path
+end
+
+
+uiu.imageCache = {}
+function uiu.image(path)
+    path = uiu.path(path) .. ".png"
 
     local cache = uiu.imageCache
     local img = cache[path]
@@ -71,6 +85,22 @@ function uiu.image(path)
     img:setFilter("linear", "linear")
     cache[path] = img
     return img
+end
+
+
+uiu.patchCache = {}
+function uiu.patch(path)
+    path = uiu.path(path) .. ".9.png"
+
+    local cache = uiu.patchCache
+    local patch = cache[path]
+    if patch then
+        return patch
+    end
+
+    patch = patchy.load(path)
+    cache[path] = patch
+    return patch
 end
 
 
@@ -318,7 +348,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -343,7 +373,7 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local width = self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing)
+                local width = self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -409,7 +439,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -435,7 +465,7 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local height = self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing)
+                local height = self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing)
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -495,8 +525,8 @@ function uiu.fill(el)
             end,
 
             layoutLate = function(orig, self)
-                local width = math.floor(self.parent.innerWidth * fract - (except >= 0 and except or self.parent.style.spacing))
-                local height = math.floor(self.parent.innerHeight * fract - (except >= 0 and except or self.parent.style.spacing))
+                local width = math.floor(self.parent.innerWidth * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing))
+                local height = math.floor(self.parent.innerHeight * fract - ((except >= 0 and not respectSiblings) and except or self.parent.style.spacing))
                 self.width = width
                 self.height = height
                 local padding = self.style:get("padding") or 0
