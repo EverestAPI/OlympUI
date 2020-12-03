@@ -902,16 +902,18 @@ local mtEl = {
             return v
         end
 
-        local children = self.children
-        if children then
-            if keyType == "string" and key:sub(1, 1) == "_" then
-                local id = key:sub(2)
-                for i = 1, #children do
-                    local c = children[i]
-                    local cid = c.id
-                    if cid and cid == id then
-                        propcache[key] = { type = "child", i = i, id = id }
-                        return c
+        if ui.metachildren then
+            local children = self.children
+            if children then
+                if keyType == "string" and key:sub(1, 1) == "_" then
+                    local id = key:sub(2)
+                    for i = 1, #children do
+                        local c = children[i]
+                        local cid = c.id
+                        if cid and cid == id then
+                            propcache[key] = { type = "child", i = i, id = id }
+                            return c
+                        end
                     end
                 end
             end

@@ -8,6 +8,9 @@ local ui = {
 
     debugLog = false,
     debugDraw = false,
+
+    metachildren = false,
+
     repaintAll = false,
     globalReflowID = 0,
 
