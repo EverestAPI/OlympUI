@@ -13,7 +13,7 @@ uie.add("button", {
         padding = 8,
         spacing = 4,
 
-        normalBG = { 0.13, 0.13, 0.13, 0.8 },
+        normalBG = { 0.13, 0.13, 0.13, 0.9 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0, 1 },
 
@@ -21,11 +21,11 @@ uie.add("button", {
         disabledFG = { 0.7, 0.7, 0.7, 0.7 },
         disabledBorder = { 0, 0, 0, 0, 1 },
 
-        hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
+        hoveredBG = { 0.36, 0.36, 0.36, 1 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0, 1 },
 
-        pressedBG = { 0.2, 0.2, 0.2, 0.7 },
+        pressedBG = { 0.2, 0.2, 0.2, 1 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0, 1 },
 
@@ -527,19 +527,19 @@ uie.add("listItem", {
         spacing = 4,
         radius = 0,
 
-        normalBG = { 0.13, 0.13, 0.13, 0.8 },
+        normalBG = { 0.13, 0.13, 0.13, 0.9 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0, 1 },
 
-        disabledBG = { 0.05, 0.05, 0.05, 1 },
+        disabledBG = { 0.05, 0.05, 0.05, 0.7 },
         disabledFG = { 0.7, 0.7, 0.7, 0.7 },
         disabledBorder = { 0, 0, 0, 0, 1 },
 
-        hoveredBG = { 0.36, 0.36, 0.36, 0.9 },
+        hoveredBG = { 0.36, 0.36, 0.36, 1 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0, 1 },
 
-        pressedBG = { 0.1, 0.3, 0.6, 0.9 },
+        pressedBG = { 0.1, 0.3, 0.6, 1 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0, 1 },
 
