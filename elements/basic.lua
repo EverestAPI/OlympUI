@@ -182,7 +182,7 @@ uie.add("panel", {
             end
 
             local children = self.children
-            if not self.cacheable then
+            if not self.cacheable and not self.cacheForce then
                 for i = 1, #children do
                     local c = children[i]
                     if c.onscreen and c.visible then
@@ -243,6 +243,40 @@ uie.add("label", {
         self.text = text or ""
         self.dynamic = false
         self.wrap = false
+        self._color = {}
+    end,
+
+    _recolor = function(self, olds)
+        local color = self.style.color
+        if #color == 0 then
+            return olds
+        end
+
+        if type(olds) == "string" then
+            return { color, olds }
+        end
+
+        local news = {}
+
+        for i = 1, #olds do
+            local old = olds[i]
+            local new = old
+            if #old == 3 and old[1] == 1 and old[2] == 1 and old[3] == 1 then
+                new = {}
+                new[1] = color[1]
+                new[2] = color[2]
+                new[3] = color[3]
+            elseif #old == 4 and old[1] == 1 and old[2] == 1 and old[3] == 1 then
+                new = {}
+                new[1] = color[1]
+                new[2] = color[2]
+                new[3] = color[3]
+                new[4] = old[4] * color[4]
+            end
+            news[i] = new
+        end
+
+        return news
     end,
 
     getText = function(self)
@@ -257,9 +291,9 @@ uie.add("label", {
 
         if type(value) ~= "userdata" then
             if not self._text then
-                self._text = love.graphics.newText(self.style.font, value)
+                self._text = love.graphics.newText(self.style.font, self:_recolor(value))
             else
-                self._text:set(value)
+                self._text:set(self:_recolor(value))
             end
         else
             self._text = value
@@ -279,7 +313,7 @@ uie.add("label", {
             local prevWidth = self.width
             local prevHeight = self.height
 
-            self._text:set(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth))
+            self._text:set(self:_recolor(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth)))
 
             local width = self:calcWidth()
             self.width = width
@@ -305,7 +339,24 @@ uie.add("label", {
     end,
 
     draw = function(self)
-        return uiu.setColor(self.style.color) and love.graphics.draw(self._text, self.screenX, self.screenY)
+        local color = self.style.color
+        if #color == 0 then
+            return
+        end
+
+        local colorLast = self._color
+        if colorLast[1] ~= color[1] or colorLast[2] ~= color[2] or colorLast[3] ~= color[3] or colorLast[4] ~= color[4] then
+            colorLast[1] = color[1]
+            colorLast[2] = color[2]
+            colorLast[3] = color[3]
+            colorLast[4] = color[4]
+            local text = self._textStr
+            self._textStr = ""
+            self.text = text
+        end
+
+        uiu.setColor(1, 1, 1, 1)
+        return love.graphics.draw(self._text, self.screenX, self.screenY)
     end
 })
 

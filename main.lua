@@ -9,6 +9,7 @@ local ui = {
     debugLog = false,
     debugDraw = false,
     repaintAll = false,
+    globalReflowID = 0,
 
     fontDebug = love.graphics.newFont(8),
 

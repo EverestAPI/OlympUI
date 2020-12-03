@@ -25,6 +25,10 @@ uie.__default = {
     cachedCanvas = nil,
     cachePadding = 16,
 
+    reflowID = 0,
+    reflowLateID = 0,
+    repaintID = 0,
+
     getPath = function(self)
         local id = self.id
         if not id then
@@ -285,7 +289,9 @@ uie.__default = {
     __dtHidden = 0,
 
     layoutLazy = function(self)
-        if not self.reflowing then
+        if self.reflowID ~= ui.globalReflowID then
+            self.reflowID = ui.globalReflowID
+        elseif not self.reflowing then
             return false
         end
         self.reflowing = false
@@ -312,7 +318,9 @@ uie.__default = {
     end,
 
     layoutLateLazy = function(self)
-        if not self.reflowingLate then
+        if self.reflowLateID ~= ui.globalReflowID then
+            self.reflowLateID = ui.globalReflowID
+        elseif not self.reflowingLate then
             return false
         end
         self.reflowingLate = false
@@ -369,7 +377,7 @@ uie.__default = {
     draw = function(self)
         local children = self.children
         if children then
-            if not self.cacheable then
+            if not self.cacheable and not self.cacheForce then
                 for i = 1, #children do
                     local c = children[i]
                     if c.onscreen and c.visible then
@@ -535,7 +543,10 @@ uie.__default = {
     end,
 
     redraw = function(self)
-        if ui.repaintAll then
+        if self.repaintID ~= ui.globalReflowID then
+            self.repaintID = ui.globalReflowID
+            self.cachedCanvas = nil
+        elseif ui.repaintAll then
             self.cachedCanvas = nil
         end
 
