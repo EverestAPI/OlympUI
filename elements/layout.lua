@@ -24,7 +24,7 @@ uie.add("column", {
             height = height + c.height
             addSpacing = true
         end
-        return uie.__panel.calcSize(self, nil, height)
+        return uie.panel.calcSize(self, nil, height)
     end,
 
     layoutChildren = function(self)
@@ -66,7 +66,7 @@ uie.add("row", {
             width = width + c.width
             addSpacing = true
         end
-        return uie.__panel.calcSize(self, width, nil)
+        return uie.panel.calcSize(self, width, nil)
     end,
 
     layoutChildren = function(self)

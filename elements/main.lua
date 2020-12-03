@@ -5,7 +5,7 @@ local uie = {}
 ui.e = uie
 
 -- Default element functions and values.
-uie.__default = {
+uie.default = {
     x = 0,
     y = 0,
     width = 0,
@@ -552,7 +552,7 @@ uie.__default = {
 
         if ui.debug.draw then
             if ui.debug.draw == -1 then
-                uie.__default.draw(self)
+                uie.default.draw(self)
             else
                 self:__draw(true)
             end
@@ -727,6 +727,8 @@ uie.__default = {
     onText = false,
 }
 
+uie.default = uie.default
+
 -- Shared metatable for all style helper tables.
 local function styleGetParent(self, key)
     local el = rawget(self, "el")
@@ -889,16 +891,16 @@ local mtEl = {
         end
 
         if keyGet then
-            v = uie.__default[keyGet]
+            v = uie.default[keyGet]
             if v ~= nil then
                 propcache[key] = { type = "get", value = v }
                 return v(self)
             end
         end
 
-        v = uie.__default[key]
+        v = uie.default[key]
         if v ~= nil then
-            propcache[key] = { type = "field", owner = uie.__default }
+            propcache[key] = { type = "field", owner = uie.default }
             return v
         end
 
@@ -953,7 +955,7 @@ local mtEl = {
                 end
             end
 
-            cb = uie.__default[keySet]
+            cb = uie.default[keySet]
             if cb then
                 return cb(self, value)
             end
@@ -975,18 +977,33 @@ local mtEl = {
     end
 }
 
+local mtTemplate = {
+    __call = function(template, ...)
+        local el = template.__new()
+        el:init(...)
+        return el
+    end
+}
+
+for k, v in pairs(mtEl) do
+    if mtTemplate[k] == nil then
+        mtTemplate[k] = v
+    end
+end
+
 -- Function to register a new UI element.
 function uie.add(eltype, default)
     local template
 
     local function new()
         local el = {
+            __new = new,
             __ui = ui,
             __type = eltype,
             __types = { eltype },
             __default = default,
             __template = template,
-            __base = uie["__" .. (default.base or "default")] or uie.__default,
+            __base = uie["__" .. (default.base or "default")] or uie.default,
             __propcache = {},
             __cached = {
                 width = 0,
@@ -1008,20 +1025,15 @@ function uie.add(eltype, default)
         return setmetatable(el, mtEl)
     end
 
-    template = new()
+    template = setmetatable(new(), mtTemplate)
+    uie[eltype] = template
     uie["__" .. eltype] = template
-
-    uie[eltype] = function(...)
-        local el = new()
-        el:init(...)
-        return el
-    end
 
     return new
 end
 
 function uie.flatten(el)
-    local __default = uie.__default
+    local __default = uie.default
     local types = el.__types
     local default = el.__default
     repeat

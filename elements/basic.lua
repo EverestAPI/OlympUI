@@ -225,7 +225,7 @@ uie.add("group", {
     },
 
     init = function(self, ...)
-        uie.__panel.init(self, ...)
+        uie.panel.init(self, ...)
         self.clip = false
     end
 })
@@ -239,7 +239,7 @@ uie.add("label", {
     },
 
     init = function(self, text, font)
-        self.style.font = font or uie.__label.__default.style.font or love.graphics.getFont()
+        self.style.font = font or uie.label.__default.style.font or love.graphics.getFont()
         self.text = text or ""
         self.dynamic = false
         self.wrap = false
@@ -307,7 +307,7 @@ uie.add("label", {
     end,
 
     layoutLateLazy = function(self)
-        uie.__default.layoutLateLazy(self)
+        uie.default.layoutLateLazy(self)
 
         if self.wrap then
             local prevWidth = self.width

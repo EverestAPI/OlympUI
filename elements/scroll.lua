@@ -14,7 +14,7 @@ uie.add("scrollbox", {
 
         local handleX = uie.scrollhandleX()
         local handleY = uie.scrollhandleY()
-        uie.__group.init(self, { inner, handleX, handleY })
+        uie.group.init(self, { inner, handleX, handleY })
         self.inner = inner
         self.handleX = handleX
         self.handleY = handleY

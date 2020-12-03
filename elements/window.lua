@@ -21,7 +21,7 @@ uie.add("window", {
         inner.style.radius = 0
 
         local titlebar = uie.titlebar(title)
-        uie.__column.init(self, {
+        uie.column.init(self, {
             titlebar,
             inner
         })
@@ -128,7 +128,7 @@ uie.add("titlebar", {
             children[#children + 1] = uie.buttonClose()
         end
 
-        uie.__row.init(self, children)
+        uie.row.init(self, children)
 
         self.label = label
 
@@ -137,7 +137,7 @@ uie.add("titlebar", {
 
     layoutLazy = function(self)
         -- Required to allow the container to shrink again.
-        uie.__row.layoutLazy(self)
+        uie.row.layoutLazy(self)
         self.width = 0
     end,
 
@@ -150,7 +150,7 @@ uie.add("titlebar", {
         local width = self.parent.innerWidth
         self.width = width
         self.innerWidth = width - self.style.padding * 2
-        uie.__row.layoutLate(self)
+        uie.row.layoutLate(self)
     end,
 
     update = function(self, dt)
@@ -240,11 +240,11 @@ uie.add("buttonClose", {
     },
 
     init = function(self)
-       uie.__button.init(self, uie.image("ui:icons/close"))
+       uie.button.init(self, uie.image("ui:icons/close"))
     end,
 
     layoutLazy = function(self)
-        uie.__button.layoutLazy(self)
+        uie.button.layoutLazy(self)
         self.realHeight = self.height
         self.height = 0
     end,

@@ -36,7 +36,7 @@ uie.add("button", {
         if not label or not label.__ui then
             label = uie.label(label)
         end
-        uie.__row.init(self, { label })
+        uie.row.init(self, { label })
         self.label = label
         self.cb = cb
         self.enabled = true
@@ -188,7 +188,7 @@ uie.add("field", {
     init = function(self, text, cb)
         self.index = 0
         local label = uie.label(text)
-        uie.__row.init(self, { label })
+        uie.row.init(self, { label })
         self.label = label
         self.cb = cb
         self.enabled = true
@@ -325,7 +325,7 @@ uie.add("field", {
         local font = labelStyle.font
         local fg = labelStyle.color
 
-        uie.__row.draw(self)
+        uie.row.draw(self)
 
         if self.focused and self.blinkTime < 0.5 and fg and #fg ~= 0 and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
             local ix = math.ceil(self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))) + 0.5
@@ -447,7 +447,7 @@ uie.add("list", {
     },
 
     init = function(self, items, cb)
-        uie.__column.init(self, uiu.map(items, uie.listItem))
+        uie.column.init(self, uiu.map(items, uie.listItem))
         self.cb = cb
         self.enabled = true
         self.selected = false
@@ -484,10 +484,10 @@ uie.add("listH", {
     isList = true,
     grow = true,
 
-    style = uie.__list.__default.style,
+    style = uie.list.__default.style,
 
     init = function(self, items, cb)
-        uie.__row.init(self, uiu.map(items, uie.listItem))
+        uie.row.init(self, uiu.map(items, uie.listItem))
         self.cb = cb
         self.enabled = true
         self.selected = false
@@ -556,7 +556,7 @@ uie.add("listItem", {
             text = text.text
         end
         local label = uie.label(text)
-        uie.__row.init(self, { label })
+        uie.row.init(self, { label })
         self.label = label
         self.data = data
         self.enabled = true
@@ -736,7 +736,7 @@ uie.add("topbar", {
     },
 
     init = function(self, list)
-        uie.__row.init(self, uiu.map(list, uie.__menuItem.map))
+        uie.row.init(self, uiu.map(list, uie.menuItem.map))
         self:with(uiu.fillWidth)
     end
 })
@@ -752,7 +752,7 @@ uie.add("menuItem", {
     },
 
     init = function(self, text, data)
-        uie.__listItem.init(self, text, data)
+        uie.listItem.init(self, text, data)
     end,
 
     map = function(item)
@@ -797,7 +797,7 @@ uie.add("menuItem", {
             y = self.screenY
         end
 
-        parent.submenu = uie.__menuItemSubmenu.spawn(self, x, y, uiu.map(data, uie.__menuItem.map))
+        parent.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(data, uie.menuItem.map))
     end,
 
     onClick = function(self, x, y, button)
@@ -822,7 +822,7 @@ uie.add("menuItemSubmenu", {
     },
 
     init = function(self, owner, children)
-        uie.__column.init(self, children)
+        uie.column.init(self, children)
 
         self.owner = owner
     end,
@@ -855,7 +855,7 @@ uie.add("menuItemSubmenu", {
 
     getFocused = function(self)
         local submenu = self.submenu
-        return uie.__default.getFocused(self) or self.owner.focused or (submenu and submenu.focused)
+        return uie.default.getFocused(self) or self.owner.focused or (submenu and submenu.focused)
     end,
 
     update = function(self)
@@ -912,7 +912,7 @@ uie.add("dropdown", {
     init = function(self, list, cb)
         self._itemsCache = {}
         self.selected = self:_itemCached(list[1], 1)
-        uie.__button.init(self, self.selected.text)
+        uie.button.init(self, self.selected.text)
         self.data = list
         self.cb = cb
         self.isList = true
@@ -960,7 +960,7 @@ uie.add("dropdown", {
             x = self.screenX
             y = self.screenY + self.height + self.parent.style.spacing
 
-            self.submenu = uie.__menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
+            self.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
                 local item = self:_itemCached(data, i)
                 item.width = false
                 item.height = false
