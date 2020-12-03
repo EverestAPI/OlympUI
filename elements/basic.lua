@@ -141,21 +141,22 @@ uie.add("panel", {
         local w = self.width
         local h = self.height
 
-        local patchName = self.style.patch
-        local patch
-        if patchName == self._patchName then
-            patch = self._patch
-        else
-            if patchName then
-                patch = uiu.patch(patchName, self.__types)
-            end
-            self._patchName = patchName
-            self._patch = patch
-        end
-
-        local radius = self.style.radius
+        local radius
         local bg = self.style.bg
         if bg and #bg ~= 0 and bg[4] ~= 0 and uiu.setColor(bg) then
+            radius = self.style.radius
+            local patchName = self.style.patch
+            local patch
+            if patchName == self._patchName then
+                patch = self._patch
+            else
+                if patchName then
+                    patch = uiu.patch(patchName, self.__types)
+                end
+                self._patchName = patchName
+                self._patch = patch
+            end
+
             if patch then
                 patch:draw(x, y, w, h, true)
             else
@@ -202,6 +203,9 @@ uie.add("panel", {
 
         local border = self.style.border
         if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
+            if not radius then
+                radius = self.style.radius
+            end
             love.graphics.setLineWidth(border[5] or 1)
             love.graphics.rectangle("line", x, y, w, h, radius, radius)
         end
