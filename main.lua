@@ -6,10 +6,18 @@ local uin = require("ui.native")
 local ui = {
     _enabled = true,
 
-    debugLog = false,
-    debugDraw = false,
+    debug = {
+        log = false,
+        draw = false
+    },
 
-    metachildren = false,
+    features = {
+        metachildren = false,
+        megacanvas = true,
+    },
+
+    megacanvas = {
+    },
 
     repaintAll = false,
     globalReflowID = 0,

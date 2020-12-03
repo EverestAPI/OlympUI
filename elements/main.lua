@@ -200,7 +200,7 @@ uie.__default = {
     end,
 
     reflow = function(self)
-        if ui.debugLog then
+        if ui.debug.log then
             print("reflow", self)
         end
 
@@ -229,7 +229,7 @@ uie.__default = {
     end,
 
     reflowLate = function(self)
-        if ui.debugLog then
+        if ui.debug.log then
             print("reflowLate", self)
         end
 
@@ -256,7 +256,7 @@ uie.__default = {
     end,
 
     repaint = function(self)
-        if ui.debugLog then
+        if ui.debug.log then
             print("repaint", self)
         end
 
@@ -550,8 +550,8 @@ uie.__default = {
             self.cachedCanvas = nil
         end
 
-        if ui.debugDraw then
-            if ui.debugDraw == -1 then
+        if ui.debug.draw then
+            if ui.debug.draw == -1 then
                 uie.__default.draw(self)
             else
                 self:__draw(true)
@@ -902,7 +902,7 @@ local mtEl = {
             return v
         end
 
-        if ui.metachildren then
+        if ui.features.metachildren then
             local children = self.children
             if children then
                 if keyType == "string" and key:sub(1, 1) == "_" then

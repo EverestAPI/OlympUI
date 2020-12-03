@@ -390,7 +390,15 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local width = self.parent.innerWidth * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
+                local extra = except
+                if exceptSpacing then
+                    local spacing = self.parent.style:get("spacing")
+                    local siblings = el.parent.children
+                    if spacing and siblings[#siblings] ~= el then
+                        extra = extra + spacing
+                    end
+                end
+                local width = self.parent.innerWidth * fract - extra
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
@@ -415,7 +423,15 @@ function uiu.fillWidth(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local width = self.parent.innerWidth * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
+                local extra = except
+                if exceptSpacing then
+                    local spacing = self.parent.style:get("spacing")
+                    local siblings = el.parent.children
+                    if spacing and siblings[#siblings] ~= el then
+                        extra = extra + spacing
+                    end
+                end
+                local width = self.parent.innerWidth * fract - extra
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -489,7 +505,15 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layoutLate = function(orig, self)
-                local height = self.parent.innerHeight * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
+                local extra = except
+                if exceptSpacing then
+                    local spacing = self.parent.style:get("spacing")
+                    local siblings = el.parent.children
+                    if spacing and siblings[#siblings] ~= el then
+                        extra = extra + spacing
+                    end
+                end
+                local height = self.parent.innerHeight * fract - extra
                 if respectSiblings then
                     local spacing = self.parent.style.spacing
                     local children = self.parent.children
@@ -515,7 +539,15 @@ function uiu.fillHeight(el, arg2, arg3)
             end,
 
             layout = function(orig, self)
-                local height = self.parent.innerHeight * fract - except - (exceptSpacing and self.parent.style:get("spacing") or 0)
+                local extra = except
+                if exceptSpacing then
+                    local spacing = self.parent.style:get("spacing")
+                    local siblings = el.parent.children
+                    if spacing and siblings[#siblings] ~= el then
+                        extra = extra + spacing
+                    end
+                end
+                local height = self.parent.innerHeight * fract - extra
                 if respectSiblings then
                     local children = self.parent.children
                     for i = 1, #children do
