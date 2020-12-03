@@ -817,6 +817,12 @@ local mtEl = {
             if ctype == "get" then
                 return cached.value(self)
 
+            elseif ctype == "field" then
+                v = cached.owner[key]
+                if v ~= nil then
+                    return v
+                end
+
             elseif ctype == "child" then
                 local id = cached.id
                 local children = self.children
@@ -853,6 +859,7 @@ local mtEl = {
 
         v = default[key]
         if v ~= nil then
+            propcache[key] = { type = "field", owner = default }
             return v
         end
 
@@ -871,6 +878,7 @@ local mtEl = {
 
                 v = base[key]
                 if v ~= nil then
+                    propcache[key] = { type = "field", owner = base }
                     return v
                 end
             end
@@ -890,6 +898,7 @@ local mtEl = {
 
         v = uie.__default[key]
         if v ~= nil then
+            propcache[key] = { type = "field", owner = uie.__default }
             return v
         end
 

@@ -147,9 +147,8 @@ uie.add("button", {
 
             self:repaint()
             label:repaint()
+            self.__fadeTime = fadeTime
         end
-
-        self.__fadeTime = fadeTime
     end,
 
     onClick = function(self, x, y, button)
@@ -304,6 +303,7 @@ uie.add("field", {
 
             self:repaint()
             label:repaint()
+            self.__fadeTime = fadeTime
         end
 
         local blinkTimePrev = self.blinkTime
@@ -312,8 +312,6 @@ uie.add("field", {
         if blinkTimePrev < 0.5 and blinkTime >= 0.5 or blinkTimePrev >= 0.5 and blinkTime < 0.5 then
             self:repaint()
         end
-
-        self.__fadeTime = fadeTime
     end,
 
     draw = function(self)
@@ -701,9 +699,8 @@ uie.add("listItem", {
 
             self:repaint()
             label:repaint()
+            self.__fadeTime = fadeTime
         end
-
-        self.__fadeTime = fadeTime
     end,
 
     onClick = function(self, x, y, button)
