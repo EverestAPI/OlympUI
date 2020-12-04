@@ -24,10 +24,15 @@ uie.default = {
     cacheForce = false,
     cachedCanvas = nil,
     cachePadding = 16,
+    consecutiveFreshDraws = 0,
+    drawID = 0,
 
     reflowID = 0,
     reflowLateID = 0,
-    repaintID = 0,
+    redrawID = 0,
+
+    __realX = false,
+    __realY = false,
 
     getPath = function(self)
         local id = self.id
@@ -45,12 +50,11 @@ uie.default = {
 
 
     is = function(self, expected)
-        local base = self
-        while base do
-            if base.__type == expected then
+        local types = self.__types
+        for i = 1, #types do
+            if types[i] == expected then
                 return true
             end
-            base = base.__base
         end
         return false
     end,
@@ -435,25 +439,34 @@ uie.default = {
         love.graphics.setBlendMode("alpha", "alphamultiply")
 
 
-        local id = self.id
-        if not id then
-            id = "(" .. self.__type .. ":" .. self.__rawid .. ")"
+        local text = self.id
+        if not text then
+            text = "(" .. self.__type .. ":" .. self.__rawid .. ")"
+        end
+        if ui.debug.draw == -2 then
+            text = text .. " [" .. tostring(self.consecutiveFreshDraws) .. "]"
         end
 
         uiu.setColor(0, 0, 0, 1)
         local pos = love.math.newTransform(x, y)
         pos:translate(0, -1)
-        love.graphics.print(id, ui.fontDebug, pos)
+        love.graphics.print(text, ui.fontDebug, pos)
         pos:translate(0, 2)
-        love.graphics.print(id, ui.fontDebug, pos)
+        love.graphics.print(text, ui.fontDebug, pos)
         pos:translate(-1, -1)
-        love.graphics.print(id, ui.fontDebug, pos)
+        love.graphics.print(text, ui.fontDebug, pos)
         pos:translate(2, 0)
-        love.graphics.print(id, ui.fontDebug, pos)
+        love.graphics.print(text, ui.fontDebug, pos)
         pos:translate(-1, 0)
 
-        uiu.setColor(1, 1, 1, 1)
-        love.graphics.print(id, ui.fontDebug, pos)
+        if self.cacheForce then
+            uiu.setColor(1, 0, 1, 1)
+        elseif self.cacheable then
+            uiu.setColor(1, 1, 0, 1)
+        else
+            uiu.setColor(1, 1, 1, 1)
+        end
+        love.graphics.print(text, ui.fontDebug, pos)
 
     end,
 
@@ -476,7 +489,12 @@ uie.default = {
         local cached = self.__cached
 
         local canvas = self.cachedCanvas
+        if not canvas then
+            self.consecutiveFreshDraws = 0
+        end
+
         if self.cacheForce then
+            -- This will keep the cached canvas but force a redraw onto the canvas, as if repaint() was called.
             canvas = nil
         end
 
@@ -500,39 +518,43 @@ uie.default = {
         local x = self.screenX
         local y = self.screenY
 
-        if not canvas then
-            canvas = cached.canvas
-
-            if not canvas then
-                canvas = love.graphics.newCanvas(width, height)
-                cached.canvas = canvas
-            end
-            self.cachedCanvas = canvas
-
-            local sX, sY, sW, sH = love.graphics.getScissor()
-
-            local canvasPrev = love.graphics.getCanvas()
-            love.graphics.setCanvas(canvas)
-            if sX then
-                love.graphics.setScissor()
-            end
-            love.graphics.clear(0, 0, 0, 0)
-
-            love.graphics.push()
-            love.graphics.origin()
-            love.graphics.translate(-x + padding, -y + padding)
-
-            self:draw()
-
-            love.graphics.pop()
-
-            love.graphics.setCanvas(canvasPrev)
-            if sX then
-                love.graphics.setScissor(sX, sY, sW, sH)
-            end
+        if canvas then
+            self:__drawCachedCanvas(canvas, x, y, width, height, padding)
+            return
         end
 
-        return self:__drawCachedCanvas(canvas, x, y, width, height, padding)
+        canvas = cached.canvas
+
+        if not canvas then
+            canvas = love.graphics.newCanvas(width, height)
+            cached.canvas = canvas
+        end
+        self.cachedCanvas = canvas
+
+        local sX, sY, sW, sH = love.graphics.getScissor()
+
+        local canvasPrev = love.graphics.getCanvas()
+        love.graphics.setCanvas(canvas)
+        if sX then
+            love.graphics.setScissor()
+        end
+        love.graphics.clear(0, 0, 0, 0)
+
+        love.graphics.push()
+        love.graphics.origin()
+        love.graphics.translate(-x + padding, -y + padding)
+
+        local rv = { self:draw() }
+
+        love.graphics.pop()
+
+        love.graphics.setCanvas(canvasPrev)
+        if sX then
+            love.graphics.setScissor(sX, sY, sW, sH)
+        end
+
+        self:__drawCachedCanvas(canvas, x, y, width, height, padding)
+        return table.unpack(rv)
     end,
 
     __drawCachedCanvas = function(self, canvas, x, y, width, height, padding)
@@ -543,27 +565,49 @@ uie.default = {
     end,
 
     redraw = function(self)
-        if self.repaintID ~= ui.globalReflowID then
-            self.repaintID = ui.globalReflowID
+        if self.redrawID ~= ui.globalReflowID then
+            self.redrawID = ui.globalReflowID
             self.cachedCanvas = nil
         elseif ui.repaintAll then
             self.cachedCanvas = nil
         end
 
+        local drawID = ui.drawID
+        if self.drawID + 1 == drawID then
+            self.consecutiveFreshDraws = self.consecutiveFreshDraws + 1
+        else
+            self.consecutiveFreshDraws = 0
+        end
+
         if ui.debug.draw then
+            local drawDebug = true
             if ui.debug.draw == -1 then
                 uie.default.draw(self)
+            elseif ui.debug.draw == -2 then
+                self:__draw(false)
+                drawDebug = true
+                local parent = self.parent
+                while parent and drawDebug do
+                    if parent.cacheable and parent.consecutiveFreshDraws < 2 and parent.cachedCanvas then
+                        drawDebug = false
+                        break
+                    end
+                    parent = parent.parent
+                end
             else
                 self:__draw(true)
             end
-            local cb = self.drawDebug
-            if cb then
-                cb(self)
+            if drawDebug then
+                local cb = self.drawDebug
+                if cb then
+                    cb(self)
+                end
             end
-            return
+        else
+            self:__draw(false)
         end
 
-        self:__draw(false)
+        self.drawID = drawID
     end,
 
     addChild = function(self, child, index)

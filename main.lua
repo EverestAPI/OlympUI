@@ -21,6 +21,7 @@ local ui = {
 
     repaintAll = false,
     globalReflowID = 0,
+    drawID = 0,
 
     fontDebug = love.graphics.newFont(8),
 
@@ -162,6 +163,7 @@ end
 
 
 function ui.draw()
+    ui.drawID = ui.drawID + 1
     uiu.resetColor()
     ui.root:redraw()
     love.graphics.setColor(1, 1, 1, 1)

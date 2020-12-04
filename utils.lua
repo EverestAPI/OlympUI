@@ -371,8 +371,6 @@ function uiu.fillWidth(el, arg2, arg3)
         if except < 0 then
             except = 0
             exceptSpacing = true
-        elseif respectSiblings then
-            exceptSpacing = true
         end
 
         return
@@ -392,19 +390,16 @@ function uiu.fillWidth(el, arg2, arg3)
             layoutLate = function(orig, self)
                 local extra = except
                 if exceptSpacing then
-                    local spacing = self.parent.style:get("spacing")
-                    local siblings = el.parent.children
-                    if spacing and siblings[#siblings] ~= el then
-                        extra = extra + spacing
-                    end
+                    extra = extra + self.parent.style.spacing
                 end
                 local width = self.parent.innerWidth * fract - extra
                 if respectSiblings then
+                    local spacing = self.parent.style.spacing
                     local children = self.parent.children
                     for i = 1, #children do
                         local c = children[i]
                         if c ~= self then
-                            width = width - c.width
+                            width = width - c.width - spacing
                         end
                     end
                 end
@@ -425,11 +420,7 @@ function uiu.fillWidth(el, arg2, arg3)
             layout = function(orig, self)
                 local extra = except
                 if exceptSpacing then
-                    local spacing = self.parent.style:get("spacing")
-                    local siblings = el.parent.children
-                    if spacing and siblings[#siblings] ~= el then
-                        extra = extra + spacing
-                    end
+                    extra = extra + self.parent.style.spacing
                 end
                 local width = self.parent.innerWidth * fract - extra
                 if respectSiblings then
@@ -486,8 +477,6 @@ function uiu.fillHeight(el, arg2, arg3)
         if except < 0 then
             except = 0
             exceptSpacing = true
-        elseif respectSiblings then
-            exceptSpacing = true
         end
 
         return
@@ -507,11 +496,7 @@ function uiu.fillHeight(el, arg2, arg3)
             layoutLate = function(orig, self)
                 local extra = except
                 if exceptSpacing then
-                    local spacing = self.parent.style:get("spacing")
-                    local siblings = el.parent.children
-                    if spacing and siblings[#siblings] ~= el then
-                        extra = extra + spacing
-                    end
+                    extra = extra + self.parent.style.spacing
                 end
                 local height = self.parent.innerHeight * fract - extra
                 if respectSiblings then
@@ -541,19 +526,16 @@ function uiu.fillHeight(el, arg2, arg3)
             layout = function(orig, self)
                 local extra = except
                 if exceptSpacing then
-                    local spacing = self.parent.style:get("spacing")
-                    local siblings = el.parent.children
-                    if spacing and siblings[#siblings] ~= el then
-                        extra = extra + spacing
-                    end
+                    extra = extra + self.parent.style.spacing
                 end
                 local height = self.parent.innerHeight * fract - extra
                 if respectSiblings then
+                    local spacing = self.parent.style.spacing
                     local children = self.parent.children
                     for i = 1, #children do
                         local c = children[i]
                         if c ~= self then
-                            height = height - c.height
+                            height = height - c.height - spacing
                         end
                     end
                 end
