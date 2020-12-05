@@ -574,34 +574,26 @@ uie.default = {
 
         local drawID = ui.drawID
         if self.drawID + 1 == drawID then
-            self.consecutiveFreshDraws = self.consecutiveFreshDraws + 1
+            local draws = self.consecutiveFreshDraws + 1
+            self.consecutiveFreshDraws = draws
+            if ui.debug.draw == -2 and draws % 60 == 0 and self.cacheable then
+                print("consecutiveFreshDraws", self, self.consecutiveFreshDraws)
+            end
         else
             self.consecutiveFreshDraws = 0
         end
 
         if ui.debug.draw then
-            local drawDebug = true
             if ui.debug.draw == -1 then
                 uie.default.draw(self)
             elseif ui.debug.draw == -2 then
                 self:__draw(false)
-                drawDebug = true
-                local parent = self.parent
-                while parent and drawDebug do
-                    if parent.cacheable and parent.consecutiveFreshDraws < 2 and parent.cachedCanvas then
-                        drawDebug = false
-                        break
-                    end
-                    parent = parent.parent
-                end
             else
                 self:__draw(true)
             end
-            if drawDebug then
-                local cb = self.drawDebug
-                if cb then
-                    cb(self)
-                end
+            local cb = self.drawDebug
+            if cb then
+                cb(self)
             end
         else
             self:__draw(false)

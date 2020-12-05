@@ -12,11 +12,7 @@ local ui = {
     },
 
     features = {
-        metachildren = false,
-        megacanvas = true,
-    },
-
-    megacanvas = {
+        metachildren = false
     },
 
     repaintAll = false,
