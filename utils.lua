@@ -644,7 +644,7 @@ function uiu.at(el, arg2, arg3)
         })
     end
 
-    if type(el) == "number" then
+    if type(el) == "number" or type(el) == "boolean" then
         x = el
         y = arg2
         return apply

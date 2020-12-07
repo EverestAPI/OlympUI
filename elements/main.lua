@@ -663,27 +663,35 @@ uie.default = {
         return parent:removeChild(self)
     end,
 
-    getChild = function(self, id)
+    getChild = function(self, id, id2, ...)
+        if not id then
+            return
+        end
+
         local children = self.children
         if children then
             for i = 1, #children do
                 local c = children[i]
                 local cid = c.id
                 if cid and cid == id then
-                    return c
+                    return c, self:getChild(id2, ...)
                 end
             end
         end
     end,
 
-    findChild = function(self, id)
+    findChild = function(self, id, id2, ...)
+        if not id then
+            return
+        end
+
         local children = self.children
         if children then
             for i = 1, #children do
                 local c = children[i]
                 local cid = c.id
                 if cid and cid == id then
-                    return c
+                    return c, self:findChild(id2, ...)
                 end
             end
 
@@ -691,7 +699,7 @@ uie.default = {
                 local c = children[i]
                 c = c:findChild(id)
                 if c then
-                    return c
+                    return c, self:findChild(id2, ...)
                 end
             end
         end
