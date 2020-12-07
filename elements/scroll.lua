@@ -9,6 +9,10 @@ uie.add("scrollbox", {
     base = "group",
     interactive = 2,
 
+    style = {
+        barPadding = 0,
+    },
+
     init = function(self, inner)
         inner.style.radius = 0
 
@@ -247,6 +251,7 @@ uie.add("scrollhandleX", {
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
+        local padding = box.style.barPadding
         local inner = box.inner
 
         local boxSize = box.width
@@ -266,12 +271,12 @@ uie.add("scrollhandleX", {
             end
         end
 
-        size = math.max(1, tail - pos)
+        size = math.max(1, tail - pos - padding * 2)
 
-        if size + 1 < innerSize then
+        if size + 1 + padding * 2 < innerSize then
             self.isNeeded = true
-            self.realX = math.round(pos)
-            self.realY = box.height - thickness - 1
+            self.realX = math.round(pos) + padding
+            self.realY = box.height - thickness - 1 - padding
             self.width = math.round(size)
         else
             self.isNeeded = false
@@ -302,6 +307,7 @@ uie.add("scrollhandleY", {
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
+        local padding = box.style.barPadding
         local inner = box.inner
 
         local boxSize = box.height
@@ -321,12 +327,12 @@ uie.add("scrollhandleY", {
             end
         end
 
-        size = math.max(1, tail - pos)
-        
-        if size + 1 < innerSize then
+        size = math.max(1, tail - pos - padding * 2)
+
+        if size + 1 + padding * 2 < innerSize then
             self.isNeeded = true
-            self.realX = box.width - thickness - 1
-            self.realY = math.round(pos)
+            self.realX = box.width - thickness - 1 - padding
+            self.realY = math.round(pos) + padding
             self.height = math.round(size)
         else
             self.isNeeded = false
