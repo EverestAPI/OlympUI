@@ -181,7 +181,7 @@ uie.add("titlebar", {
         end
 
         local fadeDuration = style.fadeDuration
-        if #bgPrev ~= 0 and fadeTime < fadeDuration then
+        if #bgPrev == 4 and #fgPrev == 4 and fadeTime < fadeDuration then
             fadeTime = math.min(fadeDuration, fadeTime + dt)
             local f = fadeTime / fadeDuration
             bg = {

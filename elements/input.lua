@@ -106,7 +106,7 @@ uie.add("button", {
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
 
-            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
                 local f = fadeTime / fadeDuration
 
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
@@ -260,7 +260,7 @@ uie.add("field", {
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
 
-            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
                 local f = fadeTime / fadeDuration
 
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
@@ -658,7 +658,7 @@ uie.add("listItem", {
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
 
-            if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
                 local f = fadeTime / fadeDuration
 
                 bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
