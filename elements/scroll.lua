@@ -13,6 +13,8 @@ uie.add("scrollbox", {
         barPadding = 0,
     },
 
+    wiggleroom = 4,
+
     init = function(self, inner)
         inner.style.radius = 0
 
@@ -273,7 +275,7 @@ uie.add("scrollhandleX", {
 
         size = math.max(1, tail - pos - padding * 2)
 
-        if size + 1 + padding * 2 < innerSize then
+        if size + 1 + padding * 2 + box.wiggleroom < innerSize then
             self.isNeeded = true
             self.realX = math.round(pos) + padding
             self.realY = box.height - thickness - 1 - padding
@@ -329,7 +331,7 @@ uie.add("scrollhandleY", {
 
         size = math.max(1, tail - pos - padding * 2)
 
-        if size + 1 + padding * 2 < innerSize then
+        if size + 1 + padding * 2 + box.wiggleroom < innerSize then
             self.isNeeded = true
             self.realX = box.width - thickness - 1 - padding
             self.realY = math.round(pos) + padding
