@@ -12,13 +12,15 @@ else
     sdl = sys
 end
 
-ffi.cdef[[
-    typedef struct SDL_Window SDL_Window;
-    SDL_Window* SDL_GL_GetCurrentWindow();
-    void SDL_GetWindowPosition(SDL_Window* window, int* x, int* y);
-    int SDL_CaptureMouse(bool enabled);
-    int SDL_GetGlobalMouseState(int* x, int* y);
-]]
+pcall(function()
+    ffi.cdef[[
+        typedef struct SDL_Window SDL_Window;
+        SDL_Window* SDL_GL_GetCurrentWindow();
+        void SDL_GetWindowPosition(SDL_Window* window, int* x, int* y);
+        int SDL_CaptureMouse(bool enabled);
+        int SDL_GetGlobalMouseState(int* x, int* y);
+    ]]
+end)
 
 local uin = {}
 
