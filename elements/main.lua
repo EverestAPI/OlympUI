@@ -17,12 +17,12 @@ uie.default = {
 
     interactive = 0,
 
-    parent = nil,
-    id = nil,
+    parent = false,
+    id = false,
 
     cacheable = true,
     cacheForce = false,
-    cachedCanvas = nil,
+    cachedCanvas = false,
     cachePadding = 16,
     consecutiveFreshDraws = 0,
     drawID = 0,
@@ -663,6 +663,22 @@ uie.default = {
         return parent:removeChild(self)
     end,
 
+    getParent = function(self, id, id2, ...)
+        if not id then
+            return
+        end
+
+        local parent = self.parent
+        while parent do
+            if parent.id == id then
+                return parent, self:getParent(id2, ...)
+            end
+            parent = parent.parent
+        end
+
+        return nil, self:getParent(id2, ...)
+    end,
+
     getChild = function(self, id, id2, ...)
         if not id then
             return
@@ -678,6 +694,8 @@ uie.default = {
                 end
             end
         end
+
+        return nil, self:getChild(id2, ...)
     end,
 
     findChild = function(self, id, id2, ...)
@@ -703,6 +721,8 @@ uie.default = {
                 end
             end
         end
+
+        return nil, self:findChild(id2, ...)
     end,
 
     getChildAt = function(self, mx, my)
