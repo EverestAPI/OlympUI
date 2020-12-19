@@ -15,6 +15,8 @@ local ui = {
         metachildren = false
     },
 
+    runLate = {},
+
     repaintAll = false,
     globalReflowID = 0,
     drawID = 0,
@@ -152,6 +154,12 @@ function ui.update()
 
     root:collect()
     spike = spike and spike("collect")
+
+    local runLate = ui.runLate
+    ui.runLate = {}
+    for i = 1, #runLate do
+        ui.runLate[i]()
+    end
 
     updateID = updateID + 1
     spike = spike and spiker(spike)

@@ -640,26 +640,26 @@ uie.default = {
         return false
     end,
 
+    __removing = false,
     removeSelf = function(self)
         local parent = self.parent
 
         if not parent then
-            -- Parent not present, remove on next update.
-            self:hook({
-                update = function(orig, self, ...)
-                    self.update = orig
-
-                    self:removeSelf()
-
-                    if uiu.isCallback(orig) then
-                        orig(self, ...)
+            -- Parent not present, remove late.
+            if not self.__removing then
+                self.__removing = true
+                ui.runLate[#ui.runLate + 1] = function()
+                    if self.__removing then
+                        self.__removing = false
+                        self:removeSelf()
                     end
                 end
-            })
+            end
 
             return
         end
 
+        self.__removing = false
         return parent:removeChild(self)
     end,
 
