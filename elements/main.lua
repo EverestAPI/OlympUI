@@ -618,6 +618,7 @@ uie.default = {
         else
             children[#children + 1] = child
         end
+        child.__removing = false
         self:reflow()
         ui.root:recollect()
         return true
@@ -627,11 +628,14 @@ uie.default = {
         if not child then
             return false
         end
+        child.__removing = false
         local children = self.children
         for i = 1, #children do
             local c = children[i]
             if c == child then
                 table.remove(children, i)
+                self:reflow()
+                ui.root:recollect()
                 return true
             end
         end
@@ -648,18 +652,17 @@ uie.default = {
             -- Parent not present, remove late.
             if not self.__removing then
                 self.__removing = true
-                ui.runLate[#ui.runLate + 1] = function()
+                ui.runLate(function()
                     if self.__removing then
                         self.__removing = false
                         self:removeSelf()
                     end
-                end
+                end)
             end
 
             return
         end
 
-        self.__removing = false
         return parent:removeChild(self)
     end,
 

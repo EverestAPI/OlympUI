@@ -15,7 +15,8 @@ local ui = {
         metachildren = false
     },
 
-    runLate = {},
+    runOnceMap = {},
+    runLateList = {},
 
     repaintAll = false,
     globalReflowID = 0,
@@ -43,6 +44,8 @@ function ui.update()
     if not root then
         return
     end
+
+    ui.runOnceMap = {}
 
     local spiker = spiker
     local spike = spiker and spiker("ui.update", 0.01)
@@ -139,6 +142,12 @@ function ui.update()
     end
     spike = spike and spike("update")
 
+    local runLateList = ui.runLateList
+    ui.runLateList = {}
+    for i = 1, #runLateList do
+        runLateList[i]()
+    end
+
     ::reflow::
     repeat
         root:layoutLazy()
@@ -155,12 +164,6 @@ function ui.update()
     root:collect()
     spike = spike and spike("collect")
 
-    local runLate = ui.runLate
-    ui.runLate = {}
-    for i = 1, #runLate do
-        ui.runLate[i]()
-    end
-
     updateID = updateID + 1
     spike = spike and spiker(spike)
 end
@@ -172,6 +175,19 @@ function ui.draw()
     ui.root:redraw()
     love.graphics.setColor(1, 1, 1, 1)
     uiu.resetColor()
+end
+
+
+function ui.runLate(cb)
+    ui.runLateList[#ui.runLateList + 1] = cb
+end
+
+function ui.runOnce(cb, ...)
+    if ui.runOnceMap[cb] then
+        return
+    end
+    ui.runOnceMap[cb] = true
+    cb(...)
 end
 
 
