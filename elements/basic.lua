@@ -373,13 +373,10 @@ uie.add("image", {
     scaleX = 1,
     scaleY = 1,
     drawArgs = nil,
+    scaleRoundAuto = "auto",
 
     init = function(self, image)
-        if type(image) == "string" then
-            self.id = image
-            image = uiu.image(image)
-        end
-        self._image = image
+        self.image = image
     end,
 
     calcSize = function(self)
@@ -387,6 +384,10 @@ uie.add("image", {
         local width, height = image:getWidth(), image:getHeight()
         self.width = width * self.scaleX
         self.height = height * self.scaleY
+        if self.scaleRoundAuto == "auto" then
+            self.width = math.round(self.width)
+            self.height = math.round(self.height)
+        end
     end,
 
     getScale = function(self)
@@ -396,7 +397,64 @@ uie.add("image", {
     setScale = function(self, sx, sy)
         self.scaleX = sx
         self.scaleY = sy or sx
+        if self.scaleRoundAuto then
+            self:scaleRound()
+        end
         return self
+    end,
+
+    getImage = function(self)
+        return self._image
+    end,
+
+    setImage = function(self, image)
+        if type(image) == "string" then
+            self.id = image
+            image = uiu.image(image)
+        end
+        if self._image == image then
+            return
+        end
+        self._image = image
+        self:reflow()
+    end,
+
+    scaleRound = function(self, mode)
+        if not mode then
+            mode = self.scaleRoundAuto
+        end
+
+        self:calcSize()
+
+        if mode == "x" or mode == "w" or mode == "width" then
+            local size = math.round(self.width)
+            if size == self.width then
+                return
+            end
+
+            local scale = size / self._image:getWidth()
+            self.scaleY = self.scaleY * (scale / self.scaleX)
+            self.scaleX = scale
+            self:calcSize()
+
+        elseif mode == "y" or mode == "h" or mode == "height" then
+            local size = math.round(self.height)
+            if size == self.height then
+                return
+            end
+
+            local scale = size / self._image:getHeight()
+            self.scaleX = self.scaleX * (scale / self.scaleY)
+            self.scaleY = scale
+            self:calcSize()
+
+        elseif mode == "auto" then
+            -- Handled in calcSize, should probably be handled here instead?
+
+        else
+            error([[scaleRound mode must be one of the following: "x" "w" "width" "y" "h" "height"]])
+        end
+
     end,
 
     draw = function(self)
