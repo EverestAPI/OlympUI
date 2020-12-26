@@ -157,7 +157,7 @@ math.round = math.round or uiu.round
 function uiu.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
-math.sign = math.siggn or uiu.sign
+math.sign = math.sign or uiu.sign
 
 
 function uiu.listRange(from, to, step)
