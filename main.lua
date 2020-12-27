@@ -12,7 +12,8 @@ local ui = {
     },
 
     features = {
-        metachildren = false
+        metachildren = false,
+        mouseGlobal = false
     },
 
     runOnceMap = {},
@@ -32,7 +33,8 @@ local ui = {
     mousePresses = 0,
     mouseX = false,
     mouseY = false,
-    mouseGlobal = true
+    mouseEvent = false,
+    mouseFocus = 0
 }
 
 
@@ -76,10 +78,18 @@ function ui.update()
     end
     spike = spike and spike("root resize")
 
-    if ui.mouseGlobal then
+    if ui.mousePresses > 0 or love.window.hasMouseFocus() then
+        ui.mouseFocus = 2
+    elseif ui.mouseFocus > 0 then
+        ui.mouseFocus = ui.mouseFocus - 1
+        if ui.mouseFocus == 0 then
+            ui.hovering = false
+        end
+    end
+    if not ui.mouseX or (not ui.mouseEvent and ui.mouseFocus > 0) then
         local mouseX, mouseY = love.mouse.getPosition()
         local mouseState = false
-        if uin then
+        if uin and ui.features.mouseGlobal then
             mouseX, mouseY, mouseState = uin.getGlobalMouseState()
             local windowX, windowY = uin.getWindowPosition()
             mouseX = mouseX - windowX
@@ -269,7 +279,7 @@ function ui.__mousemoved(x, y, dx, dy)
 end
 
 function ui.mousemoved(...)
-    ui.mouseGlobal = false
+    ui.mouseEvent = true
     return ui.__mousemoved(...)
 end
 
