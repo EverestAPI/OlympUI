@@ -205,7 +205,7 @@ uie.default = {
 
     reflow = function(self)
         if ui.debug.log then
-            print("reflow", self)
+            print("[olympui]", "reflow", self)
         end
 
         local el = self
@@ -234,7 +234,7 @@ uie.default = {
 
     reflowLate = function(self)
         if ui.debug.log then
-            print("reflowLate", self)
+            print("[olympui]", "reflowLate", self)
         end
 
         local el = self
@@ -261,7 +261,7 @@ uie.default = {
 
     repaint = function(self)
         if ui.debug.log then
-            print("repaint", self)
+            print("[olympui]", "repaint", self)
         end
 
         local el = self

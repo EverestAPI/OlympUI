@@ -243,6 +243,7 @@ uie.add("label", {
         self.text = text or ""
         self.dynamic = false
         self.wrap = false
+        self._error = false
         self._color = {}
     end,
 
@@ -289,20 +290,37 @@ uie.add("label", {
         end
         self._textStr = value
 
-        if type(value) ~= "userdata" then
-            if not self._text then
-                self._text = love.graphics.newText(self.style.font, self:_recolor(value))
-            else
-                self._text:set(self:_recolor(value))
-            end
-        else
-            self._text = value
-        end
+        self:_setText(value)
 
         if not self.dynamic and (self.width ~= math.ceil(self._text:getWidth()) or self.height ~= math.ceil(self._text:getHeight())) then
             self:reflow()
         else
             self:repaint()
+        end
+    end,
+
+    _setText = function(self, value)
+        self._error = false
+
+        if type(value) == "userdata" then
+            self._text = value
+
+        else
+            local status, err = pcall(function()
+                if not self._text then
+                    self._text = love.graphics.newText(self.style.font, self:_recolor(value))
+                else
+                    self._text:set(self:_recolor(value))
+                end
+            end)
+
+            if not status then
+                if type(value) ~= "string" or not value:match("error while updating text") then
+                    print("[olympui]", "error while updating text", err, "\n", value)
+                end
+                self._error = err or true
+                self._text = love.graphics.newText(love.graphics.getFont(), "ERROR!")
+            end
         end
     end,
 
@@ -313,7 +331,7 @@ uie.add("label", {
             local prevWidth = self.width
             local prevHeight = self.height
 
-            self._text:set(self:_recolor(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth)))
+            self:_setText(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth))
 
             local width = self:calcWidth()
             self.width = width
@@ -339,6 +357,14 @@ uie.add("label", {
     end,
 
     draw = function(self)
+        if self._error then
+            uiu.setColor(1, 0, 0, 1)
+            love.graphics.rectangle("fill", self.screenX - 2, self.screenY - 2, self.width + 4, self.height + 4)
+
+            uiu.setColor(1, 1, 1, 1)
+            return love.graphics.draw(self._text, self.screenX, self.screenY)
+        end
+
         local color = self.style.color
         if #color == 0 then
             return
