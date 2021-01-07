@@ -729,6 +729,40 @@ function uiu.bottombound(el, arg2)
 end
 
 
+local mtStyleDeep = {
+    __index = function(self, key)
+        return self.__styleOrig[key]
+    end,
+
+    __newindex = function(self, key, value)
+        self.__styleOrig[key] = value
+
+        local children = self.__el.children
+        for i = 1, #children do
+            children[i].style[key] = value
+        end
+    end
+}
+
+function uiu.styleDeep(el)
+    el.__style = setmetatable({
+        __el = el,
+        __styleOrig = el.__style
+    }, mtStyleDeep)
+
+    el:hook({
+        repaint = function(orig, self)
+            local children = self.children
+            for i = 1, #children do
+                children[i]:repaint()
+            end
+        end
+    })
+
+    return el
+end
+
+
 table.pack = table.pack or function(...)
     return { ... }
 end

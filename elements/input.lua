@@ -555,7 +555,7 @@ uie.add("listItem", {
             data = text.data
             text = text.text
         end
-        local label = uie.label(text)
+        local label = type(text) == "table" and text.__type and text or uie.label(text)
         uie.row.init(self, { label })
         self.label = label
         self.data = data
