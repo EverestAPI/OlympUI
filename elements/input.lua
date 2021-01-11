@@ -38,11 +38,11 @@ uie.add("button", {
         end
         uie.row.init(self, { label })
         self.label = label
-        self.cb = cb
         self.enabled = true
         self.style.bg = {}
         self.label.style.color = {}
         self.style.border = {}
+        self.cb = cb
     end,
 
     getEnabled = function(self)
@@ -172,6 +172,7 @@ uie.add("field", {
 
         normalBG = { 0.95, 0.95, 0.95, 0.9 },
         normalFG = { 0, 0, 0, 0.8, 0 },
+        normalPlaceholder = { 0, 0, 0, 0.4, 0 },
         normalBorder = { 0.08, 0.08, 0.08, 0.6, 1 },
 
         disabledBG = { 0.5, 0.5, 0.5, 0.7 },
@@ -180,6 +181,7 @@ uie.add("field", {
 
         focusedBG = { 1, 1, 1, 0.9 },
         focusedFG = { 0, 0, 0, 0.9, 1 },
+        focusedPlaceholder = { 0, 0, 0, 0.8, 1 },
         focusedBorder = { 0, 0, 0, 0.9, 1 },
 
         fadeDuration = 0.2
@@ -187,15 +189,18 @@ uie.add("field", {
 
     init = function(self, text, cb)
         self.index = 0
-        local label = uie.label(text)
+        local label = uie.label()
         uie.row.init(self, { label })
         self.label = label
-        self.cb = cb
         self.enabled = true
         self.style.bg = {}
         self.label.style.color = {}
         self.style.border = {}
         self.blinkTime = 0
+        self._text = false
+        self.placeholder = false
+        self.text = text
+        self.cb = cb
     end,
 
     getEnabled = function(self)
@@ -207,16 +212,30 @@ uie.add("field", {
         self.interactive = value and 1 or -1
     end,
 
+    getPlaceholder = function(self)
+        return self._placeholder
+    end,
+
+    setPlaceholder = function(self, value)
+        value = value and #value ~= 0 and value
+        self._placeholder = value
+        if not self.text then
+            self.label.text = value or ""
+        end
+    end,
+
     getText = function(self)
-        return self.label.text
+        return self._text
     end,
 
     setText = function(self, value)
-        local prev = self.label.text
-        self.label.text = value
+        value = value and #value ~= 0 and value
+        local prev = self._text
+        self._text = value
+        self.label.text = value or self.placeholder
         local cb = self.cb
         if cb then
-            cb(value, prev)
+            cb(value or "", prev or "")
         end
     end,
 
@@ -237,11 +256,11 @@ uie.add("field", {
             border = style.disabledBorder
         elseif self.focused then
             bg = style.focusedBG
-            fg = style.focusedFG
+            fg = self.text and style.focusedFG or style.focusedPlaceholder
             border = style.focusedBorder
         else
             bg = style.normalBG
-            fg = style.normalFG
+            fg = self.text and style.normalFG or style.normalPlaceholder
             border = style.normalBorder
         end
 
@@ -319,7 +338,7 @@ uie.add("field", {
         local y = self.screenY
         local w = self.width
         local h = self.height
-        local text = self.text
+        local text = self.text or ""
         local padding = self.style.padding
         local labelStyle = self.label.style
         local font = labelStyle.font
@@ -342,15 +361,15 @@ uie.add("field", {
         end
 
         local label = self.label
-        local text = self.text
-        local len = utf8.len(self.text)
+        local text = self.text or ""
+        local len = utf8.len(text)
         local font = label.style.font
 
         x = x - label.screenX
         if x <= 0 then
             self.index = 0
-        elseif x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
-            self.index = utf8.len(self.text)
+        elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
+            self.index = len
         else
             local min = 0
             local max = len
@@ -375,7 +394,7 @@ uie.add("field", {
     end,
 
     onText = function(self, new)
-        local text = self.text
+        local text = self.text or ""
         local index = self.index
         if index == 0 then
             self.text = new .. text:sub(utf8.offset(text, index + 1))
@@ -386,7 +405,7 @@ uie.add("field", {
     end,
 
     onKeyPress = function(self, key)
-        local text = self.text
+        local text = self.text or ""
         local index = self.index
 
         if key == "backspace" then
@@ -448,9 +467,9 @@ uie.add("list", {
 
     init = function(self, items, cb)
         uie.column.init(self, uiu.map(items, uie.listItem))
-        self.cb = cb
         self.enabled = true
         self.selected = false
+        self.cb = cb
     end,
 
     layoutLateLazy = function(self)
@@ -488,9 +507,9 @@ uie.add("listH", {
 
     init = function(self, items, cb)
         uie.row.init(self, uiu.map(items, uie.listItem))
-        self.cb = cb
         self.enabled = true
         self.selected = false
+        self.cb = cb
     end,
 
     layoutLateLazy = function(self)
@@ -914,9 +933,9 @@ uie.add("dropdown", {
         self.selected = self:_itemCached(list[1], 1)
         uie.button.init(self, self.selected.text)
         self.data = list
-        self.cb = cb
         self.isList = true
         self:addChild(uie.icon("ui:icons/drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
+        self.cb = cb
     end,
 
     _itemCached = function(self, text, i)
