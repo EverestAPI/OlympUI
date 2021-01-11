@@ -235,7 +235,7 @@ uie.add("field", {
         self.label.text = value or self.placeholder
         local cb = self.cb
         if cb then
-            cb(value or "", prev or "")
+            cb(self, value or "", prev or "")
         end
     end,
 
