@@ -232,7 +232,7 @@ uie.add("field", {
         value = value and #value ~= 0 and value
         local prev = self._text
         self._text = value
-        self.label.text = value or self.placeholder
+        self.label.text = value or self.placeholder or ""
         local cb = self.cb
         if cb then
             cb(self, value or "", prev or "")
