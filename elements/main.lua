@@ -915,6 +915,12 @@ local mtEl = {
         if keyType == "string" then
             local Key = key:sub(1, 1):upper() .. key:sub(2)
             keyGet = "get" .. Key
+
+            v = rawget(self, keyGet)
+            if v ~= nil then
+                propcache[key] = { type = "get", value = v }
+                return v(self)
+            end
         end
 
         local default = rawget(self, "__default")
@@ -1001,9 +1007,12 @@ local mtEl = {
         local keySet = nil
         if type(key) == "string" then
             keySet = "set" .. key:sub(1, 1):upper() .. key:sub(2)
-        end
 
-        if keySet then
+            local cb = rawget(self, keySet)
+            if cb ~= nil then
+                return cb(self, value)
+            end
+
             local default = self.__default
             local cb = default[keySet]
             if cb ~= nil then
