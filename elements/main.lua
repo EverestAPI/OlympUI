@@ -203,6 +203,30 @@ uie.default = {
         return self
     end,
 
+    foreach = function(self, funcOrID, ...)
+        local cb = funcOrID
+        if type(funcOrID) == "string" then
+            cb = self[funcOrID]
+        end
+
+        if cb then
+            local rv = {cb(self, ...)}
+            if #rv ~= 0 then
+                return table.unpack(rv)
+            end
+        end
+
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local rv = {children[i]:foreach(funcOrID, ...)}
+                if #rv ~= 0 then
+                    return table.unpack(rv)
+                end
+            end
+        end
+    end,
+
     reflow = function(self)
         if ui.debug.log then
             print("[olympui]", "reflow", self)

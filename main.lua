@@ -13,8 +13,11 @@ local ui = {
 
     features = {
         metachildren = false,
-        mouseGlobal = false
+        mouseGlobal = false,
+        eventProxies = false
     },
+
+    eventProxyCache = {},
 
     runOnceMap = {},
     runLateList = {},
@@ -447,4 +450,29 @@ function ui.hookLove(hookUpdateDraw, hookInput)
 end
 
 
-return ui
+local mtUI = {}
+
+function mtUI:__index(key)
+    local rv = rawget(self, key)
+    if rv ~= nil then
+        return rv
+    end
+
+    if self.features.eventProxies then
+        rv = self.eventProxyCache[key]
+        if rv ~= nil then
+            return rv
+        end
+
+        rv = function(...)
+            return self.root:foreach(key, ...)
+        end
+        self.eventProxyCache[key] = rv
+        return rv
+    end
+
+    return nil
+end
+
+
+return setmetatable(ui, mtUI)
