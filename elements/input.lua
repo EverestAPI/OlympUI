@@ -626,7 +626,7 @@ uie.add("listItem", {
             self.__selected = value
             return
         end
-        owner.selected = value and self or nil
+        owner.selected = value and self or false
     end,
 
     update = function(self, dt)
