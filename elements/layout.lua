@@ -28,16 +28,23 @@ uie.add("column", {
     end,
 
     layoutChildren = function(self)
-        local padding = self.style.padding
-        local y = padding
-        local spacing = self.style.spacing
+        local style = self.style
+        local padding = style.padding
+        local paddingL, paddingT
+        if type(padding) == "table" then
+            paddingL, paddingT = padding[1], padding[2]
+        else
+            paddingL, paddingT = padding, padding
+        end
+        local y = paddingT
+        local spacing = style.spacing
         local children = self.children
         for i = 1, #children do
             local c = children[i]
             c.parent = self
             c:layoutLazy()
             y = y + c.y
-            c.realX = c.x + padding
+            c.realX = c.x + paddingL
             c.realY = y
             y = y + c.height + spacing
         end
@@ -70,9 +77,16 @@ uie.add("row", {
     end,
 
     layoutChildren = function(self)
-        local padding = self.style.padding
-        local x = padding
-        local spacing = self.style.spacing
+        local style = self.style
+        local padding = style.padding
+        local paddingL, paddingT
+        if type(padding) == "table" then
+            paddingL, paddingT = padding[1], padding[2]
+        else
+            paddingL, paddingT = padding, padding
+        end
+        local x = paddingL
+        local spacing = style.spacing
         local children = self.children
         for i = 1, #children do
             local c = children[i]
@@ -80,7 +94,7 @@ uie.add("row", {
             c:layoutLazy()
             x = x + c.x
             c.realX = x
-            c.realY = c.y + padding
+            c.realY = c.y + paddingT
             x = x + c.width + spacing
         end
     end

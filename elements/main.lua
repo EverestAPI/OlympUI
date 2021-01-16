@@ -507,8 +507,15 @@ uie.default = {
         end
 
         local padding = self.cachePadding
-        width = width + padding * 2
-        height = height + padding * 2
+        local paddingL, paddingT, paddingR, paddingB
+        if type(padding) == "table" then
+            paddingL, paddingT, paddingR, paddingB = padding[1], padding[2], padding[3], padding[4]
+        else
+            paddingL, paddingT, paddingR, paddingB = padding, padding, padding, padding
+        end
+
+        width = width + paddingL + paddingR
+        height = height + paddingT + paddingB
 
         local cached = self.__cached
 
@@ -543,7 +550,7 @@ uie.default = {
         local y = self.screenY
 
         if canvas then
-            self:__drawCachedCanvas(canvas, x, y, width, height, padding)
+            self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
             return
         end
 
@@ -566,7 +573,7 @@ uie.default = {
 
         love.graphics.push()
         love.graphics.origin()
-        love.graphics.translate(-x + padding, -y + padding)
+        love.graphics.translate(-x + paddingL, -y + paddingT)
 
         local rv = { self:draw() }
 
@@ -577,14 +584,14 @@ uie.default = {
             love.graphics.setScissor(sX, sY, sW, sH)
         end
 
-        self:__drawCachedCanvas(canvas, x, y, width, height, padding)
+        self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
         return table.unpack(rv)
     end,
 
-    __drawCachedCanvas = function(self, canvas, x, y, width, height, padding)
+    __drawCachedCanvas = function(self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
         uiu.setColor(1, 1, 1, 1)
         love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.draw(canvas, x - padding, y - padding)
+        love.graphics.draw(canvas, x - paddingL, y - paddingT)
         love.graphics.setBlendMode("alpha", "alphamultiply")
     end,
 
@@ -853,17 +860,21 @@ end
 local function styleGet(self, key)
     local v = rawget(self, key)
     if v ~= nil then
-        return v, self
+        return v
     end
 
     if key == "get" then
-        return styleGet
+        return rawget(self, "get")
+    end
+
+    if key == "getIndex" then
+        return rawget(self, "getIndex")
     end
 
     local propcache = rawget(self, "__propcache")
     local cached = propcache and propcache[key]
     if cached ~= nil then
-        return cached[key], cached
+        return cached[key]
     end
 
     v, cached = styleGetParent(self, key)
@@ -875,11 +886,21 @@ local function styleGet(self, key)
     end
 end
 
+local function styleGetIndex(self, key, index)
+    local v = styleGet(self, key)
+    if v ~= nil then
+        if type(v) == "table" then
+            return v[index]
+        end
+        return v
+    end
+end
+
 local mtStyle = {
     __name = "ui.element.style",
 
     __index = function(self, key)
-        local v = styleGet(self, key)
+        local v = rawget(self, "get")(self, key)
         if v ~= nil then
             return v
         end
@@ -1116,7 +1137,9 @@ function uie.add(eltype, default)
 
         el.__style = setmetatable({
             el = el,
-            __propcache = {}
+            __propcache = {},
+            get = styleGet,
+            getIndex = styleGetIndex
         }, mtStyle)
         el.__rawid = tostring(el):sub(8)
 

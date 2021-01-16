@@ -405,7 +405,7 @@ function uiu.fillWidth(el, arg2, arg3)
                 end
                 width = math.floor(width)
                 self.width = width
-                self.innerWidth = width - (self.style:get("padding") or 0) * 2
+                self.innerWidth = width - (self.style:getIndex("padding", 1) or 0) - (self.style:getIndex("padding", 3) or 0)
                 orig(self)
             end
         })
@@ -737,7 +737,7 @@ local mtStyleDeep = {
     __newindex = function(self, key, value)
         self.__styleOrig[key] = value
 
-        local children = self.__el.children
+        local children = self.el.children
         for i = 1, #children do
             children[i].style[key] = value
         end
@@ -746,8 +746,14 @@ local mtStyleDeep = {
 
 function uiu.styleDeep(el)
     el.__style = setmetatable({
-        __el = el,
-        __styleOrig = el.__style
+        el = el,
+        __styleOrig = el.__style,
+        get = function(self, ...)
+            return self.__styleOrig:get(...)
+        end,
+        getIndex = function(self, ...)
+            return self.__styleOrig:getIndex(...)
+        end,
     }, mtStyleDeep)
 
     el:hook({

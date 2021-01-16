@@ -344,12 +344,19 @@ uie.add("field", {
         local font = labelStyle.font
         local fg = labelStyle.color
 
+        local paddingL, paddingT, paddingB
+        if type(padding) == "table" then
+            paddingL, paddingT, paddingB = padding[1], padding[2], padding[4]
+        else
+            paddingL, paddingT, paddingB = padding, padding, padding
+        end
+
         uie.row.draw(self)
 
         if self.focused and self.blinkTime < 0.5 and fg and #fg ~= 0 and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
             local ix = math.ceil(self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))) + 0.5
             love.graphics.setLineWidth(fg[5] or 1)
-            love.graphics.line(x + ix + padding, y + padding, x + ix + padding, y + h - padding)
+            love.graphics.line(x + ix + paddingL, y + paddingT, x + ix + paddingL, y + h - paddingB)
         end
 
     end,
@@ -885,9 +892,16 @@ uie.add("menuItemSubmenu", {
     end,
 
     layoutChildren = function(self)
-        local padding = self.style.padding
-        local y = padding
-        local spacing = self.style.spacing
+        local style = self.style
+        local padding = style.padding
+        local paddingL, paddingT, paddingR
+        if type(padding) == "table" then
+            paddingL, paddingT, paddingR = padding[1], padding[2], padding[3]
+        else
+            paddingL, paddingT, paddingR = padding, padding, padding
+        end
+        local y = paddingT
+        local spacing = style.spacing
         local maxWidth = 0
         local children = self.children
         if children then
@@ -896,13 +910,13 @@ uie.add("menuItemSubmenu", {
                 c.parent = self
                 c:layoutLazy()
                 y = y + c.y
-                c.realX = c.x + padding
+                c.realX = c.x + paddingL
                 c.realY = y
                 y = y + c.height + spacing
                 maxWidth = math.max(maxWidth, c.width)
             end
         end
-        self.width = maxWidth + self.style.padding * 2
+        self.width = maxWidth + paddingL + paddingR
         self.innerWidth = maxWidth
         self.__maxWidth = maxWidth
     end,

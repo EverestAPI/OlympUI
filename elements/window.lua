@@ -149,7 +149,7 @@ uie.add("titlebar", {
     layoutLate = function(self)
         local width = self.parent.innerWidth
         self.width = width
-        self.innerWidth = width - self.style.padding * 2
+        self.innerWidth = width - self.style:getIndex("padding", 1) - self.style:getIndex("padding", 3)
         uie.row.layoutLate(self)
     end,
 

@@ -103,8 +103,9 @@ uie.add("panel", {
         self.innerWidth = width
         self.innerHeight = height
 
-        width = width + self.style.padding * 2
-        height = height + self.style.padding * 2
+        local style = self.style
+        width = width + style:getIndex("padding", 1) + style:getIndex("padding", 3)
+        height = height + style:getIndex("padding", 2) + style:getIndex("padding", 4)
 
         self.__autoWidth = width
         self.__autoHeight = height
@@ -113,25 +114,27 @@ uie.add("panel", {
     end,
 
     layoutChildren = function(self)
-        local padding = self.style.padding
+        local style = self.style
+        local paddingL, paddingT = style:getIndex("padding", 1), style:getIndex("padding", 3)
         local children = self.children
         for i = 1, #children do
             local c = children[i]
             c.parent = self
             c:layoutLazy()
-            c.realX = c.x + padding
-            c.realY = c.y + padding
+            c.realX = c.x + paddingL
+            c.realY = c.y + paddingT
         end
     end,
 
     repositionChildren = function(self)
-        local padding = self.style.padding
+        local style = self.style
+        local paddingL, paddingT = style:getIndex("padding", 1), style:getIndex("padding", 3)
         local children = self.children
         for i = 1, #children do
             local c = children[i]
             c.parent = self
-            c.realX = c.x + padding
-            c.realY = c.y + padding
+            c.realX = c.x + paddingL
+            c.realY = c.y + paddingT
         end
     end,
 
@@ -140,12 +143,13 @@ uie.add("panel", {
         local y = self.screenY
         local w = self.width
         local h = self.height
+        local style = self.style
 
         local radius
-        local bg = self.style.bg
+        local bg = style.bg
         if bg and #bg ~= 0 and bg[4] ~= 0 and uiu.setColor(bg) then
-            radius = self.style.radius
-            local patchName = self.style.patch
+            radius = style.radius
+            local patchName = style.patch
             local patch
             if patchName == self._patchName then
                 patch = self._patch
@@ -171,13 +175,19 @@ uie.add("panel", {
                 sX, sY, sW, sH = love.graphics.getScissor()
                 local padding = self.clipPadding
                 if padding == true then
-                    padding = self.style.padding
+                    padding = style.padding
+                end
+                local paddingL, paddingT, paddingR, paddingB
+                if type(padding) == "table" then
+                    paddingL, paddingT, paddingR, paddingB = padding[1], padding[2], padding[3], padding[4]
+                else
+                    paddingL, paddingT, paddingR, paddingB = padding, padding, padding, padding
                 end
                 local scissorX, scissorY = love.graphics.transformPoint(x, y)
                 if self.cachedCanvas then
-                    love.graphics.setScissor(scissorX - padding, scissorY - padding, w + padding * 2, h + padding * 2)
+                    love.graphics.setScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
                 else
-                    love.graphics.intersectScissor(scissorX - padding, scissorY - padding, w + padding * 2, h + padding * 2)
+                    love.graphics.intersectScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
                 end
             end
 
@@ -201,10 +211,10 @@ uie.add("panel", {
         end
 
 
-        local border = self.style.border
+        local border = style.border
         if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
             if not radius then
-                radius = self.style.radius
+                radius = style.radius
             end
             love.graphics.setLineWidth(border[5] or 1)
             love.graphics.rectangle("line", x, y, w, h, radius, radius)
