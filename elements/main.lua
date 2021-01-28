@@ -1022,8 +1022,35 @@ local mtEl = {
             return v
         end
 
+        local children
+        if keyType == "number" then
+            if key < 0 then
+                local p = self
+                for _ = 1, -key do
+                    p = p.parent
+                    if p == nil then
+                        return p
+                    end
+                end
+                return p
+            end
+
+            if children == nil then
+                children = self.children
+            end
+            if children == nil then
+                return nil
+            end
+            local c = children[key]
+            if c ~= nil then
+                return c
+            end
+        end
+
         if ui.features.metachildren then
-            local children = self.children
+            if children == nil then
+                children = self.children
+            end
             if children then
                 if keyType == "string" and key:sub(1, 1) == "_" then
                     local id = key:sub(2)
