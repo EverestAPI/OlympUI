@@ -83,6 +83,7 @@ function uiu.image(path)
 
     img = love.graphics.newImage(path, { mipmaps = true } )
     img:setFilter("linear", "linear")
+    img:setMipmapFilter("linear", 1)
     cache[path] = img
     return img
 end
