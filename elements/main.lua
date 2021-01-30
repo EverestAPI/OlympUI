@@ -93,8 +93,8 @@ uie.default = {
             el = el.parent
         end
         value = value - pos
-        el.x = value
-        el.realX = value
+        self.x = value
+        self.realX = value
     end,
 
     getScreenY = function(self)
@@ -115,8 +115,8 @@ uie.default = {
             el = el.parent
         end
         value = value - pos
-        el.y = value
-        el.realY = value
+        self.y = value
+        self.realY = value
     end,
 
     getInnerWidth = function(self)
