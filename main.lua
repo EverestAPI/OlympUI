@@ -140,6 +140,9 @@ function ui.update()
                 end
             else
                 cb = c.updateHidden
+                if cb == true then
+                    cb = c.update
+                end
                 if not cb then
                     c.__dtHidden = c.__dtHidden + dt
                 end
