@@ -85,6 +85,18 @@ uie.default = {
         return pos
     end,
 
+    setScreenX = function(self, value)
+        local pos = 0
+        local el = self.parent
+        while el do
+            pos = pos + el.realX
+            el = el.parent
+        end
+        value = value - pos
+        el.x = value
+        el.realX = value
+    end,
+
     getScreenY = function(self)
         local pos = 0
         local el = self
@@ -93,6 +105,18 @@ uie.default = {
             el = el.parent
         end
         return pos
+    end,
+
+    setScreenY = function(self, value)
+        local pos = 0
+        local el = self.parent
+        while el do
+            pos = pos + el.realY
+            el = el.parent
+        end
+        value = value - pos
+        el.y = value
+        el.realY = value
     end,
 
     getInnerWidth = function(self)
