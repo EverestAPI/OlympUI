@@ -27,6 +27,12 @@ function uiu.fract(num, default)
     end
 
     local fract
+
+    if num < 0 then
+        num, fract = uiu.fract(-num, default)
+        return -num, fract
+    end
+
     fract = num % 1
     if fract <= 0.0001 or fract >= 0.9999 then
         fract = default or 0
@@ -368,11 +374,7 @@ function uiu.fillWidth(el, arg2, arg3)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
-        local exceptSpacing = false
-        if except < 0 then
-            except = 0
-            exceptSpacing = true
-        end
+        local exceptSpacing = false -- FIXME: Expose exceptSpacing!
 
         return
         late and
@@ -474,11 +476,7 @@ function uiu.fillHeight(el, arg2, arg3)
         respectSiblings = uiu.default(respectSiblings, false)
         late = uiu.default(late, true)
 
-        local exceptSpacing = false
-        if except < 0 then
-            except = 0
-            exceptSpacing = true
-        end
+        local exceptSpacing = false -- FIXME: Expose exceptSpacing!
 
         return
         late and
