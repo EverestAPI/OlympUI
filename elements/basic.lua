@@ -19,6 +19,8 @@ uie.add("panel", {
         self.minHeight = -1
         self.maxWidth = -1
         self.maxHeight = -1
+        self.autoWidth = -1
+        self.autoHeight = -1
         self.forceWidth = -1
         self.forceHeight = -1
         self.clip = true
@@ -41,16 +43,22 @@ uie.add("panel", {
         local manualHeight = self.height
         manualHeight = manualHeight ~= -1 and manualHeight or nil
 
+        local autoWidth = self.autoWidth
         local forceWidth
-        if self.__autoWidth ~= manualWidth then
+        if autoWidth == true then
+            forceWidth = -1
+        elseif autoWidth == false or autoWidth ~= manualWidth then
             forceWidth = manualWidth or -1
             self.forceWidth = forceWidth
         else
             forceWidth = self.forceWidth or -1
         end
 
+        local autoHeight = self.autoHeight
         local forceHeight
-        if self.__autoHeight ~= manualHeight then
+        if autoHeight == true then
+            forceHeight = -1
+        elseif autoHeight == false or autoHeight ~= manualHeight then
             forceHeight = manualHeight or -1
             self.forceHeight = forceHeight
         else
@@ -107,8 +115,8 @@ uie.add("panel", {
         width = width + style:getIndex("padding", 1) + style:getIndex("padding", 3)
         height = height + style:getIndex("padding", 2) + style:getIndex("padding", 4)
 
-        self.__autoWidth = width
-        self.__autoHeight = height
+        self.autoWidth = width
+        self.autoHeight = height
         self.width = width
         self.height = height
     end,

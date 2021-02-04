@@ -497,6 +497,7 @@ uie.add("list", {
                 local c = children[i]
                 c.parent = self
                 c.width = width
+                c.autoWidth = true
                 c:layoutLateLazy()
             end
         end
@@ -537,6 +538,7 @@ uie.add("listH", {
                 local c = children[i]
                 c.parent = self
                 c.height = height
+                c.autoHeight = true
                 c:layoutLateLazy()
             end
         end
