@@ -675,7 +675,9 @@ uie.default = {
         end
         child.__removing = false
         self:reflow()
-        ui.root:recollect()
+        if ui.root then
+            ui.root:recollect()
+        end
         return true
     end,
 

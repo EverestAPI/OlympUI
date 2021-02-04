@@ -781,6 +781,22 @@ uie.add("menuItem", {
 
     init = function(self, text, data)
         uie.listItem.init(self, text, data)
+        if data and not uiu.isCallback(data) then
+            self:addChild(uie.icon("ui:icons/nested"):hook({
+                layoutLateLazy = function(orig, self)
+                    -- Always reflow this child whenever its parent gets reflowed.
+                    self:layoutLate()
+                end,
+
+                layoutLate = function(orig, self)
+                    local parent = self.parent
+                    parent.style.bg = { 1, 0, 0, 1 }
+                    self.realX = math.floor(parent.width - (parent.style:get("padding") or 0) - 6)
+                    self.realY = math.floor(parent.height * 0.5 - 3)
+                    orig(self)
+                end
+            }))
+        end
     end,
 
     map = function(item)
@@ -842,6 +858,9 @@ uie.add("menuItem", {
 uie.add("menuItemSubmenu", {
     base = "column",
     clip = false,
+
+    isList = false,
+    grow = false,
 
     style = {
         bg = { 0.08, 0.08, 0.08, 0.8 },
@@ -931,6 +950,7 @@ uie.add("menuItemSubmenu", {
                 local c = children[i]
                 c.parent = self
                 c.width = width
+                c.autoWidth = true
                 c:layoutLateLazy()
             end
         end
