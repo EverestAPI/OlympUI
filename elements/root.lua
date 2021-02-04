@@ -136,16 +136,15 @@ uie.add("root", {
             interactive = self.recollectingInteractive
         end
 
-        self.recollectingBasic = false
-        self.recollectingInteractive = false
-
         if basic then
+            self.recollectingBasic = false
             local all = {}
             collectAll(all, self, self.__collection + 1)
             self.all = all
         end
 
         if interactive then
+            self.recollectingInteractive = false
             local all = {}
             collectAllInteractive(all, self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
             self.allInteractive = all

@@ -109,9 +109,10 @@ function ui.update()
     local dt = love.timer.getDelta()
     ui.dt = dt
 
+    local iLast = 0
     ::reupdate::
     local all = root.all
-    for i = 1, #all do
+    for i = iLast + 1, #all do
         local c = all[i]
 
         if c.__updateID ~= updateID then
@@ -152,6 +153,7 @@ function ui.update()
             end
         end
 
+        iLast = i + 1
         if root:collect() then
             goto reupdate
         end

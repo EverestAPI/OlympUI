@@ -221,7 +221,7 @@ uie.add("titlebar", {
         local parent = self.parent
         parent.x = parent.x + dx
         parent.y = parent.y + dy
-        parent:repaint()
+        parent:reflow()
         ui.root:recollect(false, true)
     end
 })
