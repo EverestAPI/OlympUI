@@ -790,7 +790,6 @@ uie.add("menuItem", {
 
                 layoutLate = function(orig, self)
                     local parent = self.parent
-                    parent.style.bg = { 1, 0, 0, 1 }
                     self.realX = math.floor(parent.width - (parent.style:get("padding") or 0) - 6)
                     self.realY = math.floor(parent.height * 0.5 - 3)
                     orig(self)
