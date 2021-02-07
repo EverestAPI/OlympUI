@@ -766,6 +766,28 @@ uie.add("topbar", {
     init = function(self, list)
         uie.row.init(self, uiu.map(list, uie.menuItem.map))
         self:with(uiu.fillWidth)
+
+        local children = self.children
+        for i = 1, #children do
+            local child = children[i]
+            local img = child.children[2]
+            if img and img.id == "ui:icons/nested" then
+                img:removeSelf()
+                child:addChild(uie.icon("ui:icons/drop"):hook({
+                    layoutLateLazy = function(orig, self)
+                        -- Always reflow this child whenever its parent gets reflowed.
+                        self:layoutLate()
+                    end,
+
+                    layoutLate = function(orig, self)
+                        local parent = self.parent
+                        self.realX = math.floor(parent.width - (parent.style:get("padding") or 0) - 8)
+                        self.realY = math.floor(parent.height * 0.5 - 3)
+                        orig(self)
+                    end
+                }))
+            end
+        end
     end
 })
 
