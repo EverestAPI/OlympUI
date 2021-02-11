@@ -14,7 +14,8 @@ local ui = {
     features = {
         metachildren = false,
         mouseGlobal = false,
-        eventProxies = false
+        eventProxies = false,
+        inspector = "f12",
     },
 
     eventProxyCache = {},
@@ -384,7 +385,27 @@ function ui.wheelmoved(dx, dy)
 end
 
 function ui.keypressed(key, scancode, isrepeat)
-    return ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
+    local el = ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
+    if el then
+        return el
+    end
+
+    if ui.features.inspector and key == ui.features.inspector then
+        ui.globalReflowID = ui.globalReflowID + 1
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+            ui.debug.draw = (ui.debug.draw ~= -1) and -1 or true
+
+        elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
+            ui.debug.draw = -2
+
+        else
+            ui.debug.draw = not ui.debug.draw
+        end
+
+        return true
+    end
+
+    return false
 end
 
 function ui.keyreleased(key, scancode)
