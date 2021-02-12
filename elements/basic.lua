@@ -419,18 +419,30 @@ uie.add("image", {
     drawArgs = nil,
     scaleRoundAuto = "auto",
 
-    init = function(self, image)
+    init = function(self, image, quad)
         self.image = image
+        self.quad = quad
     end,
 
     calcSize = function(self)
+        local width, height
         local image = self._image
-        local width, height = image:getWidth(), image:getHeight()
+        local quad = self.quad
+
+        if quad then
+            local quadX, quadY, quadWidth, quadHeight = quad:getViewport()
+
+            width, height = quadWidth, quadHeight
+
+        else
+            width, height = image:getDimensions()
+        end
+
         self.width = width * self.scaleX
         self.height = height * self.scaleY
         if self.scaleRoundAuto == "auto" then
-            self.width = math.round(self.width)
-            self.height = math.round(self.height)
+            self.width = uiu.round(self.width)
+            self.height = uiu.round(self.height)
         end
     end,
 
