@@ -277,9 +277,9 @@ uie.add("scrollhandleX", {
 
         if size + 1 + padding * 2 + box.wiggleroom < innerSize then
             self.isNeeded = true
-            self.realX = math.round(pos) + padding
+            self.realX = uiu.round(pos) + padding
             self.realY = box.height - thickness - 1 - padding
-            self.width = math.round(size)
+            self.width = uiu.round(size)
         else
             self.isNeeded = false
             self.realX = 0
@@ -334,8 +334,8 @@ uie.add("scrollhandleY", {
         if size + 1 + padding * 2 + box.wiggleroom < innerSize then
             self.isNeeded = true
             self.realX = box.width - thickness - 1 - padding
-            self.realY = math.round(pos) + padding
-            self.height = math.round(size)
+            self.realY = uiu.round(pos) + padding
+            self.height = uiu.round(size)
         else
             self.isNeeded = false
             self.realX = 0

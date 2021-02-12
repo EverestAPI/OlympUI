@@ -431,7 +431,6 @@ uie.add("image", {
 
         if quad then
             local quadX, quadY, quadWidth, quadHeight = quad:getViewport()
-
             width, height = quadWidth, quadHeight
 
         else
@@ -483,7 +482,7 @@ uie.add("image", {
         self:calcSize()
 
         if mode == "x" or mode == "w" or mode == "width" then
-            local size = math.round(self.width)
+            local size = uiu.round(self.width)
             if size == self.width then
                 return
             end
@@ -494,7 +493,7 @@ uie.add("image", {
             self:calcSize()
 
         elseif mode == "y" or mode == "h" or mode == "height" then
-            local size = math.round(self.height)
+            local size = uiu.round(self.height)
             if size == self.height then
                 return
             end
