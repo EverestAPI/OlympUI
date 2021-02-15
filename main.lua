@@ -7,8 +7,18 @@ local ui = {
     _enabled = true,
 
     debug = {
-        log = false,
-        draw = false
+        draw = false,
+    },
+
+    log = {
+        reflow = false,
+        canvas = true,
+    },
+
+    stats = {
+        canvases = 0,
+        draws = 0,
+        layouts = 0
     },
 
     features = {
@@ -25,6 +35,8 @@ local ui = {
 
     repaintAll = false,
     globalReflowID = 0,
+
+    updateID = 0,
     drawID = 0,
 
     fontDebug = love.graphics.newFont(8),
@@ -46,10 +58,15 @@ local updateID = 0
 local prevWidth
 local prevHeight
 function ui.update()
+    ui.updateID = ui.updateID + 1
+
     local root = ui.root
     if not root then
         return
     end
+
+    ui.stats.draws = 0
+    ui.stats.layouts = 0
 
     ui.runOnceMap = {}
 
@@ -396,7 +413,7 @@ function ui.keypressed(key, scancode, isrepeat)
             ui.debug.draw = (ui.debug.draw ~= -1) and -1 or true
 
         elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
-            ui.debug.draw = -2
+            ui.debug.draw = (ui.debug.draw ~= -2) and -2 or -3
 
         else
             ui.debug.draw = not ui.debug.draw

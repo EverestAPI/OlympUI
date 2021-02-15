@@ -252,15 +252,15 @@ uie.default = {
     end,
 
     reflow = function(self)
-        if ui.debug.log then
+        if ui.log.reflow then
             print("[olympui]", "reflow", self)
         end
 
         local el = self
-        while el do
+        while el and not el.reflowing do
             el.reflowing = true
             el.reflowingLate = true
-            el.cachedCanvas = nil
+            el.cachedCanvas = false
             el = el.parent
         end
 
@@ -274,21 +274,21 @@ uie.default = {
                 local c = children[i]
                 c.reflowing = true
                 c.reflowingLate = true
-                c.cachedCanvas = nil
+                c.cachedCanvas = false
                 c:reflowDown()
             end
         end
     end,
 
     reflowLate = function(self)
-        if ui.debug.log then
+        if ui.log.reflow then
             print("[olympui]", "reflowLate", self)
         end
 
         local el = self
         while el do
             el.reflowingLate = true
-            el.cachedCanvas = nil
+            el.cachedCanvas = false
             el = el.parent
         end
 
@@ -301,20 +301,20 @@ uie.default = {
             for i = 1, #children do
                 local c = children[i]
                 c.reflowingLate = true
-                c.cachedCanvas = nil
+                c.cachedCanvas = false
                 c:reflowDown()
             end
         end
     end,
 
     repaint = function(self)
-        if ui.debug.log then
+        if ui.log.reflow then
             print("[olympui]", "repaint", self)
         end
 
         local el = self
         while el do
-            el.cachedCanvas = nil
+            el.cachedCanvas = false
             el = el.parent
         end
     end,
@@ -324,7 +324,7 @@ uie.default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
-                c.cachedCanvas = nil
+                c.cachedCanvas = false
                 c:repaintDown()
             end
         end
@@ -354,6 +354,8 @@ uie.default = {
     end,
 
     layout = function(self)
+        self.__layoutLastUpdateID = ui.updateID
+        ui.stats.layouts = ui.stats.layouts + 1
         self:layoutChildren()
         self:recalc()
     end,
@@ -383,6 +385,7 @@ uie.default = {
     end,
 
     layoutLate = function(self)
+        ui.stats.layouts = ui.stats.layouts + 1
         self.style.__propcache = {}
         self:layoutLateChildren()
     end,
@@ -444,9 +447,11 @@ uie.default = {
         end
     end,
 
-    -- drawDebug = function(self) end,
+    -- drawDebug = function(self, layout, decached) end,
     -- drawDebug = false,
-    drawDebug = function(self)
+    drawDebug = function(self, layout, decached)
+        local delayouted = self.__layoutLastUpdateID == ui.updateID
+
         local x = self.screenX
         local y = self.screenY
         local width = self.width
@@ -455,32 +460,38 @@ uie.default = {
         love.graphics.setLineWidth(1)
         love.graphics.setBlendMode("alpha", "premultiplied")
 
-        -- red = outter
-        -- green = inner
-        -- blue = padding orientation
-        -- yellow = outline
+        if layout then
+            -- red = outter
+            -- green = inner
+            -- blue = padding orientation
+            -- yellow = outline
 
-        local visibleRect = self.__cached.visibleRect
-        local el = visibleRect[1]
-        local et = visibleRect[2]
-        local er = visibleRect[3]
-        local eb = visibleRect[4]
-        uiu.setColor(0, 0, 0.5, 0.5)
-        love.graphics.rectangle("line", el + 0.5, et + 0.5, er - el - 1, eb - et - 1)
+            local visibleRect = self.__cached.visibleRect
+            local el = visibleRect[1]
+            local et = visibleRect[2]
+            local er = visibleRect[3]
+            local eb = visibleRect[4]
+            uiu.setColor(0, 0, 0.5, 0.5)
+            love.graphics.rectangle("line", el + 0.5, et + 0.5, er - el - 1, eb - et - 1)
 
-        local padding = self.style:get("padding")
-        if padding and padding ~= 0 then
-            uiu.setColor(0.75, 0, 0, 0.5)
-            love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
+            local padding = self.style:get("padding")
+            if padding and padding ~= 0 then
+                uiu.setColor(0.75, 0, 0, 0.5)
+                love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
 
-            uiu.setColor(0, 0, 0.25, 0.25)
-            love.graphics.rectangle("line", x + 0.5, y + 0.5, padding - 1, padding - 1)
+                uiu.setColor(0, 0, 0.25, 0.25)
+                love.graphics.rectangle("line", x + 0.5, y + 0.5, padding - 1, padding - 1)
 
-            uiu.setColor(0, 0.125, 0, 0.125)
-            love.graphics.rectangle("line", x + 0.5 + padding, y + 0.5 + padding, width - padding * 2 - 1, height - padding * 2 - 1)
+                uiu.setColor(0, 0.125, 0, 0.125)
+                love.graphics.rectangle("line", x + 0.5 + padding, y + 0.5 + padding, width - padding * 2 - 1, height - padding * 2 - 1)
+
+            else
+                uiu.setColor(0.75, 0.75, 0, 0.5)
+                love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
+            end
 
         else
-            uiu.setColor(0.75, 0.75, 0, 0.5)
+            uiu.setColor(decached and 0.75 or 0.25, 0.25, delayouted and 0.75 or 0.25, 0.5)
             love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
         end
 
@@ -507,19 +518,33 @@ uie.default = {
         love.graphics.print(text, ui.fontDebug, pos)
         pos:translate(-1, 0)
 
-        if self.cacheForce then
-            uiu.setColor(1, 0, 1, 1)
-        elseif self.cacheable then
-            uiu.setColor(1, 1, 0, 1)
+        if layout then
+            if self.cacheForce then
+                uiu.setColor(1, 0, 1, 1)
+            elseif self.cacheable then
+                if decached then
+                    uiu.setColor(1, 0, 0, 1)
+                else
+                    uiu.setColor(1, 1, 0, 1)
+                end
+            else
+                uiu.setColor(1, 1, 1, 1)
+            end
         else
-            uiu.setColor(1, 1, 1, 1)
+            if not delayouted and not decached then
+                uiu.setColor(1, 1, 1, 1)
+            else
+                uiu.setColor(decached and 1 or 0, 0, delayouted and 1 or 0, 1)
+            end
         end
         love.graphics.print(text, ui.fontDebug, pos)
 
     end,
 
     __draw = function(self, skipCache)
-        if (not self.cacheable or skipCache) and not self.cacheForce then
+        ui.stats.draws = ui.stats.draws + 1
+
+        if (not self.cacheable or skipCache == 1) and not self.cacheForce then
             return self:draw()
         end
 
@@ -559,6 +584,10 @@ uie.default = {
                 canvas:release()
                 cached.canvas = nil
                 canvas = nil
+                ui.stats.canvases = ui.stats.canvases - 1
+                if ui.log.canvas then
+                    print("[olympui]", "canvas released", self)
+                end
             end
 
             cached.width = width
@@ -573,7 +602,7 @@ uie.default = {
         local x = self.screenX
         local y = self.screenY
 
-        if canvas then
+        if canvas and skipCache ~= 2 then
             self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
             return
         end
@@ -583,6 +612,10 @@ uie.default = {
         if not canvas then
             canvas = love.graphics.newCanvas(width, height)
             cached.canvas = canvas
+            ui.stats.canvases = ui.stats.canvases + 1
+            if ui.log.canvas then
+                print("[olympui]", "canvas created", self)
+            end
         end
         self.cachedCanvas = canvas
 
@@ -622,9 +655,9 @@ uie.default = {
     redraw = function(self)
         if self.redrawID ~= ui.globalReflowID then
             self.redrawID = ui.globalReflowID
-            self.cachedCanvas = nil
+            self.cachedCanvas = false
         elseif ui.repaintAll then
-            self.cachedCanvas = nil
+            self.cachedCanvas = false
         end
 
         local drawID = ui.drawID
@@ -639,19 +672,31 @@ uie.default = {
         end
 
         if ui.debug.draw then
+            local cb = self.drawDebug
             if ui.debug.draw == -1 then
                 uie.default.draw(self)
+                if cb then
+                    cb(self, true)
+                end
             elseif ui.debug.draw == -2 then
-                self:__draw(false)
+                self:__draw(0)
+                if cb and self.cachedCanvas then
+                    cb(self, true)
+                end
+            elseif ui.debug.draw == -3 then
+                local cachedCanvas = self.cachedCanvas
+                self:__draw(2)
+                if cb and self.cachedCanvas then
+                    cb(self, false, self.cachedCanvas ~= cachedCanvas)
+                end
             else
-                self:__draw(true)
-            end
-            local cb = self.drawDebug
-            if cb then
-                cb(self)
+                self:__draw(1)
+                if cb then
+                    cb(self, true)
+                end
             end
         else
-            self:__draw(false)
+            self:__draw(0)
         end
 
         self.drawID = drawID
@@ -1146,6 +1191,15 @@ local mtEl = {
         return self:with(...)
     end,
 
+    __gc = function(self)
+        if self.__cached.canvas then
+            ui.stats.canvases = ui.stats.canvases - 1
+            if ui.log.canvas then
+                print("[olympui]", "canvas freed", self)
+            end
+        end
+    end,
+
     __tostring = function(self)
         return self.path
     end
@@ -1195,6 +1249,14 @@ function uie.add(eltype, default)
             getIndex = styleGetIndex
         }, mtStyle)
         el.__rawid = tostring(el):sub(8)
+
+        if _G.newproxy then
+            local proxy = _G.newproxy(true)
+            getmetatable(proxy).__gc = function()
+                mtEl.__gc(el)
+            end
+            el.__proxy = proxy
+        end
 
         uie.flatten(el)
 
