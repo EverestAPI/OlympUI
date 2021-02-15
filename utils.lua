@@ -388,6 +388,7 @@ function uiu.fillWidth(el, arg2, arg3)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -418,6 +419,7 @@ function uiu.fillWidth(el, arg2, arg3)
             layoutLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layout()
+                self:repaint()
             end,
 
             layout = function(orig, self)
@@ -490,6 +492,7 @@ function uiu.fillHeight(el, arg2, arg3)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -520,6 +523,7 @@ function uiu.fillHeight(el, arg2, arg3)
             layoutLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layout()
+                self:repaint()
             end,
 
             layout = function(orig, self)
@@ -585,6 +589,7 @@ function uiu.fill(el)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -628,6 +633,7 @@ function uiu.at(el, arg2, arg3)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -671,6 +677,7 @@ function uiu.rightbound(el, arg2)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -707,6 +714,7 @@ function uiu.bottombound(el, arg2)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)

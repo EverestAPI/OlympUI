@@ -5,19 +5,10 @@ local uiu = require("ui.utils")
 
 -- Dynamic layout generator.
 uie.add("dynamic", {
-    base = "panel",
-
-    style = {
-        bg = {},
-        border = {},
-        padding = 0,
-        radius = 0
-    },
+    base = "group",
 
     init = function(self, children)
-        uie.panel.init(self)
-        self.clip = false
-
+        uie.group.init(self)
         self._allFirst = children
         self._dirty = true
     end,

@@ -155,6 +155,7 @@ uie.add("scrollhandle", {
     layoutLateLazy = function(self)
         -- Always reflow this child whenever its parent gets reflowed.
         self:layoutLate()
+        self:repaint()
     end,
 
     update = function(self, dt)

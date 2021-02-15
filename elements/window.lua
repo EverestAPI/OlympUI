@@ -14,13 +14,14 @@ uie.add("window", {
         bg = { 0.12, 0.12, 0.12, 1 },
         border = { 0.15, 0.15, 0.15, 1 },
         padding = 1,
+        radius = 3,
         spacing = 0
     },
 
     init = function(self, title, inner)
         inner.style.radius = 0
 
-        local titlebar = uie.titlebar(title)
+        local titlebar = uie.paneled.titlebar(title)
         uie.column.init(self, {
             titlebar,
             inner
@@ -144,6 +145,7 @@ uie.add("titlebar", {
     layoutLateLazy = function(self)
         -- Always reflow this child whenever its parent gets reflowed.
         self:layoutLate()
+        self:repaint()
     end,
 
     layoutLate = function(self)
@@ -252,6 +254,7 @@ uie.add("buttonClose", {
     layoutLateLazy = function(self)
         -- Always reflow this child whenever its parent gets reflowed.
         self:layoutLate()
+        self:repaint()
     end,
 
     layoutLate = function(self)

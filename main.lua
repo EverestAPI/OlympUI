@@ -12,7 +12,7 @@ local ui = {
 
     log = {
         reflow = false,
-        canvas = true,
+        canvas = false,
     },
 
     stats = {
@@ -403,9 +403,6 @@ end
 
 function ui.keypressed(key, scancode, isrepeat)
     local el = ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
-    if el then
-        return el
-    end
 
     if ui.features.inspector and key == ui.features.inspector then
         ui.globalReflowID = ui.globalReflowID + 1
@@ -422,7 +419,7 @@ function ui.keypressed(key, scancode, isrepeat)
         return true
     end
 
-    return false
+    return el
 end
 
 function ui.keyreleased(key, scancode)

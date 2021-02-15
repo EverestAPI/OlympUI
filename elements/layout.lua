@@ -5,7 +5,7 @@ require("ui.elements.basic")
 
 -- Basic vertical list.
 uie.add("column", {
-    base = "panel",
+    base = "group",
 
     style = {
         spacing = 8
@@ -54,7 +54,7 @@ uie.add("column", {
 
 -- Basic horizontal list.
 uie.add("row", {
-    base = "panel",
+    base = "group",
 
     style = {
         spacing = 8

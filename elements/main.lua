@@ -15,6 +15,8 @@ uie.default = {
     visible = true,
     onscreen = true,
 
+    miniroot = false,
+
     interactive = 0,
 
     parent = false,
@@ -257,14 +259,12 @@ uie.default = {
         end
 
         local el = self
-        while el and not el.reflowing do
+        repeat
             el.reflowing = true
             el.reflowingLate = true
             el.cachedCanvas = false
             el = el.parent
-        end
-
-        self:repaintDown()
+        until not el or el.reflowing or el.miniroot
     end,
 
     reflowDown = function(self)
@@ -686,8 +686,8 @@ uie.default = {
             elseif ui.debug.draw == -3 then
                 local cachedCanvas = self.cachedCanvas
                 self:__draw(2)
-                if cb and self.cachedCanvas then
-                    cb(self, false, self.cachedCanvas ~= cachedCanvas)
+                if cb and self.cacheable then
+                    cb(self, false, self.cachedCanvas ~= cachedCanvas or self.cachedCanvas == nil)
                 end
             else
                 self:__draw(1)

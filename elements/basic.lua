@@ -230,6 +230,19 @@ uie.add("panel", {
     end
 })
 
+-- Helper to allow quick paneling of group elements (f.e. row, column).
+uie.paneled = setmetatable({}, {
+    __index = function(self, key)
+        return function(...)
+            return self(uie[key](...))
+        end
+    end,
+    __call = function(self, el)
+        el.__default = uie.panel.__default
+        return el
+    end
+})
+
 
 -- Panel which doesn't display as one by default.
 uie.add("group", {

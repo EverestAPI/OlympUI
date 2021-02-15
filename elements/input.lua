@@ -466,10 +466,7 @@ uie.add("list", {
     grow = true,
 
     style = {
-        padding = 0,
         spacing = 1,
-        bg = {},
-        -- border = { 0.3, 0.3, 0.3, 1 }
     },
 
     init = function(self, items, cb)
@@ -777,6 +774,7 @@ uie.add("topbar", {
                     layoutLateLazy = function(orig, self)
                         -- Always reflow this child whenever its parent gets reflowed.
                         self:layoutLate()
+                        self:repaint()
                     end,
 
                     layoutLate = function(orig, self)
@@ -808,6 +806,7 @@ uie.add("menuItem", {
                 layoutLateLazy = function(orig, self)
                     -- Always reflow this child whenever its parent gets reflowed.
                     self:layoutLate()
+                    self:repaint()
                 end,
 
                 layoutLate = function(orig, self)
