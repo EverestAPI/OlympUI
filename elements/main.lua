@@ -451,6 +451,7 @@ uie.default = {
     -- drawDebug = false,
     drawDebug = function(self, layout, decached)
         local delayouted = self.__layoutLastUpdateID == ui.updateID
+        local forcecached = self.cacheForce
 
         local x = self.screenX
         local y = self.screenY
@@ -491,7 +492,7 @@ uie.default = {
             end
 
         else
-            uiu.setColor(decached and 0.75 or 0.25, 0.25, delayouted and 0.75 or 0.25, 0.5)
+            uiu.setColor(decached and 0.75 or 0.25, forcecached and 0.75 or 0.25, delayouted and 0.75 or 0.25, 0.5)
             love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
         end
 
@@ -531,10 +532,10 @@ uie.default = {
                 uiu.setColor(1, 1, 1, 1)
             end
         else
-            if not delayouted and not decached then
+            if not delayouted and not forcecached and not decached then
                 uiu.setColor(1, 1, 1, 1)
             else
-                uiu.setColor(decached and 1 or 0, 0, delayouted and 1 or 0, 1)
+                uiu.setColor(decached and 1 or 0, forcecached and 1 or 0, delayouted and 1 or 0, 1)
             end
         end
         love.graphics.print(text, ui.fontDebug, pos)
