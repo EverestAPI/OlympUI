@@ -196,7 +196,7 @@ uie.add("field", {
         self.style.bg = {}
         self.label.style.color = {}
         self.style.border = {}
-        self.blinkTime = 0
+        self.blinkTime = false
         self._text = false
         self.placeholder = false
         self.text = text
@@ -326,10 +326,12 @@ uie.add("field", {
         end
 
         local blinkTimePrev = self.blinkTime
-        local blinkTime = (blinkTimePrev + dt) % 1
-        self.blinkTime = blinkTime
-        if blinkTimePrev < 0.5 and blinkTime >= 0.5 or blinkTimePrev >= 0.5 and blinkTime < 0.5 then
-            self:repaint()
+        if blinkTimePrev then
+            local blinkTime = (blinkTimePrev + dt) % 1
+            self.blinkTime = blinkTime
+            if blinkTimePrev < 0.5 and blinkTime >= 0.5 or blinkTimePrev >= 0.5 and blinkTime < 0.5 then
+                self:repaint()
+            end
         end
     end,
 
@@ -398,6 +400,7 @@ uie.add("field", {
 
     onUnfocus = function(self)
         love.keyboard.setKeyRepeat(self.__wasKeyRepeat)
+        self.blinkTime = false
     end,
 
     onText = function(self, new)
@@ -455,6 +458,10 @@ uie.add("field", {
         end
     end
 })
+
+
+-- Alias uie.add("textfield", { base = "field" })
+uie.textfield = uie.field
 
 
 -- Basic list, consisting of multiple list items.
