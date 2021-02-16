@@ -832,7 +832,7 @@ uie.default = {
 
     getChildAt = function(self, mx, my)
         local interactive = self.interactive
-        if interactive == -2 then
+        if interactive < 0 then
             return nil
         end
 
@@ -865,7 +865,7 @@ uie.default = {
             end
         end
 
-        if interactive == -1 then
+        if interactive == 0 then
             return nil
         end
 

@@ -59,7 +59,7 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                     visibleRect[3] = cbr
                     visibleRect[4] = cbb
 
-                    if interactive >= 1 then
+                    if interactive > 0 then
                         all[#all + 1] = c
                     end
 
@@ -83,6 +83,8 @@ end
 uie.add("root", {
     id = "root",
     cacheable = false,
+    interactive = -1,
+
     init = function(self, child)
         uiu.hook(child, {
             layoutLazy = function(orig, self)

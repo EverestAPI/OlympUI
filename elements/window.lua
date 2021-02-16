@@ -8,7 +8,7 @@ require("ui.elements.input")
 -- Basic window.
 uie.add("window", {
     base = "column",
-    interactive = 2,
+    interactive = 1,
 
     style = {
         bg = { 0.12, 0.12, 0.12, 1 },

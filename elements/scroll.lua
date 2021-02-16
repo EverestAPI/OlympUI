@@ -7,7 +7,7 @@ require("ui.elements.layout")
 -- Basic view box.
 uie.add("scrollbox", {
     base = "group",
-    interactive = 2,
+    interactive = 1,
 
     style = {
         barPadding = 0,

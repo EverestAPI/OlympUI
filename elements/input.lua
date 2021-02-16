@@ -751,7 +751,7 @@ uie.add("listItem", {
 uie.add("topbar", {
     base = "row",
     clip = false,
-    interactive = 2,
+    interactive = 1,
 
     style = {
         bg = { 0.08, 0.08, 0.08, 0.8 },
@@ -982,7 +982,7 @@ uie.add("menuItemSubmenu", {
 uie.add("dropdown", {
     base = "button",
     clip = false,
-    interactive = 2,
+    interactive = 1,
 
     init = function(self, list, cb)
         self._itemsCache = {}

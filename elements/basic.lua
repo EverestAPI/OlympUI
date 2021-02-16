@@ -5,6 +5,16 @@ local uiu = require("ui.utils")
 
 -- Basic panel with children elements.
 uie.add("panel", {
+    interactive = 1,
+
+    style = {
+        bg = { 0.065, 0.065, 0.065, 0.9 },
+        border = { 0, 0, 0, 0 },
+        patch = "ui:patches/%s",
+        padding = 8,
+        radius = 3
+    },
+
     init = function(self, children)
         children = children or {}
         for i = #children, 1, -1 do
@@ -28,14 +38,6 @@ uie.add("panel", {
         self._patchName = false
         self._patch = false
     end,
-
-    style = {
-        bg = { 0.065, 0.065, 0.065, 0.9 },
-        border = { 0, 0, 0, 0 },
-        patch = "ui:patches/%s",
-        padding = 8,
-        radius = 3
-    },
 
     calcSize = function(self, width, height)
         local manualWidth = self.width
@@ -247,6 +249,8 @@ uie.paneled = setmetatable({}, {
 -- Panel which doesn't display as one by default.
 uie.add("group", {
     base = "panel",
+
+    interactive = 0,
 
     style = {
         bg = {},
