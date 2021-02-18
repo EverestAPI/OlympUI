@@ -66,88 +66,52 @@ uie.add("button", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bgPrev = style.bg
-        local fgPrev = labelStyle.color
-        local borderPrev = style.border
-        local bg = bgPrev
-        local fg = fgPrev
-        local border = borderPrev
+        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
+        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
 
         if not self.enabled then
-            bg = style.disabledBG
-            fg = style.disabledFG
-            border = style.disabledBorder
+            bgNext = style.disabledBG
+            fgNext = style.disabledFG
+            borderNext = style.disabledBorder
         elseif self.pressed then
-            bg = style.pressedBG
-            fg = style.pressedFG
-            border = style.pressedBorder
+            bgNext = style.pressedBG
+            fgNext = style.pressedFG
+            borderNext = style.pressedBorder
         elseif self.hovered then
-            bg = style.hoveredBG
-            fg = style.hoveredFG
-            border = style.hoveredBorder
+            bgNext = style.hoveredBG
+            fgNext = style.hoveredFG
+            borderNext = style.hoveredBorder
         else
-            bg = style.normalBG
-            fg = style.normalFG
-            border = style.normalBorder
+            bgNext = style.normalBG
+            fgNext = style.normalFG
+            borderNext = style.normalBorder
         end
 
-        local fadeTime
+        local faded = false
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
-        if self.__bg ~= bg or self.__fg ~= fg or self.__border ~= border then
-            self.__bg = bg
-            self.__fg = fg
-            self.__border = border
-            fadeTime = 0
-        else
-            fadeTime = self.__fadeTime
-        end
-
+        local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
+            local f = 1 - fadeTime / fadeDuration
+            f = f * f * f * f * f
+            f = 1 - f
 
-            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
-                local f = fadeTime / fadeDuration
+            faded = false
+            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
+            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
+            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
 
-                bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
-                bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
-                bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
-                bgPrev[4] = bgPrev[4] + (bg[4] - bgPrev[4]) * f
-
-                fgPrev[1] = fgPrev[1] + (fg[1] - fgPrev[1]) * f
-                fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
-                fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
-                fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
-
-                borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
-                borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
-                borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
-                borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
-                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
-
-            else
-                fadeTime = fadeDuration
-
-                bgPrev[1] = bg[1]
-                bgPrev[2] = bg[2]
-                bgPrev[3] = bg[3]
-                bgPrev[4] = bg[4]
-
-                fgPrev[1] = fg[1]
-                fgPrev[2] = fg[2]
-                fgPrev[3] = fg[3]
-                fgPrev[4] = fg[4]
-
-                borderPrev[1] = border[1]
-                borderPrev[2] = border[2]
-                borderPrev[3] = border[3]
-                borderPrev[4] = border[4]
-                borderPrev[5] = border[5]
+            if faded then
+                self:repaint()
+                label:repaint()
             end
 
-            self:repaint()
-            label:repaint()
-            self.__fadeTime = fadeTime
+            self._fadeTime = fadeTime
         end
     end,
 
@@ -243,86 +207,48 @@ uie.add("field", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bgPrev = style.bg
-        local fgPrev = labelStyle.color
-        local borderPrev = style.border
-        local bg = bgPrev
-        local fg = fgPrev
-        local border = borderPrev
+        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
+        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
 
         if not self.enabled then
-            bg = style.disabledBG
-            fg = style.disabledFG
-            border = style.disabledBorder
+            bgNext = style.disabledBG
+            fgNext = style.disabledFG
+            borderNext = style.disabledBorder
         elseif self.focused then
-            bg = style.focusedBG
-            fg = self.text and style.focusedFG or style.focusedPlaceholder
-            border = style.focusedBorder
+            bgNext = style.focusedBG
+            fgNext = self.text and style.focusedFG or style.focusedPlaceholder
+            borderNext = style.focusedBorder
         else
-            bg = style.normalBG
-            fg = self.text and style.normalFG or style.normalPlaceholder
-            border = style.normalBorder
+            bgNext = style.normalBG
+            fgNext = self.text and style.normalFG or style.normalPlaceholder
+            borderNext = style.normalBorder
         end
 
-        local fadeTime
+        local faded = false
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
-        if self.__bg ~= bg or self.__fg ~= fg or self.__border ~= border then
-            self.__bg = bg
-            self.__fg = fg
-            self.__border = border
-            fadeTime = 0
-        else
-            fadeTime = self.__fadeTime
-        end
-
+        local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
+            local f = 1 - fadeTime / fadeDuration
+            f = f * f * f * f * f
+            f = 1 - f
 
-            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
-                local f = fadeTime / fadeDuration
+            faded = false
+            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
+            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
+            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
 
-                bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
-                bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
-                bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
-                bgPrev[4] = bgPrev[4] + (bg[4] - bgPrev[4]) * f
-
-                fgPrev[1] = fgPrev[1] + (fg[1] - fgPrev[1]) * f
-                fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
-                fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
-                fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
-                fgPrev[5] = fgPrev[5] + (fg[5] - fgPrev[5]) * f
-
-                borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
-                borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
-                borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
-                borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
-                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
-
-            else
-                fadeTime = fadeDuration
-
-                bgPrev[1] = bg[1]
-                bgPrev[2] = bg[2]
-                bgPrev[3] = bg[3]
-                bgPrev[4] = bg[4]
-
-                fgPrev[1] = fg[1]
-                fgPrev[2] = fg[2]
-                fgPrev[3] = fg[3]
-                fgPrev[4] = fg[4]
-                fgPrev[5] = fg[5]
-
-                borderPrev[1] = border[1]
-                borderPrev[2] = border[2]
-                borderPrev[3] = border[3]
-                borderPrev[4] = border[4]
-                borderPrev[5] = border[5]
+            if faded then
+                self:repaint()
+                label:repaint()
             end
 
-            self:repaint()
-            label:repaint()
-            self.__fadeTime = fadeTime
+            self._fadeTime = fadeTime
         end
 
         local blinkTimePrev = self.blinkTime
@@ -646,92 +572,56 @@ uie.add("listItem", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bgPrev = style.bg
-        local fgPrev = labelStyle.color
-        local borderPrev = style.border
-        local bg = bgPrev
-        local fg = fgPrev
-        local border = borderPrev
+        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
+        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
 
         if not self.enabled then
-            bg = style.disabledBG
-            fg = style.disabledFG
-            border = style.disabledBorder
+            bgNext = style.disabledBG
+            fgNext = style.disabledFG
+            borderNext = style.disabledBorder
         elseif self.pressed then
-            bg = style.pressedBG
-            fg = style.pressedFG
-            border = style.pressedBorder
+            bgNext = style.pressedBG
+            fgNext = style.pressedFG
+            borderNext = style.pressedBorder
         elseif self.selected then
-            bg = style.selectedBG
-            fg = style.selectedFG
-            border = style.selectedBorder
+            bgNext = style.selectedBG
+            fgNext = style.selectedFG
+            borderNext = style.selectedBorder
         elseif self.hovered then
-            bg = style.hoveredBG
-            fg = style.hoveredFG
-            border = style.hoveredBorder
+            bgNext = style.hoveredBG
+            fgNext = style.hoveredFG
+            borderNext = style.hoveredBorder
         else
-            bg = style.normalBG
-            fg = style.normalFG
-            border = style.normalBorder
+            bgNext = style.normalBG
+            fgNext = style.normalFG
+            borderNext = style.normalBorder
         end
 
-        local fadeTime
+        local faded = false
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
-        if self.__bg ~= bg or self.__fg ~= fg or self.__border ~= border then
-            self.__bg = bg
-            self.__fg = fg
-            self.__border = border
-            fadeTime = 0
-        else
-            fadeTime = self.__fadeTime
-        end
-
+        local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
         if fadeTime < fadeDuration then
             fadeTime = fadeTime + dt
+            local f = 1 - fadeTime / fadeDuration
+            f = f * f * f * f * f
+            f = 1 - f
 
-            if #bgPrev == 4 and #fgPrev == 4 and #borderPrev == 5 and fadeTime < fadeDuration then
-                local f = fadeTime / fadeDuration
+            faded = false
+            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
+            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
+            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
 
-                bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
-                bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
-                bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
-                bgPrev[4] = bgPrev[4] + (bg[4] - bgPrev[4]) * f
-
-                fgPrev[1] = fgPrev[1] + (fg[1] - fgPrev[1]) * f
-                fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
-                fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
-                fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
-
-                borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
-                borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
-                borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
-                borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
-                borderPrev[5] = borderPrev[5] + (border[5] - borderPrev[5]) * f
-
-            else
-                fadeTime = fadeDuration
-
-                bgPrev[1] = bg[1]
-                bgPrev[2] = bg[2]
-                bgPrev[3] = bg[3]
-                bgPrev[4] = bg[4]
-
-                fgPrev[1] = fg[1]
-                fgPrev[2] = fg[2]
-                fgPrev[3] = fg[3]
-                fgPrev[4] = fg[4]
-
-                borderPrev[1] = border[1]
-                borderPrev[2] = border[2]
-                borderPrev[3] = border[3]
-                borderPrev[4] = border[4]
-                borderPrev[5] = border[5]
+            if faded then
+                self:repaint()
+                label:repaint()
             end
 
-            self:repaint()
-            label:repaint()
-            self.__fadeTime = fadeTime
+            self._fadeTime = fadeTime
         end
     end,
 

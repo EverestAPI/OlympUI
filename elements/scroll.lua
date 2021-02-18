@@ -150,6 +150,8 @@ uie.add("scrollhandle", {
     init = function(self)
         self.enabled = nil
         self.__enabled = true
+        self.style.color = {}
+        self.style.border = {}
     end,
 
     layoutLateLazy = function(self)
@@ -170,55 +172,42 @@ uie.add("scrollhandle", {
         end
 
         local style = self.style
-        local colorPrev = style.color
-        local borderPrev = style.border
-        local color = colorPrev
-        local border = borderPrev
+        local color, colorPrev, colorNext = style.color, self._fadeColor, nil
+        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
 
         if self.dragged then
-            color = style.pressedColor
-            border = style.pressedBorder
+            colorNext = style.pressedColor
+            borderNext = style.pressedBorder
         elseif self.hovered then
-            color = style.hoveredColor
-            border = style.hoveredBorder
+            colorNext = style.hoveredColor
+            borderNext = style.hoveredBorder
         else
-            color = style.normalColor
-            border = style.normalBorder
+            colorNext = style.normalColor
+            borderNext = style.normalBorder
         end
 
-        local fadeTime
+        local faded = false
+        faded, colorPrev, self._fadeColorPrev, self._fadeColor = uiu.fadeSwap(faded, color, self._fadeColorPrev, colorPrev, colorNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
-        if self.__color ~= color or self.__border ~= border then
-            self.__color = color
-            self.__border = border
-            fadeTime = 0
-        else
-            fadeTime = self.__fadeTime
-        end
-
+        local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
-        if #colorPrev ~= 0 and fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + dt)
-            local f = fadeTime / fadeDuration
-            color = {
-                colorPrev[1] + (color[1] - colorPrev[1]) * f,
-                colorPrev[2] + (color[2] - colorPrev[2]) * f,
-                colorPrev[3] + (color[3] - colorPrev[3]) * f,
-                colorPrev[4] + (color[4] - colorPrev[4]) * f,
-            }
-            border = {
-                borderPrev[1] + (border[1] - borderPrev[1]) * f,
-                borderPrev[2] + (border[2] - borderPrev[2]) * f,
-                borderPrev[3] + (border[3] - borderPrev[3]) * f,
-                borderPrev[4] + (border[4] - borderPrev[4]) * f,
-                borderPrev[5] + (border[5] - borderPrev[5]) * f,
-            }
-            self:repaint()
-        end
+        if fadeTime < fadeDuration then
+            fadeTime = fadeTime + dt
+            local f = 1 - fadeTime / fadeDuration
+            f = f * f * f * f * f
+            f = 1 - f
 
-        self.__fadeTime = fadeTime
-        style.color = color
-        style.border = border
+            faded = false
+            faded = uiu.fade(faded, f, color, colorPrev, colorNext)
+            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
+
+            if faded then
+                self:repaint()
+            end
+
+            self._fadeTime = fadeTime
+        end
     end,
 
     draw = function(self)

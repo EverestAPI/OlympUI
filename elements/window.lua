@@ -134,6 +134,7 @@ uie.add("titlebar", {
         self.label = label
 
         self.style.bg = {}
+        self.label.style.color = {}
     end,
 
     layoutLazy = function(self)
@@ -159,52 +160,40 @@ uie.add("titlebar", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bgPrev = style.bg
-        local fgPrev = labelStyle.color
-        local bg = bgPrev
-        local fg = fgPrev
+        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
 
         if (self.root and ui.root.focused) or self.parent.focused then
-            bg = style.focusedBG
-            fg = style.focusedFG
+            bgNext = style.focusedBG
+            fgNext = style.focusedFG
         else
-            bg = style.unfocusedBG
-            fg = style.unfocusedFG
+            bgNext = style.unfocusedBG
+            fgNext = style.unfocusedFG
         end
 
-        local fadeTime
+        local faded = false
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
 
-        if self.__bg ~= bg or self.__fg ~= fg then
-            self.__bg = bg
-            self.__fg = fg
-            fadeTime = 0
-        else
-            fadeTime = self.__fadeTime
-        end
-
+        local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
-        if #bgPrev == 4 and #fgPrev == 4 and fadeTime < fadeDuration then
-            fadeTime = math.min(fadeDuration, fadeTime + dt)
-            local f = fadeTime / fadeDuration
-            bg = {
-                bgPrev[1] + (bg[1] - bgPrev[1]) * f,
-                bgPrev[2] + (bg[2] - bgPrev[2]) * f,
-                bgPrev[3] + (bg[3] - bgPrev[3]) * f,
-                bgPrev[4] + (bg[4] - bgPrev[4]) * f,
-            }
-            fg = {
-                fgPrev[1] + (fg[1] - fgPrev[1]) * f,
-                fgPrev[2] + (fg[2] - fgPrev[2]) * f,
-                fgPrev[3] + (fg[3] - fgPrev[3]) * f,
-                fgPrev[4] + (fg[4] - fgPrev[4]) * f,
-            }
-            self:repaint()
-            label:repaint()
-        end
+        if fadeTime < fadeDuration then
+            fadeTime = fadeTime + dt
+            local f = 1 - fadeTime / fadeDuration
+            f = f * f * f * f * f
+            f = 1 - f
 
-        self.__fadeTime = fadeTime
-        style.bg = bg
-        labelStyle.color = fg
+            faded = false
+            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
+            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
+
+            if faded then
+                self:repaint()
+                label:repaint()
+            end
+
+            self._fadeTime = fadeTime
+        end
     end,
 
     onPress = function(self, x, y, button, dragging)

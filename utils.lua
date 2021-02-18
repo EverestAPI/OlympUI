@@ -192,6 +192,61 @@ function uiu.map(input, fn)
 end
 
 
+function uiu.fadeSwap(faded, color, colorPrev, prev, next)
+    if prev == next then
+        return faded, colorPrev, colorPrev, next
+    end
+    local copy = {color[1], color[2], color[3], color[4], color[5]}
+    return true, copy, copy, next
+end
+
+
+function uiu.fade(faded, f, color, prev, next)
+    if next[5] then
+        if f < 1 and prev[5] and color[5] then
+            color[1] = prev[1] + (next[1] - prev[1]) * f
+            color[2] = prev[2] + (next[2] - prev[2]) * f
+            color[3] = prev[3] + (next[3] - prev[3]) * f
+            color[4] = prev[4] + (next[4] - prev[4]) * f
+            color[5] = prev[5] + (next[5] - prev[5]) * f
+            return true
+
+        else
+            if color[1] == next[1] and color[2] == next[2] and color[3] == next[3] and color[4] == next[4] and color[5] == next[5] then
+                return faded
+            end
+
+            color[1] = next[1]
+            color[2] = next[2]
+            color[3] = next[3]
+            color[4] = next[4]
+            color[5] = next[5]
+            return true
+        end
+
+    else
+        if f < 1 and prev[4] and color[4] then
+            color[1] = prev[1] + (next[1] - prev[1]) * f
+            color[2] = prev[2] + (next[2] - prev[2]) * f
+            color[3] = prev[3] + (next[3] - prev[3]) * f
+            color[4] = prev[4] + (next[4] - prev[4]) * f
+            return true
+
+        else
+            if color[1] == next[1] and color[2] == next[2] and color[3] == next[3] and color[4] == next[4] then
+                return faded
+            end
+
+            color[1] = next[1]
+            color[2] = next[2]
+            color[3] = next[3]
+            color[4] = next[4]
+            return true
+        end
+    end
+end
+
+
 -- Adapted from https://love2d.org/forums/viewtopic.php?p=196103&sid=ee7a367880e9968d161c042542058a93#p196103
 function uiu.getWrap(font, input, width)
     local wrap = {}
