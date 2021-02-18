@@ -85,6 +85,8 @@ uie.add("root", {
     cacheable = false,
     interactive = -1,
 
+    all = false,
+
     init = function(self, child)
         uiu.hook(child, {
             layoutLazy = function(orig, self)

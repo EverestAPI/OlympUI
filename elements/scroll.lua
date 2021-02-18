@@ -148,10 +148,10 @@ uie.add("scrollhandle", {
     },
 
     init = function(self)
-        self.enabled = nil
+        self.enabled = false
         self.__enabled = true
-        self.style.color = {}
-        self.style.border = {}
+        self.style.color, self._fadeColorPrev, self._fadeColor = {}, false, false
+        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
 
     layoutLateLazy = function(self)

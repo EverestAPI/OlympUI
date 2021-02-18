@@ -7,6 +7,8 @@ ui.e = uie
 -- Default element functions and values.
 uie.default = {
     base = false,
+    __template = false,
+    __updateID = false,
 
     x = 0,
     y = 0,
@@ -24,6 +26,9 @@ uie.default = {
     parent = false,
     children = false,
     id = false,
+
+    clip = false,
+    clipPadding = false,
 
     cacheable = true,
     cacheForce = false,
@@ -637,7 +642,7 @@ uie.default = {
         love.graphics.origin()
         love.graphics.translate(-x + paddingL, -y + paddingT)
 
-        local rv = { self:draw() }
+        self:draw()
 
         love.graphics.pop()
 
@@ -646,8 +651,7 @@ uie.default = {
             love.graphics.setScissor(sX, sY, sW, sH)
         end
 
-        self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
-        return table.unpack(rv)
+        return self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
     end,
 
     __drawCachedCanvas = function(self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
@@ -976,11 +980,6 @@ local mtStyle = {
     __name = "ui.element.style",
 
     __index = function(self, key)
-        if false then
-            print("OLYMPUI __index:   STYLE: " .. tostring(key))
-            print(" @ " .. tostring(self))
-        end
-
         local v = rawget(self, "get")(self, key)
         if v ~= nil then
             return v
@@ -999,11 +998,6 @@ mtEl = {
         local v = rawget(self, key)
         if v ~= nil then
             return v
-        end
-
-        if false and key ~= "path" and key ~= "id" and key ~= "parent" then
-            print("OLYMPUI __index: ELEMENT: " .. tostring(key))
-            print(" @ " .. tostring(self))
         end
 
         if key == "style" then
@@ -1084,7 +1078,7 @@ mtEl = {
                     end
                 end
 
-                v = base[key]
+                v = mtEl.__index(base, key, keyGet)
                 if v ~= nil then
                     propcache[key] = { type = 2, owner = base }
                     return v

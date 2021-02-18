@@ -15,6 +15,19 @@ uie.add("panel", {
         radius = 3
     },
 
+    width = -1,
+    height = -1,
+    minWidth = -1,
+    minHeight = -1,
+    maxWidth = -1,
+    maxHeight = -1,
+    autoWidth = -1,
+    autoHeight = -1,
+    forceWidth = -1,
+    forceHeight = -1,
+    clip = true,
+    clipPadding = true,
+
     init = function(self, children)
         children = children or {}
         for i = #children, 1, -1 do
@@ -23,18 +36,6 @@ uie.add("panel", {
             end
         end
         self.children = children
-        self.width = -1
-        self.height = -1
-        self.minWidth = -1
-        self.minHeight = -1
-        self.maxWidth = -1
-        self.maxHeight = -1
-        self.autoWidth = -1
-        self.autoHeight = -1
-        self.forceWidth = -1
-        self.forceHeight = -1
-        self.clip = true
-        self.clipPadding = true
         self._patchName = false
         self._patch = false
     end,
@@ -240,6 +241,7 @@ uie.paneled = setmetatable({}, {
         end
     end,
     __call = function(self, el)
+        el.__base = uie.panel
         el.__default = uie.panel.__default
         return el
     end
@@ -276,11 +278,12 @@ uie.add("label", {
     init = function(self, text, font)
         self.style.font = font or uie.label.__default.style.font or love.graphics.getFont()
         self._textStr = false
-        self.text = text or ""
+        self._text = false
         self.dynamic = false
         self.wrap = false
         self._error = false
         self._color = {}
+        self.text = text or ""
     end,
 
     recolor = function(self, olds)
@@ -431,15 +434,16 @@ uie.add("image", {
         color = { 1, 1, 1, 1 }
     },
 
-    quad = nil,
+    quad = false,
     scaleX = 1,
     scaleY = 1,
-    drawArgs = nil,
+    drawArgs = false,
     scaleRoundAuto = "auto",
 
     init = function(self, image, quad)
+        self._image = false
         self.image = image
-        self.quad = quad
+        self.quad = quad or false
     end,
 
     calcSize = function(self)

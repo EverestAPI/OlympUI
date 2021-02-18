@@ -39,18 +39,18 @@ uie.add("button", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
-        self.style.bg = {}
-        self.label.style.color = {}
-        self.style.border = {}
+        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.cb = cb
     end,
 
     getEnabled = function(self)
-        return self.__enabled
+        return self._enabled
     end,
 
     setEnabled = function(self, value)
-        self.__enabled = value
+        self._enabled = value
         self.interactive = value and 1 or -1
     end,
 
@@ -157,9 +157,9 @@ uie.add("field", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
-        self.style.bg = {}
-        self.label.style.color = {}
-        self.style.border = {}
+        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.blinkTime = false
         self._text = false
         self.placeholder = false
@@ -168,11 +168,11 @@ uie.add("field", {
     end,
 
     getEnabled = function(self)
-        return self.__enabled
+        return self._enabled
     end,
 
     setEnabled = function(self, value)
-        self.__enabled = value
+        self._enabled = value
         self.interactive = value and 1 or -1
     end,
 
@@ -518,9 +518,11 @@ uie.add("listItem", {
         self.label = label
         self.data = data
         self.enabled = true
-        self.style.bg = {}
-        self.label.style.color = {}
-        self.style.border = {}
+        self.owner = false
+        self._selected = false
+        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
 
     getText = function(self)
@@ -534,27 +536,27 @@ uie.add("listItem", {
     getEnabled = function(self)
         local owner = self.owner or self.parent
         if not owner.isList then
-            return self.__enabled
+            return self._enabled
         end
-        return owner.enabled and self.__enabled
+        return owner.enabled and self._enabled
     end,
 
     setEnabled = function(self, value)
-        self.__enabled = value
+        self._enabled = value
     end,
 
     getInteractive = function(self)
         local owner = self.owner or self.parent
         if not owner.isList then
-            return self.__enabled and 1 or -1
+            return self._enabled and 1 or -1
         end
-        return owner.enabled and self.__enabled and 1 or -1
+        return owner.enabled and self._enabled and 1 or -1
     end,
 
     getSelected = function(self)
         local owner = self.owner or self.parent
         if not owner.isList then
-            return self.__selected
+            return self._selected
         end
         return owner.selected == self
     end,
@@ -562,7 +564,7 @@ uie.add("listItem", {
     setSelected = function(self, value)
         local owner = self.owner or self.parent
         if not owner.isList then
-            self.__selected = value
+            self._selected = value
             return
         end
         owner.selected = value and self or false
@@ -649,6 +651,8 @@ uie.add("topbar", {
     base = "row",
     clip = false,
     interactive = 1,
+
+    isList = false,
 
     style = {
         bg = { 0.08, 0.08, 0.08, 0.8 },

@@ -133,8 +133,8 @@ uie.add("titlebar", {
 
         self.label = label
 
-        self.style.bg = {}
-        self.label.style.color = {}
+        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
     end,
 
     layoutLazy = function(self)
