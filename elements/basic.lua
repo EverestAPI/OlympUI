@@ -275,6 +275,7 @@ uie.add("label", {
 
     init = function(self, text, font)
         self.style.font = font or uie.label.__default.style.font or love.graphics.getFont()
+        self._textStr = false
         self.text = text or ""
         self.dynamic = false
         self.wrap = false
@@ -282,7 +283,7 @@ uie.add("label", {
         self._color = {}
     end,
 
-    _recolor = function(self, olds)
+    recolor = function(self, olds)
         local color = self.style.color
         if #color == 0 then
             return olds
@@ -325,7 +326,7 @@ uie.add("label", {
         end
         self._textStr = value
 
-        self:_setText(value)
+        self:forceText(value)
 
         if not self.dynamic and (self.width ~= math.ceil(self._text:getWidth()) or self.height ~= math.ceil(self._text:getHeight())) then
             self:reflow()
@@ -334,7 +335,7 @@ uie.add("label", {
         end
     end,
 
-    _setText = function(self, value)
+    forceText = function(self, value)
         self._error = false
 
         if type(value) == "userdata" then
@@ -343,9 +344,9 @@ uie.add("label", {
         else
             local status, err = pcall(function()
                 if not self._text then
-                    self._text = love.graphics.newText(self.style.font, self:_recolor(value))
+                    self._text = love.graphics.newText(self.style.font, self:recolor(value))
                 else
-                    self._text:set(self:_recolor(value))
+                    self._text:set(self:recolor(value))
                 end
             end)
 
@@ -366,7 +367,7 @@ uie.add("label", {
             local prevWidth = self.width
             local prevHeight = self.height
 
-            self:_setText(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth))
+            self:forceText(uiu.getWrap(self.style.font, self._textStr, self.parent.innerWidth))
 
             local width = self:calcWidth()
             self.width = width

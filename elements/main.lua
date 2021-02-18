@@ -6,6 +6,8 @@ ui.e = uie
 
 -- Default element functions and values.
 uie.default = {
+    base = false,
+
     x = 0,
     y = 0,
     width = 0,
@@ -20,6 +22,7 @@ uie.default = {
     interactive = 0,
 
     parent = false,
+    children = false,
     id = false,
 
     cacheable = true,
@@ -386,7 +389,8 @@ uie.default = {
 
     layoutLate = function(self)
         ui.stats.layouts = ui.stats.layouts + 1
-        self.style.__propcache = {}
+        self.style.__propcacheGet = {}
+        self.style.__propcacheSet = {}
         self:layoutLateChildren()
     end,
 
@@ -416,7 +420,7 @@ uie.default = {
         local eltype = self.__type
         local eltypeBase = eltype
         while eltypeBase do
-            local default = uie["__" .. eltypeBase].__default
+            local default = uie[eltypeBase].__default
             for k, v in pairs(default) do
                 if k:sub(1, 4) == "calc" then
                     if not calcset[k] then
@@ -897,7 +901,7 @@ uie.default = {
     onText = false,
 }
 
-uie.default = uie.default
+uie.__default = uie.default
 
 -- Shared metatable for all style helper tables.
 local function styleGetParent(self, key)
@@ -943,7 +947,7 @@ local function styleGet(self, key)
         return rawget(self, "getIndex")
     end
 
-    local propcache = rawget(self, "__propcache")
+    local propcache = rawget(self, "__propcacheGet")
     local cached = propcache and propcache[key]
     if cached ~= nil then
         return cached[key]
@@ -972,6 +976,11 @@ local mtStyle = {
     __name = "ui.element.style",
 
     __index = function(self, key)
+        if false then
+            print("OLYMPUI __index:   STYLE: " .. tostring(key))
+            print(" @ " .. tostring(self))
+        end
+
         local v = rawget(self, "get")(self, key)
         if v ~= nil then
             return v
@@ -982,34 +991,40 @@ local mtStyle = {
 }
 
 -- Shared metatable for all element tables.
-local mtEl = {
+local mtEl
+mtEl = {
     __name = "ui.element",
 
-    __index = function(self, key)
+    __index = function(self, key, keyGet)
         local v = rawget(self, key)
         if v ~= nil then
             return v
+        end
+
+        if false and key ~= "path" and key ~= "id" and key ~= "parent" then
+            print("OLYMPUI __index: ELEMENT: " .. tostring(key))
+            print(" @ " .. tostring(self))
         end
 
         if key == "style" then
             return rawget(self, "__style")
         end
 
-        local propcache = rawget(self, "__propcache")
+        local propcache = rawget(self, "__propcacheGet")
         local cached = propcache[key]
         if cached then
             local ctype = cached.type
 
-            if ctype == "get" then
+            if ctype == 1 then
                 return cached.value(self)
 
-            elseif ctype == "field" then
+            elseif ctype == 2 then
                 v = cached.owner[key]
                 if v ~= nil then
                     return v
                 end
 
-            elseif ctype == "child" then
+            elseif ctype == 3 then
                 local id = cached.id
                 local children = self.children
                 local c = children[cached.i]
@@ -1028,14 +1043,15 @@ local mtEl = {
 
         local keyType = type(key)
 
-        local keyGet = nil
-        if keyType == "string" then
-            local Key = key:sub(1, 1):upper() .. key:sub(2)
-            keyGet = "get" .. Key
+        if keyType == "string" and keyGet == nil then
+            local prefix = key:sub(1, 1)
+            keyGet = prefix ~= "_" and ("get" .. prefix:upper() .. key:sub(2))
+        end
 
+        if keyGet then
             v = rawget(self, keyGet)
             if v ~= nil then
-                propcache[key] = { type = "get", value = v }
+                propcache[key] = { type = 1, value = v }
                 return v(self)
             end
         end
@@ -1044,33 +1060,33 @@ local mtEl = {
         if keyGet then
             v = default[keyGet]
             if v ~= nil then
-                propcache[key] = { type = "get", value = v }
+                propcache[key] = { type = 1, value = v }
                 return v(self)
             end
         end
 
         v = default[key]
         if v ~= nil then
-            propcache[key] = { type = "field", owner = default }
+            propcache[key] = { type = 2, owner = default }
             return v
         end
 
         local base = default.base
         if base then
-            base = uie["__" .. default.base]
+            base = uie[default.base]
 
             if base then
                 if keyGet then
-                    v = base[keyGet]
+                    v = mtEl.__index(base, keyGet, false)
                     if v ~= nil then
-                        propcache[key] = { type = "get", value = v }
+                        propcache[key] = { type = 1, value = v }
                         return v(self)
                     end
                 end
 
                 v = base[key]
                 if v ~= nil then
-                    propcache[key] = { type = "field", owner = base }
+                    propcache[key] = { type = 2, owner = base }
                     return v
                 end
             end
@@ -1083,14 +1099,14 @@ local mtEl = {
         if keyGet then
             v = uie.default[keyGet]
             if v ~= nil then
-                propcache[key] = { type = "get", value = v }
+                propcache[key] = { type = 1, value = v }
                 return v(self)
             end
         end
 
         v = uie.default[key]
         if v ~= nil then
-            propcache[key] = { type = "field", owner = uie.default }
+            propcache[key] = { type = 2, owner = uie.default }
             return v
         end
 
@@ -1130,7 +1146,7 @@ local mtEl = {
                         local c = children[i]
                         local cid = c.id
                         if cid and cid == id then
-                            propcache[key] = { type = "child", i = i, id = id }
+                            propcache[key] = { type = 3, i = i, id = id }
                             return c
                         end
                     end
@@ -1148,36 +1164,49 @@ local mtEl = {
             return self
         end
 
+        local propcache = rawget(self, "__propcacheSet")
+        local cached = propcache[key]
+        if cached then
+            return cached(self, value)
+        end
+
         local keySet = nil
         if type(key) == "string" then
-            keySet = "set" .. key:sub(1, 1):upper() .. key:sub(2)
+            local prefix = key:sub(1, 1)
+            if prefix ~= "_" then
+                keySet = "set" .. prefix:upper() .. key:sub(2)
 
-            local cb = rawget(self, keySet)
-            if cb ~= nil then
-                return cb(self, value)
-            end
+                local cb = rawget(self, keySet)
+                if cb ~= nil then
+                    propcache[key] = cb
+                    return cb(self, value)
+                end
 
-            local default = self.__default
-            local cb = default[keySet]
-            if cb ~= nil then
-                return cb(self, value)
-            end
+                local default = self.__default
+                local cb = default[keySet]
+                if cb ~= nil then
+                    propcache[key] = cb
+                    return cb(self, value)
+                end
 
-            local base = default.base
-            if base then
-                base = uie["__" .. default.base]
-
+                local base = default.base
                 if base then
-                    cb = base[keySet]
-                    if cb then
-                        return cb(self, value)
+                    base = uie[default.base]
+
+                    if base then
+                        cb = mtEl.__index(base, keySet, false)
+                        if cb then
+                            propcache[key] = cb
+                            return cb(self, value)
+                        end
                     end
                 end
-            end
 
-            cb = uie.default[keySet]
-            if cb then
-                return cb(self, value)
+                cb = uie.default[keySet]
+                if cb then
+                    propcache[key] = cb
+                    return cb(self, value)
+                end
             end
         end
 
@@ -1232,8 +1261,9 @@ function uie.add(eltype, default)
             __types = { eltype },
             __default = default,
             __template = template,
-            __base = uie["__" .. (default.base or "default")] or uie.default,
-            __propcache = {},
+            __base = uie[default.base or "default"] or uie.default,
+            __propcacheGet = {},
+            __propcacheSet = {},
             __cached = {
                 width = 0,
                 height = 0,
@@ -1245,7 +1275,7 @@ function uie.add(eltype, default)
 
         el.__style = setmetatable({
             el = el,
-            __propcache = {},
+            __propcacheGet = {},
             get = styleGet,
             getIndex = styleGetIndex
         }, mtStyle)
@@ -1275,6 +1305,7 @@ function uie.flatten(el)
     local __default = uie.default
     local types = el.__types
     local default = el.__default
+
     repeat
         types[#types + 1] = default.__type
         for k, v in pairs(default) do
@@ -1282,8 +1313,15 @@ function uie.flatten(el)
                 el[k] = v
             end
         end
-        default = uie["__" .. (default.base or "default")] or __default
+        default = uie[default.base or "default"]
     until default == __default
+
+    types[#types + 1] = default.__type
+    for k, v in pairs(default) do
+        if k ~= "style" and el[k] == nil then
+            el[k] = v
+        end
+    end
 end
 
 uie.add("new", {

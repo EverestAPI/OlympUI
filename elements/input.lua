@@ -883,7 +883,7 @@ uie.add("dropdown", {
 
     init = function(self, list, cb)
         self._itemsCache = {}
-        self.selected = self:_itemCached(list[1], 1)
+        self.selected = self:getItemCached(list[1], 1)
         uie.button.init(self, self.selected.text)
         self.data = list
         self.isList = true
@@ -891,7 +891,7 @@ uie.add("dropdown", {
         self.cb = cb
     end,
 
-    _itemCached = function(self, text, i)
+    getItemCached = function(self, text, i)
         local cache = self._itemsCache
         local item = cache[i]
         if item then
@@ -919,7 +919,7 @@ uie.add("dropdown", {
     end,
 
     getItem = function(self, i)
-        return self:_itemCached(self.data[i], i)
+        return self:getItemCached(self.data[i], i)
     end,
 
     onClick = function(self, x, y, button)
@@ -933,7 +933,7 @@ uie.add("dropdown", {
             y = self.screenY + self.height + self.parent.style.spacing
 
             self.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
-                local item = self:_itemCached(data, i)
+                local item = self:getItemCached(data, i)
                 item.width = false
                 item.height = false
                 item:layout()
