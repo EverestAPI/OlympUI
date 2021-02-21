@@ -1162,8 +1162,16 @@ mtEl = {
     __newindex = function(self, key, value)
         if key == "style" then
             local style = rawget(self, "__style")
-            for k, v in pairs(value) do
-                style[k] = v
+            if not value then
+                for k, v in pairs(style) do
+                    if k ~= "el" and k ~= "get" and k ~= "getIndex" and k ~= "__propcacheGet" then
+                        style[k] = nil
+                    end
+                end
+            else
+                for k, v in pairs(value) do
+                    style[k] = v
+                end
             end
             return self
         end
