@@ -1,5 +1,6 @@
 local ui = require("ui.main")
 local uiu = require("ui.utils")
+local megacanvas = require("ui.megacanvas")
 
 local uie = {}
 ui.e = uie
@@ -35,6 +36,7 @@ uie.default = {
     cachedCanvas = false,
     cachePadding = 16,
     consecutiveFreshDraws = 0,
+    consecutiveCachedDraws = 0,
     drawID = 0,
 
     reflowID = 0,
@@ -576,66 +578,78 @@ uie.default = {
         width = width + paddingL + paddingR
         height = height + paddingT + paddingB
 
-        local cached = self.__cached
-
-        local canvas = self.cachedCanvas
-        if not canvas then
+        local repaint = not self.cachedCanvas
+        if repaint then
             self.consecutiveFreshDraws = 0
+            self.consecutiveCachedDraws = 0
+        else
+            self.consecutiveCachedDraws = self.consecutiveCachedDraws + 1
         end
 
         if self.cacheForce then
-            -- This will keep the cached canvas but force a redraw onto the canvas, as if repaint() was called.
-            canvas = nil
+            repaint = true
         end
 
-        if width > cached.width or height > cached.height then
-            canvas = canvas or cached.canvas
-            if canvas then
-                canvas:release()
-                cached.canvas = nil
-                canvas = nil
-                ui.stats.canvases = ui.stats.canvases - 1
-                if ui.log.canvas then
-                    print("[olympui]", "canvas released", self)
+        local cached = self.__cached
+        local canvas = cached.canvas
+
+        if canvas then
+            if width > canvas.canvasWidth or height > canvas.canvasHeight then
+                if width > megacanvas.width or height > megacanvas.height then
+                    canvas:release()
+                    cached.canvas = nil
+                    if ui.log.canvas then
+                        print("[olympui]", "canvas oversized", self)
+                    end
+                else
+                    canvas:init(width, height)
+                    if ui.log.canvas then
+                        print("[olympui]", "canvas resized", self)
+                    end
                 end
             end
 
-            cached.width = width
-            cached.height = height
+            canvas.width = width
+            canvas.height = height
         end
 
         -- TODO: Get max supported texture size?
-        if width > 4096 or height > 4096 then
+        if width > megacanvas.width or height > megacanvas.height then
             return self:draw()
         end
 
-        local x = self.screenX
-        local y = self.screenY
-
-        if canvas and skipCache ~= 2 then
-            self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
-            return
-        end
-
-        canvas = cached.canvas
-
         if not canvas then
-            canvas = love.graphics.newCanvas(width, height)
+            repaint = true
+            canvas = megacanvas(width, height)
             cached.canvas = canvas
             ui.stats.canvases = ui.stats.canvases + 1
             if ui.log.canvas then
                 print("[olympui]", "canvas created", self)
             end
         end
+
+        local x = self.screenX
+        local y = self.screenY
+
+        if not repaint and skipCache ~= 2 then
+            if self.consecutiveCachedDraws > 32 then
+                uiu.setColor(1, 1, 1, 1)
+                canvas:mark()
+            end
+
+            self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
+            return
+        end
+
+        canvas:init()
+
         self.cachedCanvas = canvas
 
         local sX, sY, sW, sH = love.graphics.getScissor()
 
         local canvasPrev = love.graphics.getCanvas()
-        love.graphics.setCanvas(canvas)
-        if sX then
-            love.graphics.setScissor()
-        end
+        love.graphics.setCanvas(canvas.canvas)
+        love.graphics.setScissor(0, 0, width, height)
         love.graphics.clear(0, 0, 0, 0)
 
         love.graphics.push()
@@ -647,18 +661,14 @@ uie.default = {
         love.graphics.pop()
 
         love.graphics.setCanvas(canvasPrev)
-        if sX then
-            love.graphics.setScissor(sX, sY, sW, sH)
-        end
+        love.graphics.setScissor(sX, sY, sW, sH)
 
         return self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
     end,
 
     __drawCachedCanvas = function(self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
         uiu.setColor(1, 1, 1, 1)
-        love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.draw(canvas, x - paddingL, y - paddingT)
-        love.graphics.setBlendMode("alpha", "alphamultiply")
+        canvas:draw(x - paddingL, y - paddingT)
     end,
 
     redraw = function(self)
@@ -1259,8 +1269,6 @@ function uie.add(eltype, default)
             __propcacheGet = {},
             __propcacheSet = {},
             __cached = {
-                width = 0,
-                height = 0,
                 canvas = nil,
                 visibleRect = { 0, 0, 0, 0 }
             },

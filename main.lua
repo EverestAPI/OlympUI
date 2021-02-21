@@ -2,6 +2,7 @@ local spikerStatus, spiker = pcall(require, "spiker")
 spiker = spikerStatus and spiker
 local uiu = require("ui.utils")
 local uin = require("ui.native")
+local megacanvas = require("ui.megacanvas")
 
 local ui = {
     _enabled = true,
@@ -211,6 +212,8 @@ function ui.draw()
     ui.root:redraw()
     love.graphics.setColor(1, 1, 1, 1)
     uiu.resetColor()
+
+    megacanvas.process()
 end
 
 

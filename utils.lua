@@ -319,6 +319,7 @@ function uiu.countformat(count, one, more)
     return string.format(count == 1 and one or more, count)
 end
 
+
 local prevR = -1
 local prevG = -1
 local prevB = -1
