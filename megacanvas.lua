@@ -8,15 +8,27 @@ local megacanvas = {
         rects = true,
     },
 
-    pages = {},
-    pagesCount = 0,
+    convertBlend = true,
+    convertBlendShader = love.graphics.newShader([[
+        vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords) {
+            vec4 c = Texel(tex, texture_coords);
+            return vec4(c.rgb / c.a, c.a) * color;
+        }
+    ]]),
+
+    pool = {},
+    poolAlive = 0,
+    poolUsed = 0,
+    poolNew = 0,
+
+    atlases = {},
 
     quads = setmetatable({}, { __mode = "v" }),
-    quadsCount = 0,
     quadsAlive = 0,
 
     marked = {},
-    markedCount = 0,
+
+    quadFastPadding = 32,
 
     padding = 2,
     width = 4096,
@@ -29,9 +41,9 @@ do
 
     if arrayFeature == 1 or arrayFeature == true then
         -- 4096 x 4096 x 32bit = 64MB
-        -- FIXME: dynamically grow canvas size on demand
+        -- FIXME: Dynamically grow canvas size on demand.
         local min = 1
-        local max = 4
+        local max = 16
 
         local success, canvas = pcall(love.graphics.newCanvas, 16, 16, max, { type = "array" })
         if success then
@@ -53,15 +65,16 @@ do
         success, canvas = pcall(love.graphics.newCanvas, 16, 16, min, { type = "array" })
         if success then
             canvas:release()
-            megacanvas.layers = min
+            megacanvas.layersMax = min
         else
-            megacanvas.layers = false
+            megacanvas.layersMax = false
         end
 
     else
-        megacanvas.layers = false
+        megacanvas.layersMax = false
     end
 end
+
 
 
 local function rect(x, y, width, height)
@@ -83,28 +96,57 @@ local function rect(x, y, width, height)
     }
 end
 
+local function smallest(rects, width, height)
+    local best, index
+    for i = #rects, 1, -1 do
+        local r = rects[i]
+        if r and width <= r.width and height <= r.height then
+            if not best or
+                (r.width < best.width and r.height < best.height) or
+                (width < height and r.width <= best.width or r.height <= best.height) then
+                best = r
+                index = i
+                if width == r.width and height == r.height then
+                    break
+                end
+            end
+        end
+    end
+    return best, index
+end
 
-local page = {}
+local function cleanup(list, alive, deadMax)
+    if alive and #list - alive < deadMax then
+        return false
+    end
 
-local mtPage = {
-    __name = "ui.megacanvases.page",
-    __index = page
+    for i = #list, 1, -1 do
+        if not list[i] then
+            table.remove(list, i)
+        end
+    end
+    return true
+end
+
+
+local atlas = {}
+
+local mtAtlas = {
+    __name = "ui.megacanvases.atlas",
+    __index = atlas
 }
 
-function page:init()
-    if megacanvas.layers then
-        self.canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height, megacanvas.layers, { type = "array" })
-    else
-        self.canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height)
-    end
+function atlas:init()
     self.width = megacanvas.width
     self.height = megacanvas.height
     self.layers = {}
-    for i = 1, megacanvas.layers or 1 do
+    self.layersMax = megacanvas.layersMax
+    self:grow(1)
+    for i = 1, self.layersMax or 1 do
         self.layers[i] = {
+            atlas = self,
             index = i,
-            layer = megacanvas.layers and i,
-            count = 0,
+            layer = self.layersMax and i or nil,
             taken = {},
             spaces = {
                 rect(0, 0, megacanvas.width, megacanvas.height)
@@ -113,122 +155,140 @@ function page:init()
     end
 end
 
-function page:release()
+function atlas:release()
     self.canvas:release()
 end
 
-function page:fit(width, height)
+function atlas:grow(count)
+    if not self.layersMax then
+        if (self.layersAllocated or 0) < 1 then
+            self.canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height)
+            self.layersAllocated = 1
+        end
+        return
+    end
+
+    local countOld = self.layersAllocated or 0
+    if count <= countOld then
+        return
+    end
+    self.layersAllocated = count
+
+    local canvas = self.canvas
+
+    -- Copy all data from VRAM to RAM first, otherwise we might run out of VRAM trying to hold both canvases.
+    local copies
+    if canvas then
+        copies = {}
+        for i = 1, countOld do
+            copies[i] = canvas:newImageData(i)
+        end
+        canvas:release()
+    end
+
+    canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height, count, { type = "array" })
+    self.canvas = canvas
+
+    if copies then
+        -- FIXME: blend mode?
+
+        local sX, sY, sW, sH = love.graphics.getScissor()
+        local canvasPrev = love.graphics.getCanvas()
+        love.graphics.push()
+        love.graphics.origin()
+        love.graphics.setScissor()
+
+        for i = 1, countOld do
+            local copyData = copies[i]
+            local copy = love.graphics.newImage(copyData)
+            love.graphics.setCanvas(canvas, i)
+            love.graphics.draw(copy, 0, 0)
+            copyData:release()
+            copy:release()
+        end
+
+        love.graphics.pop()
+        love.graphics.setCanvas(canvasPrev)
+        love.graphics.setScissor(sX, sY, sW, sH)
+    end
+end
+
+function atlas:fit(width, height)
     local layers = self.layers
-    local min = math.min
-    local max = math.max
-    for li = 1, megacanvas.layers or 1 do
+    for li = 1, #layers do
         local l = layers[li]
 
         local spaces = l.spaces
-        local smallest = false
-        local index = false
-        for i = 1, #spaces do
-            local r1 = spaces[i]
-            if width <= r1.width and height <= r1.height then
-                if not smallest or
-                    (r1.width < smallest.width and r1.height < smallest.height) or
-                    (width < height and r1.width <= smallest.width or r1.height <= smallest.height) then
-                    smallest = r1
-                    index = i
-                    if width == r1.width and height == r1.height then
-                        break
-                    end
+        local space, index = smallest(l.spaces, width, height)
+
+        if space then
+            local taken = rect(space.x, space.y, width, height)
+            local full = true
+
+            if taken.width < taken.height then
+                --[[
+                    +-----------+-----------+
+                    |taken      |taken.r    |
+                    |           |space.y    |
+                    |           |s.r - t.r  |
+                    |           |space.h    |
+                    +-----------+           |
+                    |space.x    |           |
+                    |taken.b    |           |
+                    |taken.w    |           |
+                    |s.b - t.b  |           |
+                    |           |           |
+                    +-----------------------+
+                ]]
+                if taken.r < space.r then
+                    spaces[index] = rect(taken.r, space.y, space.r - taken.r, space.height)
+                    index = #spaces + 1
+                    full = false
+                end
+                if taken.b < space.b then
+                    spaces[index] = rect(space.x, taken.b, taken.width, space.b - taken.b)
+                    index = #spaces + 1
+                    full = false
+                end
+
+            else
+                --[[
+                    +-----------+-----------+
+                    |taken      |taken.r    |
+                    |           |space.y    |
+                    |           |s.r - t.r  |
+                    |           |taken.h    |
+                    +-----------+-----------+
+                    |space.x                |
+                    |taken.b                |
+                    |space.w                |
+                    |s.b - t.b              |
+                    |                       |
+                    +-----------------------+
+                ]]
+                if taken.r < space.r then
+                    spaces[index] = rect(taken.r, space.y, space.r - taken.r, taken.height)
+                    index = #spaces + 1
+                    full = false
+                end
+                if taken.b < space.b then
+                    spaces[index] = rect(space.x, taken.b, space.width, space.b - taken.b)
+                    index = #spaces + 1
+                    full = false
                 end
             end
-        end
 
-        if smallest then
-            local r1 = smallest
-            if width <= r1.width and height <= r1.height then
-                local r2 = rect(r1.x, r1.y, width, height)
+            -- TODO merge adjacent rectangles
+            -- TODO overlap rectangles
 
-                local tlx = max(r1.x, r2.x)
-                local tly = max(r1.y, r2.y)
-                local brx = min(r1.r, r2.r)
-                local bry = min(r1.b, r2.b)
-
-                local remove = true
-
-                if r2.width < r2.height then
-                    -- Prefer large left / right rectangles.
-
-                    -- Left rectangle
-                    if tlx > r1.x then
-                        spaces[index] = rect(r1.x, r1.y, tlx - r1.x, r1.height)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Right rectangle
-                    if brx < r1.r then
-                        spaces[index] = rect(brx, r1.y, r1.r - brx, r1.height)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Top rectangle
-                    if tly > r1.y then
-                        spaces[index] = rect(tlx, r1.y, brx - tlx, tly - r1.y)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Bottom rectangle
-                    if bry < r1.b then
-                        spaces[index] = rect(tlx, bry, brx - tlx, r1.b - bry)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                else
-                    -- Prefer large top / bottom rectangles.
-
-                    -- Left rectangle
-                    if tlx > r1.x then
-                        spaces[index] = rect(r1.x, r1.y, tlx - r1.x, bry - tly)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Right rectangle
-                    if brx < r1.r then
-                        spaces[index] = rect(brx, r1.y, r1.r - brx, bry - tly)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Top rectangle
-                    if tly > r1.y then
-                        spaces[index] = rect(tlx, r1.y, r1.width, tly - r1.y)
-                        index = #spaces + 1
-                        remove = false
-                    end
-
-                    -- Bottom rectangle
-                    if bry < r1.b then
-                        spaces[index] = rect(tlx, bry, r1.width, r1.b - bry)
-                        index = #spaces + 1
-                        remove = false
-                    end
-                end
-
-                -- TODO merge adjacent rectangles
-                -- TODO overlap rectangles
-
-                if remove then
-                    table.remove(spaces, index)
-                end
-
-                index = l.count + 1
-                l.taken[index] = r2
-                l.count = index
-                return self, self.canvas, l.layer, r2.x, r2.y
+            if full then
+                table.remove(spaces, index)
             end
+
+            self:grow(l.index)
+            index = #l.taken + 1
+            l.taken[index] = taken
+            return l, taken
         end
     end
 
@@ -243,7 +303,7 @@ local mtQuad = {
     __name = "ui.megacanvases.megaquad",
     __index = quad,
     __gc = function(self)
-        self:release(true)
+        self:release(true, true)
     end
 }
 
@@ -255,52 +315,81 @@ function quad:init(width, height)
         height = self.height
     end
 
-    if self.canvas and (self.canvasWidth ~= width or self.canvasHeight ~= height) then
-        self.canvas:release()
+    if self.canvas and (self.canvasWidth < width or self.canvasHeight < height) then
+        megacanvas.pool.free(self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
         self.canvas = nil
     end
 
     if not self.canvas then
-        self.canvas = love.graphics.newCanvas(width, height)
+        self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(width + megacanvas.quadFastPadding, height + megacanvas.quadFastPadding)
     end
 
     self.width = width
-    self.canvasWidth = width
     self.height = height
-    self.canvasHeight = height
+
+    self.lifetime = 0
 end
 
-function quad:release(full)
-    -- FIXME: FREE THE QUAD. MAKE IT REUSED.
+function quad:release(full, gc)
+    if self.quad then
+        -- FIXME: Merge the new free space with other free spaces.
+        self.space.reclaimed = true
+        self.layer.spaces[#self.layer.spaces + 1] = self.space
+        self.space = false
+        self.quad = false
+        self.layer = false
+        self.converted = false
+    end
 
-    self.quad = false
-
-    if self.markedIndex then
-        table.remove(megacanvas.marked, self.markedIndex)
-        megacanvas.markedCount = megacanvas.markedCount - 1
-        self.markedIndex = false
+    if self.marked then
+        megacanvas.marked[self.marked] = false
+        self.marked = false
     end
 
     if full then
-        local old = self.canvas
-        if old then
-            old:release()
+        if gc then
+            -- There's a very high likelihood that the canvas has been GC'd as well if we're here.
+            -- ... might as well just dispose it entirely. Whoops!
+            local canvas = self.canvas
+            if canvas then
+                canvas:release()
+            end
+        elseif self.canvas then
+            megacanvas.pool.free(self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
+            self.canvas = false
         end
 
-        megacanvas.quads[self.index] = nil
+        megacanvas.quads[self.index] = false
         megacanvas.quadsAlive = megacanvas.quadsAlive - 1
+        self.index = false
     end
 end
 
 function quad:draw(x, y, r, sx, sy, ox, oy, kx, ky)
+    self.lifetime = 0
+
     local quad = self.quad
     if quad then
-        local layer = self.megalayer
-        if layer then
-            return love.graphics.drawLayer(self.megacanvas, layer, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+        local layer = self.layer
+        local converted = self.converted
+        if not converted then
+            love.graphics.setBlendMode("alpha", "premultiplied")
+            local layer = self.layer
+            if layer.layer then
+                love.graphics.drawLayer(layer.atlas.canvas, layer.layer, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+            else
+                love.graphics.draw(layer.atlas.canvas, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+            end
+            love.graphics.setBlendMode("alpha", "alphamultiply")
+
         else
-            return love.graphics.draw(self.megacanvas, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+            if layer.layer then
+                return love.graphics.drawLayer(layer.atlas.canvas, layer.layer, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+            else
+                return love.graphics.draw(layer.atlas.canvas, quad, x, y, r, sx, sy, ox, oy, kx, ky)
+            end
         end
+        return
     end
 
     love.graphics.setBlendMode("alpha", "premultiplied")
@@ -309,33 +398,105 @@ function quad:draw(x, y, r, sx, sy, ox, oy, kx, ky)
 end
 
 function quad:mark()
-    if not self.quad and not self.markedIndex then
-        local index = megacanvas.markedCount + 1
+    if not self.quad and not self.marked then
+        local index = #megacanvas.marked + 1
         megacanvas.marked[index] = self
-        megacanvas.markedCount = index
-        self.markedIndex = index
+        self.marked = index
     end
 end
 
 
 
-megacanvas.blitfix = love.graphics.newShader([[
-    vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords) {
-        vec4 c = Texel(tex, texture_coords);
-        return vec4(c.rgb / c.a, c.a) * color;
-    }
-]])
+function megacanvas.pool.get(width, height)
+    local pool = megacanvas.pool
+    local best, index = smallest(pool, width, height)
 
-function megacanvas.newPage()
-    local p = setmetatable({}, mtPage)
+    megacanvas.poolUsed = megacanvas.poolUsed + 1
 
-    local index = megacanvas.pagesCount + 1
-    p.index = index
-    megacanvas.pages[index] = p
-    megacanvas.pagesCount = index
+    if best then
+        megacanvas.poolAlive = megacanvas.poolAlive - 1
+        pool[index] = false
+        return best.canvas, best.width, best.height, false
+    end
 
-    p:init()
-    return p
+    megacanvas.poolNew = megacanvas.poolNew + 1
+    return love.graphics.newCanvas(width, height), width, height, true
+end
+
+function megacanvas.pool.free(canvas, width, height, new)
+    local pool = megacanvas.pool
+
+    megacanvas.poolUsed = megacanvas.poolUsed - 1
+    if new then
+        megacanvas.poolNew = megacanvas.poolNew - 1
+    end
+
+    megacanvas.poolAlive = megacanvas.poolAlive + 1
+    for i = 1, #pool + 1 do
+        if not pool[i] then
+            pool[i] = {
+                canvas = canvas,
+                width = width,
+                height = height,
+                lifetime = 0
+            }
+            break
+        end
+    end
+end
+
+function megacanvas.pool.sort(a, b)
+    return a.width * a.height < b.width * b.height
+end
+
+function megacanvas.pool.cleanup()
+    local min = 8
+    local max = 24
+    local deadMax = 32
+    local lifetimeMax = 60 * 8
+
+    local pool = megacanvas.pool
+    local alive = megacanvas.poolAlive
+
+    if alive >= max or #pool - alive > deadMax then
+        cleanup(pool)
+        alive = #pool
+        if alive >= max then
+            table.sort(pool, megacanvas.pool.sort)
+            for i = 1, #pool - min do
+                pool[1].canvas:release()
+                table.remove(pool, 1)
+            end
+            alive = min
+        end
+    end
+
+    for i = #pool, 1, -1 do
+        local entry = pool[i]
+        if entry then
+            local lifetime = entry.lifetime + 1
+            if lifetime < lifetimeMax then
+                entry.lifetime = lifetime
+            else
+                entry.canvas:release()
+                pool[i] = false
+                alive = alive - 1
+            end
+        end
+    end
+
+    megacanvas.poolAlive = alive
+end
+
+function megacanvas.newAtlas()
+    local a = setmetatable({}, mtAtlas)
+
+    local index = #megacanvas.atlases + 1
+    a.index = index
+    megacanvas.atlases[index] = a
+
+    a:init()
+    return a
 end
 
 function megacanvas.new(width, height)
@@ -349,69 +510,69 @@ function megacanvas.new(width, height)
         q.__proxy = proxy
     end
 
-    local index = megacanvas.quadsCount + 1
+    local index = #megacanvas.quads + 1
     q.index = index
     megacanvas.quads[index] = q
-    megacanvas.quadsCount = index
     megacanvas.quadsAlive = megacanvas.quadsAlive + 1
 
     q:init(width, height)
     return q
 end
 
-function megacanvas.pack(q)
-    local padding = megacanvas.padding
-    local widthPadded = q.width + padding * 2
-    local heightPadded = q.height + padding * 2
-
-    local pages = megacanvas.pages
-    local p, canvas, layer, x, y
-    for i = 1, megacanvas.pagesCount do
-        p, canvas, layer, x, y = pages[i]:fit(widthPadded, heightPadded)
-        if p then
-            break
-        end
-    end
-
-    if not p then
-        p, canvas, layer, x, y = megacanvas.newPage():fit(widthPadded, heightPadded)
-    end
-
-    love.graphics.setCanvas(canvas, layer or nil)
-    love.graphics.setScissor(x, y, widthPadded, heightPadded)
-    love.graphics.clear(0, 0, 0, 0)
-
-    if megacanvas.debug.rects then
-        love.graphics.setColor(0, 1, 0, 1)
-        love.graphics.setLineWidth(1)
-        love.graphics.rectangle("line", x + 0.5, y + 0.5, widthPadded - 1, heightPadded - 1)
-        love.graphics.setColor(1, 1, 1, 1)
-    end
-
-    love.graphics.draw(q.canvas, x + padding, y + padding)
-
-    q.canvas:release()
-    q.canvas = nil
-    q.quad = love.graphics.newQuad(x + padding, y + padding, q.width, q.height, p.width, p.height)
-    q.megacanvas = canvas
-    q.megalayer = layer
-end
-
 function megacanvas.process()
-    local quads = megacanvas.quads
-    local quadsCount = megacanvas.quadsCount
+    megacanvas.pool.cleanup()
 
-    if quadsCount - megacanvas.quadsAlive > 128 then
-        for i = quadsCount, 1, -1 do
-            local q = quads[i]
-            if not q then
-                table.remove(quads, i)
+    local lifetimeMax = 60 * 12
+
+    local quads = megacanvas.quads
+
+    for i = 1, #quads do
+        local q = quads[i]
+        if q then
+            local lifetime = q.lifetime + 1
+            if lifetime < lifetimeMax then
+                q.lifetime = lifetime
+            else
+                q:release(true)
             end
         end
-        quadsCount = #quads
-        megacanvas.quadsCount = quadsCount
-        for i = 1, quadsCount do
+    end
+
+    if cleanup(quads, megacanvas.quadsAlive, 32) then
+        for i = 1, #quads do
             quads[i].index = i
+        end
+        megacanvas.quadsAlive = #quads
+    end
+
+    local marked = megacanvas.marked
+    local markedCount = #marked
+    if markedCount < 0 then
+        return
+    end
+
+    local atlases = megacanvas.atlases
+    local padding = megacanvas.padding
+
+    local markedLast = math.max(1, markedCount - 4)
+    for i = markedCount, markedLast, -1 do
+        local q = marked[i]
+        if q then
+            q.marked = false
+
+            local widthPadded = q.width + padding * 2
+            local heightPadded = q.height + padding * 2
+
+            for i = 1, #atlases do
+                q.layer, q.space = atlases[i]:fit(widthPadded, heightPadded)
+                if q.layer then
+                    break
+                end
+            end
+
+            if not q.layer then
+                q.layer, q.space = megacanvas.newAtlas():fit(widthPadded, heightPadded)
+            end
         end
     end
 
@@ -420,22 +581,58 @@ function megacanvas.process()
     love.graphics.push()
     love.graphics.origin()
     love.graphics.setBlendMode("alpha", "premultiplied")
-    local shaderPrev = love.graphics.getShader()
-    love.graphics.setShader(megacanvas.blitfix)
-
-    local markedCount = megacanvas.markedCount
-    if markedCount > 0 then
-        local marked = megacanvas.marked
-        for i = 1, markedCount do
-            local q = marked[i]
-            q.markedIndex = false
-            megacanvas.pack(q)
-        end
-        megacanvas.marked = {}
-        megacanvas.markedCount = 0
+    local shaderPrev
+    if megacanvas.convertBlend then
+        love.graphics.getShader()
+        love.graphics.setShader(megacanvas.convertBlendShader)
     end
 
-    love.graphics.setShader(shaderPrev)
+    for i = markedCount, markedLast, -1 do
+        local q = marked[i]
+        if q then
+            marked[i] = nil
+
+            local widthPadded = q.width + padding * 2
+            local heightPadded = q.height + padding * 2
+            local layer = q.layer
+            local space = q.space
+
+            local x = space.x
+            local y = space.y
+
+            if layer.layer then
+                love.graphics.setCanvas(layer.atlas.canvas, layer.layer)
+            else
+                love.graphics.setCanvas(layer.atlas.canvas)
+            end
+            love.graphics.setScissor(x, y, widthPadded, heightPadded)
+            love.graphics.clear(0, 0, 0, 0)
+
+            if megacanvas.debug.rects then
+                love.graphics.setColor(0, 1, 0, 1)
+                love.graphics.setLineWidth(1)
+                love.graphics.rectangle("line", x + 0.5, y + 0.5, widthPadded - 1, heightPadded - 1)
+                love.graphics.setColor(1, 1, 1, 1)
+            end
+
+            x = x + padding
+            y = y + padding
+
+            local quad = love.graphics.newQuad(0, 0, q.width, q.height, q.canvasWidth, q.canvasHeight)
+            love.graphics.draw(q.canvas, x, y)
+
+            megacanvas.pool.free(q.canvas, q.canvasWidth, q.canvasHeight, q.canvasNew)
+            q.canvas = nil
+
+            quad:setViewport(x, y, q.width, q.height, layer.atlas.width, layer.atlas.height)
+            q.quad = quad
+            q.converted = megacanvas.convertBlend
+        end
+    end
+
+    if megacanvas.convertBlend then
+        love.graphics.setShader(shaderPrev)
+    end
     love.graphics.setBlendMode("alpha", "alphamultiply")
     love.graphics.pop()
     love.graphics.setCanvas(canvasPrev)
@@ -443,29 +640,53 @@ function megacanvas.process()
 end
 
 function megacanvas.dump(prefix)
+    local atlases = megacanvas.atlases
+    local quads = megacanvas.quads
+
     if megacanvas.debug.rects then
         local sX, sY, sW, sH = love.graphics.getScissor()
         local canvasPrev = love.graphics.getCanvas()
         love.graphics.push()
         love.graphics.origin()
-        love.graphics.setColor(0, 0, 1, 1)
         love.graphics.setLineWidth(1)
 
-        local pages = megacanvas.pages
-        for pi = 1, megacanvas.pagesCount do
-            local p = pages[pi]
-            local canvas = p.canvas
-            local layers = p.layers
-            for li = 1, megacanvas.layers or 1 do
+        local atlases = megacanvas.atlases
+        for ai = 1, #atlases do
+            local a = atlases[ai]
+            local canvas = a.canvas
+            local layers = a.layers
+            for li = 1, a.layersAllocated do
                 local l = layers[li]
-                love.graphics.setCanvas(canvas, l.layer or nil)
+                if l.layer then
+                    love.graphics.setCanvas(canvas, l.layer)
+                else
+                    love.graphics.setCanvas(canvas)
+                end
                 local spaces = l.spaces
                 for si = 1, #spaces do
                     local s = spaces[si]
                     love.graphics.setScissor(s.x, s.y, s.width, s.height)
-                    love.graphics.clear(0, 0, 0, 0)
+                    if s.reclaimed then
+                        love.graphics.setColor(1, 0, 0, 0.5)
+                        love.graphics.rectangle("fill", s.x + 0.5, s.y + 0.5, s.width - 1, s.height - 1)
+                        love.graphics.setColor(1, 0, 0, 1)
+                    else
+                        love.graphics.clear(0, 0, 1, 0.5)
+                        love.graphics.setColor(0, 0, 1, 1)
+                    end
                     love.graphics.rectangle("line", s.x + 0.5, s.y + 0.5, s.width - 1, s.height - 1)
                 end
+            end
+        end
+
+        love.graphics.setScissor()
+
+        for qi = 1, #quads do
+            local q = quads[qi]
+            if q and q.canvas and q.quad then
+                love.graphics.setCanvas(q.canvas)
+                love.graphics.setColor(1, 0, 0, 0.5)
+                love.graphics.rectangle("fill", 0, 0, q.width, q.height)
             end
         end
 
@@ -474,22 +695,37 @@ function megacanvas.dump(prefix)
         love.graphics.setScissor(sX, sY, sW, sH)
     end
 
-    local pages = megacanvas.pages
-    for pi = 1, megacanvas.pagesCount do
-        local p = pages[pi]
-        local canvas = p.canvas
-        local layers = p.layers
-        for li = 1, megacanvas.layers or 1 do
-            if layers[li].count > 0 then
-                local fh = io.open(prefix .. string.format("page_%d_layer_%d.png", pi, li), "wb")
+    for ai = 1, #atlases do
+        local a = atlases[ai]
+        local canvas = a.canvas
+        local layers = a.layers
+        for li = 1, a.layersAllocated or 1 do
+            local l = layers[li]
+            if #l.taken > 0 then
+                local fh = io.open(prefix .. string.format("atlas_%d_layer_%d.png", ai, li), "wb")
                 if fh then
-                    local id = canvas:newImageData(megacanvas.layers and li or nil)
+                    local id = canvas:newImageData(l.layer)
                     local fd = id:encode("png")
                     id:release()
                     fh:write(fd:getString())
                     fh:close()
                     fd:release()
                 end
+            end
+        end
+    end
+
+    for qi = 1, #quads do
+        local q = quads[qi]
+        if q and q.canvas then
+            local fh = io.open(prefix .. string.format("quad_%d.png", qi), "wb")
+            if fh then
+                local id = q.canvas:newImageData()
+                local fd = id:encode("png")
+                id:release()
+                fh:write(fd:getString())
+                fh:close()
+                fd:release()
             end
         end
     end

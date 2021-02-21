@@ -27,6 +27,7 @@ local ui = {
         mouseGlobal = false,
         eventProxies = false,
         inspector = "f12",
+        megacanvas = true,
     },
 
     eventProxyCache = {},

@@ -556,7 +556,8 @@ uie.default = {
     __draw = function(self, skipCache)
         ui.stats.draws = ui.stats.draws + 1
 
-        if (not self.cacheable or skipCache == 1) and not self.cacheForce then
+        local cacheForce = self.cacheForce
+        if (not self.cacheable or skipCache == 1) and not cacheForce then
             return self:draw()
         end
 
@@ -578,20 +579,40 @@ uie.default = {
         width = width + paddingL + paddingR
         height = height + paddingT + paddingB
 
-        local repaint = not self.cachedCanvas
-        if repaint then
+        local cacheStatus = self.cachedCanvas
+        local repaint = not cacheStatus or cacheStatus == 0
+
+        if not cacheStatus then
             self.consecutiveFreshDraws = 0
+            if self.consecutiveCachedDraws > 0 then
+                self.consecutiveCachedDraws = 0
+            else
+                self.consecutiveCachedDraws = self.consecutiveCachedDraws - 1
+            end
+            self.cachedCanvas = 0
+        elseif self.consecutiveCachedDraws < 0 then
             self.consecutiveCachedDraws = 0
         else
             self.consecutiveCachedDraws = self.consecutiveCachedDraws + 1
         end
 
-        if self.cacheForce then
-            repaint = true
-        end
-
         local cached = self.__cached
         local canvas = cached.canvas
+
+        if cacheForce then
+            repaint = true
+
+        elseif self.consecutiveCachedDraws < 10 then
+            if canvas and self.consecutiveCachedDraws < -60 * 3 then
+                canvas:release()
+                cached.canvas = nil
+                if ui.log.canvas then
+                    print("[olympui]", "canvas unused", self)
+                end
+            end
+
+            return self:draw()
+        end
 
         if canvas then
             if width > canvas.canvasWidth or height > canvas.canvasHeight then
@@ -613,16 +634,17 @@ uie.default = {
             canvas.height = height
         end
 
-        -- TODO: Get max supported texture size?
         if width > megacanvas.width or height > megacanvas.height then
             return self:draw()
         end
 
-        if not canvas then
+        if not canvas or not canvas.index then
             repaint = true
+            if not canvas then
+                ui.stats.canvases = ui.stats.canvases + 1
+            end
             canvas = megacanvas(width, height)
             cached.canvas = canvas
-            ui.stats.canvases = ui.stats.canvases + 1
             if ui.log.canvas then
                 print("[olympui]", "canvas created", self)
             end
@@ -632,25 +654,28 @@ uie.default = {
         local y = self.screenY
 
         if not repaint and skipCache ~= 2 then
-            if self.consecutiveCachedDraws > 32 then
-                uiu.setColor(1, 1, 1, 1)
+            if self.consecutiveCachedDraws > 10 and ui.features.megacanvas then
                 canvas:mark()
+                if canvas.marked and ui.log.canvas then
+                    print("[olympui]", "canvas marked", self)
+                end
             end
 
             self:__drawCachedCanvas(canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
             return
         end
 
-        canvas:init()
+        self.cachedCanvas = 1
 
-        self.cachedCanvas = canvas
+        canvas:init()
 
         local sX, sY, sW, sH = love.graphics.getScissor()
 
         local canvasPrev = love.graphics.getCanvas()
         love.graphics.setCanvas(canvas.canvas)
-        love.graphics.setScissor(0, 0, width, height)
+        love.graphics.setScissor()
         love.graphics.clear(0, 0, 0, 0)
+        love.graphics.setScissor(0, 0, width, height)
 
         love.graphics.push()
         love.graphics.origin()
@@ -706,7 +731,7 @@ uie.default = {
                 local cachedCanvas = self.cachedCanvas
                 self:__draw(2)
                 if cb and self.cacheable then
-                    cb(self, false, self.cachedCanvas ~= cachedCanvas or self.cachedCanvas == nil)
+                    cb(self, false, ((self.cachedCanvas and 1 or 0) ~= (cachedCanvas and 1 or 0)) or self.cachedCanvas == 0)
                 end
             else
                 self:__draw(1)

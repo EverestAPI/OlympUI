@@ -195,11 +195,7 @@ uie.add("panel", {
                     paddingL, paddingT, paddingR, paddingB = padding, padding, padding, padding
                 end
                 local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                if self.cachedCanvas then
-                    love.graphics.setScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
-                else
-                    love.graphics.intersectScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
-                end
+                love.graphics.intersectScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
             end
 
             local children = self.children
