@@ -219,7 +219,7 @@ uie.add("panel", {
 
 
         local border = style.border
-        if border and border[5] and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
+        if border and border[4] and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
             if not radius then
                 radius = style.radius
             end
