@@ -158,7 +158,7 @@ uie.add("panel", {
 
         local radius
         local bg = style.bg
-        if bg and #bg ~= 0 and bg[4] ~= 0 and uiu.setColor(bg) then
+        if bg and bg[4] and bg[4] ~= 0 and uiu.setColor(bg) then
             radius = style.radius
             local patchName = style.patch
             local patch
@@ -219,7 +219,7 @@ uie.add("panel", {
 
 
         local border = style.border
-        if border and #border ~= 0 and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
+        if border and border[5] and border[4] ~= 0 and border[5] ~= 0 and uiu.setColor(border) then
             if not radius then
                 radius = style.radius
             end

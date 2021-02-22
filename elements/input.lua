@@ -89,9 +89,10 @@ uie.add("button", {
         end
 
         local faded = false
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        local fadeSwap = uiu.fadeSwap
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -102,9 +103,10 @@ uie.add("button", {
             f = 1 - f
 
             faded = false
-            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
-            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
-            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
+            local fade = uiu.fade
+            faded = fade(faded, f, bg, bgPrev, bgNext)
+            faded = fade(faded, f, fg, fgPrev, fgNext)
+            faded = fade(faded, f, border, borderPrev, borderNext)
 
             if faded then
                 self:repaint()
@@ -181,7 +183,7 @@ uie.add("field", {
     end,
 
     setPlaceholder = function(self, value)
-        value = value and #value ~= 0 and value
+        value = value ~= "" and value
         self._placeholder = value
         if not self.text then
             self.label.text = value or ""
@@ -193,7 +195,7 @@ uie.add("field", {
     end,
 
     setText = function(self, value)
-        value = value and #value ~= 0 and value
+        value = value ~= "" and value
         local prev = self._text
         self._text = value
         self.label.text = value or self.placeholder or ""
@@ -226,9 +228,10 @@ uie.add("field", {
         end
 
         local faded = false
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        local fadeSwap = uiu.fadeSwap
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -239,9 +242,10 @@ uie.add("field", {
             f = 1 - f
 
             faded = false
-            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
-            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
-            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
+            local fade = uiu.fade
+            faded = fade(faded, f, bg, bgPrev, bgNext)
+            faded = fade(faded, f, fg, fgPrev, fgNext)
+            faded = fade(faded, f, border, borderPrev, borderNext)
 
             if faded then
                 self:repaint()
@@ -281,7 +285,7 @@ uie.add("field", {
 
         uie.row.draw(self)
 
-        if self.focused and self.blinkTime < 0.5 and fg and #fg ~= 0 and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
+        if self.focused and self.blinkTime < 0.5 and fg and fg[5] and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
             local ix = math.ceil(self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))) + 0.5
             love.graphics.setLineWidth(fg[5] or 1)
             love.graphics.line(x + ix + paddingL, y + paddingT, x + ix + paddingL, y + h - paddingB)
@@ -601,9 +605,10 @@ uie.add("listItem", {
         end
 
         local faded = false
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        local fadeSwap = uiu.fadeSwap
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -614,9 +619,10 @@ uie.add("listItem", {
             f = 1 - f
 
             faded = false
-            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
-            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
-            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
+            local fade = uiu.fade
+            faded = fade(faded, f, bg, bgPrev, bgNext)
+            faded = fade(faded, f, fg, fgPrev, fgNext)
+            faded = fade(faded, f, border, borderPrev, borderNext)
 
             if faded then
                 self:repaint()

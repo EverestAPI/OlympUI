@@ -172,8 +172,9 @@ uie.add("titlebar", {
         end
 
         local faded = false
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = uiu.fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        local fadeSwap = uiu.fadeSwap
+        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -184,8 +185,9 @@ uie.add("titlebar", {
             f = 1 - f
 
             faded = false
-            faded = uiu.fade(faded, f, bg, bgPrev, bgNext)
-            faded = uiu.fade(faded, f, fg, fgPrev, fgNext)
+            local fade = uiu.fade
+            faded = fade(faded, f, bg, bgPrev, bgNext)
+            faded = fade(faded, f, fg, fgPrev, fgNext)
 
             if faded then
                 self:repaint()

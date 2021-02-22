@@ -187,8 +187,9 @@ uie.add("scrollhandle", {
         end
 
         local faded = false
-        faded, colorPrev, self._fadeColorPrev, self._fadeColor = uiu.fadeSwap(faded, color, self._fadeColorPrev, colorPrev, colorNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = uiu.fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        local fadeSwap = uiu.fadeSwap
+        faded, colorPrev, self._fadeColorPrev, self._fadeColor = fadeSwap(faded, color, self._fadeColorPrev, colorPrev, colorNext)
+        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -199,8 +200,9 @@ uie.add("scrollhandle", {
             f = 1 - f
 
             faded = false
-            faded = uiu.fade(faded, f, color, colorPrev, colorNext)
-            faded = uiu.fade(faded, f, border, borderPrev, borderNext)
+            local fade = uiu.fade
+            faded = fade(faded, f, color, colorPrev, colorNext)
+            faded = fade(faded, f, border, borderPrev, borderNext)
 
             if faded then
                 self:repaint()
