@@ -622,7 +622,7 @@ uie.default = {
 
         if canvas then
             if width > canvas.canvasWidth or height > canvas.canvasHeight then
-                if width > megacanvas.width or height > megacanvas.height then
+                if width > megacanvas.widthMax or height > megacanvas.heightMax then
                     canvas:release()
                     canvas = nil
                     cached.canvas = nil
@@ -639,7 +639,7 @@ uie.default = {
             end
         end
 
-        if width > megacanvas.width or height > megacanvas.height then
+        if width > megacanvas.widthMax or height > megacanvas.heightMax then
             return self:draw()
         end
 

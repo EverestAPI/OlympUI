@@ -30,28 +30,31 @@ local megacanvas = {
 
     quadFastPadding = 32,
 
-    padding = 2,
-    width = 4096,
-    height = 4096
+    padding = 2
 }
 
 -- Love2D exposes a function that can get the theoretical maximum depth. It isn't accurate though.
 do
     local arrayFeature = love.graphics.getTextureTypes().array
 
-    if arrayFeature == 1 or arrayFeature == true then
-        -- 4096 x 4096 x 32bit = 64MB
-        local min = 1
-        local max = 8
+    local sizeArray = 2048
+    local sizeSingle = 4096
 
-        local success, canvas = pcall(love.graphics.newCanvas, 16, 16, max, { type = "array" })
+    megacanvas.widthMax = sizeSingle
+    megacanvas.heightMax = sizeSingle
+
+    if arrayFeature == 1 or arrayFeature == true then
+        local min = 1
+        local max = 16
+
+        local success, canvas = pcall(love.graphics.newCanvas, sizeArray, sizeArray, max, { type = "array" })
         if success then
             canvas:release()
             min = max
         else
             while max - min > 1 do
                 local mid = min + math.ceil((max - min) / 2)
-                success, canvas = pcall(love.graphics.newCanvas, 16, 16, mid, { type = "array" })
+                success, canvas = pcall(love.graphics.newCanvas, sizeArray, sizeArray, mid, { type = "array" })
                 if success then
                     canvas:release()
                     min = mid
@@ -61,16 +64,22 @@ do
             end
         end
 
-        success, canvas = pcall(love.graphics.newCanvas, 16, 16, min, { type = "array" })
+        success, canvas = pcall(love.graphics.newCanvas, sizeArray, sizeArray, min, { type = "array" })
         if success then
             canvas:release()
             megacanvas.layersMax = min
+            megacanvas.width = sizeArray
+            megacanvas.height = sizeArray
         else
             megacanvas.layersMax = false
+            megacanvas.width = sizeSingle
+            megacanvas.height = sizeSingle
         end
 
     else
         megacanvas.layersMax = false
+        megacanvas.width = sizeSingle
+        megacanvas.height = sizeSingle
     end
 end
 
@@ -173,7 +182,7 @@ local function smallest(rects, width, height)
     return best, index
 end
 
-local function cleanup(list, alive, deadMax)
+local function cleanupList(list, alive, deadMax)
     if alive and #list - alive < deadMax then
         return false
     end
@@ -467,6 +476,8 @@ function quad:init(width, height)
     self.width = width
     self.height = height
 
+    self.large = width > (megacanvas.width - megacanvas.padding) or height > (megacanvas.height - megacanvas.padding)
+
     self.lifetime = 0
 end
 
@@ -507,9 +518,11 @@ function quad:release(full, gc)
             self.canvas = false
         end
 
-        megacanvas.quads[self.index] = false
-        megacanvas.quadsAlive = megacanvas.quadsAlive - 1
-        self.index = false
+        if self.index then
+            megacanvas.quads[self.index] = false
+            megacanvas.quadsAlive = megacanvas.quadsAlive - 1
+            self.index = false
+        end
     end
 end
 
@@ -546,7 +559,7 @@ function quad:draw(x, y, r, sx, sy, ox, oy, kx, ky)
 end
 
 function quad:mark()
-    if not self.quad and not self.marked then
+    if not self.quad and not self.marked and not self.large then
         local index = #megacanvas.marked + 1
         megacanvas.marked[index] = self
         self.marked = index
@@ -621,7 +634,7 @@ function megacanvas.pool.cleanup()
     local alive = megacanvas.poolAlive
 
     if alive >= max or #pool - alive > deadMax then
-        cleanup(pool)
+        cleanupList(pool)
         alive = #pool
         if alive >= max then
             table.sort(pool, megacanvas.pool.sort)
@@ -700,7 +713,7 @@ function megacanvas.process()
         end
     end
 
-    if cleanup(quads, quadsAlive and megacanvas.quadsAlive, 32) then
+    if cleanupList(quads, quadsAlive and megacanvas.quadsAlive, 32) then
         for i = 1, #quads do
             quads[i].index = i
         end
@@ -874,16 +887,14 @@ function megacanvas.dump(prefix)
         local layers = a.layers
         for li = 1, a.layersAllocated or 1 do
             local l = layers[li]
-            if #l.taken > 0 then
-                local fh = io.open(prefix .. string.format("atlas_%d_layer_%d.png", ai, li), "wb")
-                if fh then
-                    local id = canvas:newImageData(l.layer)
-                    local fd = id:encode("png")
-                    id:release()
-                    fh:write(fd:getString())
-                    fh:close()
-                    fd:release()
-                end
+            local fh = io.open(prefix .. string.format("atlas_%d_layer_%d.png", ai, li), "wb")
+            if fh then
+                local id = canvas:newImageData(l.layer)
+                local fd = id:encode("png")
+                id:release()
+                fh:write(fd:getString())
+                fh:close()
+                fd:release()
             end
         end
     end
