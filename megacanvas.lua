@@ -209,7 +209,9 @@ function atlas:init()
             spaces = {
                 rect(0, 0, self.width, self.height)
             },
-            reclaimed = 0
+            reclaimed = 0,
+            reclaimedPrev = 0,
+            reclaimedFrames = 0
         }
     end
 end
@@ -363,11 +365,26 @@ function atlas:cleanup()
         local l = layers[li]
 
         local reclaimed = l.reclaimed
-        if reclaimed >= 8 then
+        local reclaimedFrames = l.reclaimedFrames
+
+        if reclaimed >= 16 or (reclaimed >= 8 and reclaimed == l.reclaimedPrev) then
+            reclaimedFrames = reclaimedFrames + 1
+        else
+            reclaimedFrames = 0
+            l.reclaimedPrev = reclaimed
+        end
+
+        if reclaimedFrames < 30 and reclaimed < 32 then
+            l.reclaimedFrames = reclaimedFrames
+
+        else
+            l.reclaimedFrames = 0
             local taken = l.taken
             local spaces = {
                 rect(0, 0, self.width, self.height)
             }
+
+            cleanup(taken)
 
             for ti = 1, #taken do
                 local t = taken[ti]
@@ -442,8 +459,8 @@ function quad:init(width, height)
 
     if not self.canvas then
         self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(
-            math.ceil(width / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding,
-            math.ceil(height / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding
+            math.ceil(width / megacanvas.quadFastPadding + 2) * megacanvas.quadFastPadding,
+            math.ceil(height / megacanvas.quadFastPadding + 2) * megacanvas.quadFastPadding
         )
     end
 
