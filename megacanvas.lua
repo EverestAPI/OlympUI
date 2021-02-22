@@ -31,8 +31,8 @@ local megacanvas = {
     quadFastPadding = 32,
 
     padding = 2,
-    width = 1024,
-    height = 1024
+    width = 4096,
+    height = 4096
 }
 
 -- Love2D exposes a function that can get the theoretical maximum depth. It isn't accurate though.
