@@ -148,8 +148,8 @@ uie.add("scrollhandle", {
     },
 
     init = function(self)
-        self.enabled = false
-        self.__enabled = true
+        self.enabled = true
+        self._enabled = true
         self.style.color, self._fadeColorPrev, self._fadeColor = {}, false, false
         self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
@@ -162,10 +162,10 @@ uie.add("scrollhandle", {
 
     update = function(self, dt)
         local enabled = self.enabled
-        if enabled == nil then
+        if enabled == true then
             enabled = self.isNeeded
         end
-        self.__enabled = enabled
+        self._enabled = enabled
 
         if not enabled then
             return
@@ -211,7 +211,7 @@ uie.add("scrollhandle", {
     end,
 
     draw = function(self)
-        if not self.__enabled then
+        if not self._enabled then
             return
         end
 

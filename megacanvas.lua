@@ -41,9 +41,8 @@ do
 
     if arrayFeature == 1 or arrayFeature == true then
         -- 4096 x 4096 x 32bit = 64MB
-        -- FIXME: Dynamically grow canvas size on demand.
         local min = 1
-        local max = 16
+        local max = 8
 
         local success, canvas = pcall(love.graphics.newCanvas, 16, 16, max, { type = "array" })
         if success then
@@ -94,6 +93,65 @@ local function rect(x, y, width, height)
         r = x + width,
         b = y + height
     }
+end
+
+local function rectSub(r1, r2)
+    local tlx = math.max(r1.x, r2.x)
+    local tly = math.max(r1.y, r2.y)
+    local brx = math.min(r1.x + r1.width, r2.x + r2.width)
+    local bry = math.min(r1.y + r1.height, r2.y + r2.height)
+
+    if tlx >= brx or tly >= bry  then
+        -- No intersection
+        return {r1}
+    end
+
+    local remaining = {}
+
+    if r2.width < r2.height then
+        -- Large left rectangle
+        if tlx > r1.x then
+            table.insert(remaining, rect(r1.x, r1.y, tlx - r1.x, r1.height))
+        end
+
+        -- Large right rectangle
+        if brx < r1.x + r1.width then
+            table.insert(remaining, rect(brx, r1.y, r1.x + r1.width - brx, r1.height))
+        end
+
+        -- Small top rectangle
+        if tly > r1.y then
+            table.insert(remaining, rect(tlx, r1.y, brx - tlx, tly - r1.y))
+        end
+
+        -- Small bottom rectangle
+        if bry < r1.y + r1.height then
+            table.insert(remaining, rect(tlx, bry, brx - tlx, r1.y + r1.height - bry))
+        end
+
+    else
+        -- Small left rectangle
+        if tlx > r1.x then
+            table.insert(remaining, rect(r1.x, tly, tlx - r1.x, bry - tly))
+        end
+
+        -- Small right rectangle
+        if brx < r1.x + r1.width then
+            table.insert(remaining, rect(brx, tly, r1.x + r1.width - brx, bry - tly))
+        end
+
+        -- Large top rectangle
+        if tly > r1.y then
+            table.insert(remaining, rect(r1.x, r1.y, r1.width, tly - r1.y))
+        end
+
+        -- Large bottom rectangle
+        if bry < r1.y + r1.height then
+            table.insert(remaining, rect(r1.x, bry, r1.width, r1.y + r1.height - bry))
+        end
+    end
+
+    return remaining
 end
 
 local function smallest(rects, width, height)
@@ -149,8 +207,9 @@ function atlas:init()
             layer = self.layersMax and i or nil,
             taken = {},
             spaces = {
-                rect(0, 0, megacanvas.width, megacanvas.height)
-            }
+                rect(0, 0, self.width, self.height)
+            },
+            reclaimed = 0
         }
     end
 end
@@ -162,7 +221,7 @@ end
 function atlas:grow(count)
     if not self.layersMax then
         if (self.layersAllocated or 0) < 1 then
-            self.canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height)
+            self.canvas = love.graphics.newCanvas(self.width, self.height)
             self.layersAllocated = 1
         end
         return
@@ -186,7 +245,7 @@ function atlas:grow(count)
         canvas:release()
     end
 
-    canvas = love.graphics.newCanvas(megacanvas.width, megacanvas.height, count, { type = "array" })
+    canvas = love.graphics.newCanvas(self.width, self.height, count, { type = "array" })
     self.canvas = canvas
 
     if copies then
@@ -197,6 +256,7 @@ function atlas:grow(count)
         love.graphics.push()
         love.graphics.origin()
         love.graphics.setScissor()
+        love.graphics.setBlendMode("alpha", "premultiplied")
 
         for i = 1, countOld do
             local copyData = copies[i]
@@ -207,6 +267,7 @@ function atlas:grow(count)
             copy:release()
         end
 
+        love.graphics.setBlendMode("alpha", "alphamultiply")
         love.graphics.pop()
         love.graphics.setCanvas(canvasPrev)
         love.graphics.setScissor(sX, sY, sW, sH)
@@ -288,11 +349,70 @@ function atlas:fit(width, height)
             self:grow(l.index)
             index = #l.taken + 1
             l.taken[index] = taken
+            taken.index = index
             return l, taken
         end
     end
 
     return false
+end
+
+function atlas:cleanup()
+    local layers = self.layers
+    for li = 1, #layers do
+        local l = layers[li]
+
+        local reclaimed = l.reclaimed
+        if reclaimed >= 8 then
+            local taken = l.taken
+            local spaces = {
+                rect(0, 0, self.width, self.height)
+            }
+
+            for ti = 1, #taken do
+                local t = taken[ti]
+
+                -- In case of debugging emergency, break glass and print(svg .. "</svg>\n")
+                --[===[
+                local svg = string.format([[
+<svg xmlns="http://www.w3.org/2000/svg" width="%d" viewBox="0 0 %d %d">
+]], self.width / 8, self.width, self.height)
+
+                local function svgrect(text, r, attrs)
+                    svg = svg .. string.format([[
+    <rect debug="%s" x="%d" y="%d" width="%d" height="%d" %s/>
+]], text, r.x, r.y, r.width, r.height, attrs)
+                end
+
+                svgrect("bg", rect(0, 0, self.width, self.height), [[fill="none" stroke="rgba(0, 0, 0, 1)" stroke-width="1px"]])
+
+                for si = 1, #spaces do
+                    svgrect("space " .. tostring(si), spaces[si], [[fill="rgba(0, 0, 255, 0.5)" stroke="rgba(0, 0, 255, 1)" stroke-width="1px"]])
+                end
+
+                for tti = 1, ti - 1 do
+                    svgrect("taken " .. tostring(tti), taken[tti], [[fill="rgba(0, 255, 0, 0.2)" stroke="rgba(0, 255, 0, 1)" stroke-width="1px"]])
+                end
+
+                svgrect("taken " .. tostring(ti), t, [[fill="rgba(0, 255, 0, 1)" stroke="rgba(0, 255, 0, 1)" stroke-width="1px"]])
+                ]===]
+
+                for si = #spaces, 1, -1 do
+                    local s = spaces[si]
+                    local result = rectSub(s, t)
+                    table.remove(spaces, si)
+                    for ri = 1, #result do
+                        ---svgrect("new " .. tostring(si) .. " " .. tostring(ri), result[ri], [[fill="rgba(255, 0, 0, 0.2)" stroke="rgba(255, 0, 0, 1)" stroke-width="1px"]])
+                        table.insert(spaces, result[ri])
+                    end
+                end
+
+            end
+
+            l.spaces = spaces
+            l.reclaimed = 0
+        end
+    end
 end
 
 
@@ -321,7 +441,10 @@ function quad:init(width, height)
     end
 
     if not self.canvas then
-        self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(width + megacanvas.quadFastPadding, height + megacanvas.quadFastPadding)
+        self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(
+            math.ceil(width / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding,
+            math.ceil(height / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding
+        )
     end
 
     self.width = width
@@ -332,9 +455,16 @@ end
 
 function quad:release(full, gc)
     if self.quad then
-        -- FIXME: Merge the new free space with other free spaces.
-        self.space.reclaimed = true
-        self.layer.spaces[#self.layer.spaces + 1] = self.space
+        local space = self.space
+        space.reclaimed = true
+        local layer = self.layer
+        local taken = layer.taken
+        table.remove(taken, space.index)
+        for i = 1, #taken do
+            taken[i].index = i
+        end
+        layer.spaces[#layer.spaces + 1] = space
+        layer.reclaimed = layer.reclaimed + 1
         self.space = false
         self.quad = false
         self.layer = false
@@ -347,15 +477,16 @@ function quad:release(full, gc)
     end
 
     if full then
-        if gc then
-            -- There's a very high likelihood that the canvas has been GC'd as well if we're here.
-            -- ... might as well just dispose it entirely. Whoops!
-            local canvas = self.canvas
-            if canvas then
+        local canvas = self.canvas
+        if canvas then
+            if gc then
+                -- There's a very high likelihood that the canvas has been GC'd as well if we're here.
+                -- ... might as well just dispose it entirely. Whoops!
                 canvas:release()
+                megacanvas.pool.free(false, self.canvasWidth, self.canvasHeight, self.canvasNew)
+            else
+                megacanvas.pool.free(self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
             end
-        elseif self.canvas then
-            megacanvas.pool.free(self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
             self.canvas = false
         end
 
@@ -409,6 +540,8 @@ end
 
 function megacanvas.pool.get(width, height)
     local pool = megacanvas.pool
+
+    ::retry::
     local best, index = smallest(pool, width, height)
 
     megacanvas.poolUsed = megacanvas.poolUsed + 1
@@ -416,6 +549,12 @@ function megacanvas.pool.get(width, height)
     if best then
         megacanvas.poolAlive = megacanvas.poolAlive - 1
         pool[index] = false
+
+        if tostring(best.canvas) == "Canvas: NULL" then
+            print(debug.traceback("GETTING A NULL CANVAS FROM THE POOL!"))
+            goto retry
+        end
+
         return best.canvas, best.width, best.height, false
     end
 
@@ -424,23 +563,29 @@ function megacanvas.pool.get(width, height)
 end
 
 function megacanvas.pool.free(canvas, width, height, new)
-    local pool = megacanvas.pool
-
     megacanvas.poolUsed = megacanvas.poolUsed - 1
     if new then
         megacanvas.poolNew = megacanvas.poolNew - 1
     end
 
-    megacanvas.poolAlive = megacanvas.poolAlive + 1
-    for i = 1, #pool + 1 do
-        if not pool[i] then
-            pool[i] = {
-                canvas = canvas,
-                width = width,
-                height = height,
-                lifetime = 0
-            }
-            break
+    if canvas then
+        if tostring(canvas) == "Canvas: NULL" then
+            print(debug.traceback("FREEING A NULL CANVAS TO THE POOL!"))
+            return
+        end
+
+        megacanvas.poolAlive = megacanvas.poolAlive + 1
+        local pool = megacanvas.pool
+        for i = 1, #pool + 1 do
+            if not pool[i] then
+                pool[i] = {
+                    canvas = canvas,
+                    width = width,
+                    height = height,
+                    lifetime = 0
+                }
+                break
+            end
         end
     end
 end
@@ -453,7 +598,7 @@ function megacanvas.pool.cleanup()
     local min = 8
     local max = 24
     local deadMax = 32
-    local lifetimeMax = 60 * 8
+    local lifetimeMax = 60 * 10
 
     local pool = megacanvas.pool
     local alive = megacanvas.poolAlive
@@ -520,11 +665,10 @@ function megacanvas.new(width, height)
 end
 
 function megacanvas.process()
-    megacanvas.pool.cleanup()
-
-    local lifetimeMax = 60 * 12
+    local lifetimeMax = 60 * 5
 
     local quads = megacanvas.quads
+    local quadsAlive = true
 
     for i = 1, #quads do
         local q = quads[i]
@@ -534,16 +678,24 @@ function megacanvas.process()
                 q.lifetime = lifetime
             else
                 q:release(true)
+                quadsAlive = false
             end
         end
     end
 
-    if cleanup(quads, megacanvas.quadsAlive, 32) then
+    if cleanup(quads, quadsAlive and megacanvas.quadsAlive, 32) then
         for i = 1, #quads do
             quads[i].index = i
         end
         megacanvas.quadsAlive = #quads
     end
+
+    local atlases = megacanvas.atlases
+    for ai = 1, #atlases do
+        atlases[ai]:cleanup()
+    end
+
+    megacanvas.pool.cleanup()
 
     local marked = megacanvas.marked
     local markedCount = #marked
@@ -551,20 +703,19 @@ function megacanvas.process()
         return
     end
 
-    local atlases = megacanvas.atlases
     local padding = megacanvas.padding
 
     local markedLast = math.max(1, markedCount - 4)
-    for i = markedCount, markedLast, -1 do
-        local q = marked[i]
+    for mi = markedCount, markedLast, -1 do
+        local q = marked[mi]
         if q then
             q.marked = false
 
             local widthPadded = q.width + padding * 2
             local heightPadded = q.height + padding * 2
 
-            for i = 1, #atlases do
-                q.layer, q.space = atlases[i]:fit(widthPadded, heightPadded)
+            for ai = 1, #atlases do
+                q.layer, q.space = atlases[ai]:fit(widthPadded, heightPadded)
                 if q.layer then
                     break
                 end
@@ -586,11 +737,12 @@ function megacanvas.process()
         love.graphics.getShader()
         love.graphics.setShader(megacanvas.convertBlendShader)
     end
+    love.graphics.setColor(1, 1, 1, 1)
 
-    for i = markedCount, markedLast, -1 do
-        local q = marked[i]
+    for mi = markedCount, markedLast, -1 do
+        local q = marked[mi]
         if q then
-            marked[i] = nil
+            marked[mi] = nil
 
             local widthPadded = q.width + padding * 2
             local heightPadded = q.height + padding * 2
@@ -607,13 +759,6 @@ function megacanvas.process()
             end
             love.graphics.setScissor(x, y, widthPadded, heightPadded)
             love.graphics.clear(0, 0, 0, 0)
-
-            if megacanvas.debug.rects then
-                love.graphics.setColor(0, 1, 0, 1)
-                love.graphics.setLineWidth(1)
-                love.graphics.rectangle("line", x + 0.5, y + 0.5, widthPadded - 1, heightPadded - 1)
-                love.graphics.setColor(1, 1, 1, 1)
-            end
 
             x = x + padding
             y = y + padding
@@ -648,6 +793,7 @@ function megacanvas.dump(prefix)
         local canvasPrev = love.graphics.getCanvas()
         love.graphics.push()
         love.graphics.origin()
+        love.graphics.setScissor()
         love.graphics.setLineWidth(1)
 
         local atlases = megacanvas.atlases
@@ -664,22 +810,32 @@ function megacanvas.dump(prefix)
                 end
                 local spaces = l.spaces
                 for si = 1, #spaces do
-                    local s = spaces[si]
-                    love.graphics.setScissor(s.x, s.y, s.width, s.height)
-                    if s.reclaimed then
-                        love.graphics.setColor(1, 0, 0, 0.5)
-                        love.graphics.rectangle("fill", s.x + 0.5, s.y + 0.5, s.width - 1, s.height - 1)
+                    local r = spaces[si]
+                    if r.reclaimed then
+                        love.graphics.setColor(0.5, 0, 0, 0.5)
+                        love.graphics.rectangle("fill", r.x + 0.5, r.y + 0.5, r.width - 1, r.height - 1)
+                    else
+                        love.graphics.setColor(0, 0, 0.5, 0.5)
+                        love.graphics.rectangle("fill", r.x + 0.5, r.y + 0.5, r.width - 1, r.height - 1)
+                    end
+                end
+                for si = 1, #spaces do
+                    local r = spaces[si]
+                    if r.reclaimed then
                         love.graphics.setColor(1, 0, 0, 1)
                     else
-                        love.graphics.clear(0, 0, 1, 0.5)
                         love.graphics.setColor(0, 0, 1, 1)
                     end
-                    love.graphics.rectangle("line", s.x + 0.5, s.y + 0.5, s.width - 1, s.height - 1)
+                    love.graphics.rectangle("line", r.x + 0.5, r.y + 0.5, r.width - 1, r.height - 1)
+                end
+                local taken = l.taken
+                for ti = 1, #taken do
+                    local r = taken[ti]
+                    love.graphics.setColor(0, 1, 0, 1)
+                    love.graphics.rectangle("line", r.x + 0.5, r.y + 0.5, r.width - 1, r.height - 1)
                 end
             end
         end
-
-        love.graphics.setScissor()
 
         for qi = 1, #quads do
             local q = quads[qi]
