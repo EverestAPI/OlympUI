@@ -187,12 +187,14 @@ local function cleanupList(list, alive, deadMax)
         return false
     end
 
+    local removed = false
     for i = #list, 1, -1 do
         if not list[i] then
             table.remove(list, i)
+            removed = i
         end
     end
-    return true
+    return removed
 end
 
 
@@ -393,10 +395,12 @@ function atlas:cleanup()
                 rect(0, 0, self.width, self.height)
             }
 
+            -- FIXME: taken shouldn't contain holes yet sometimes it does?!
+            cleanupList(taken)
+
             for ti = 1, #taken do
                 local t = taken[ti]
-
-                assert(not not t)
+                t.index = ti
 
                 -- In case of debugging emergency, break glass and print(svg .. "</svg>\n")
                 --[===[
@@ -713,8 +717,9 @@ function megacanvas.process()
         end
     end
 
-    if cleanupList(quads, quadsAlive and megacanvas.quadsAlive, 32) then
-        for i = 1, #quads do
+    local cleaned = cleanupList(quads, quadsAlive and megacanvas.quadsAlive, 32)
+    if cleaned then
+        for i = cleaned, #quads do
             quads[i].index = i
         end
         megacanvas.quadsAlive = #quads
