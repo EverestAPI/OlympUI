@@ -504,6 +504,12 @@ uie.default = {
 
         else
             uiu.setColor(decached and 0.75 or 0.25, forcecached and 0.75 or 0.25, delayouted and 0.75 or 0.25, 0.5)
+            -- love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
+            local canvas = self.__cached.canvas
+            if canvas then
+                width = canvas.width
+                height = canvas.height
+            end
             love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
         end
 
@@ -618,20 +624,19 @@ uie.default = {
             if width > canvas.canvasWidth or height > canvas.canvasHeight then
                 if width > megacanvas.width or height > megacanvas.height then
                     canvas:release()
+                    canvas = nil
                     cached.canvas = nil
                     if ui.log.canvas then
                         print("[olympui]", "canvas oversized", self)
                     end
                 else
                     canvas:init(width, height)
+                    repaint = true
                     if ui.log.canvas then
                         print("[olympui]", "canvas resized", self)
                     end
                 end
             end
-
-            canvas.width = width
-            canvas.height = height
         end
 
         if width > megacanvas.width or height > megacanvas.height then
@@ -649,6 +654,9 @@ uie.default = {
                 print("[olympui]", "canvas created", self)
             end
         end
+
+        canvas.width = width
+        canvas.height = height
 
         local x = self.screenX
         local y = self.screenY
@@ -1303,7 +1311,9 @@ function uie.add(eltype, default)
             __propcacheSet = {},
             __cached = {
                 canvas = nil,
-                visibleRect = { 0, 0, 0, 0 }
+                visibleRect = { 0, 0, 0, 0 },
+                screenX = nil,
+                screenY = nil
             },
             __collection = ui.root and ui.root.__collection or 0
         }

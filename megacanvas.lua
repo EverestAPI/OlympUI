@@ -31,8 +31,8 @@ local megacanvas = {
     quadFastPadding = 32,
 
     padding = 2,
-    width = 4096,
-    height = 4096
+    width = 1024,
+    height = 1024
 }
 
 -- Love2D exposes a function that can get the theoretical maximum depth. It isn't accurate though.
@@ -384,10 +384,10 @@ function atlas:cleanup()
                 rect(0, 0, self.width, self.height)
             }
 
-            cleanup(taken)
-
             for ti = 1, #taken do
                 local t = taken[ti]
+
+                assert(not not t)
 
                 -- In case of debugging emergency, break glass and print(svg .. "</svg>\n")
                 --[===[
@@ -459,8 +459,8 @@ function quad:init(width, height)
 
     if not self.canvas then
         self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(
-            math.ceil(width / megacanvas.quadFastPadding + 2) * megacanvas.quadFastPadding,
-            math.ceil(height / megacanvas.quadFastPadding + 2) * megacanvas.quadFastPadding
+            math.ceil(width / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding,
+            math.ceil(height / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding
         )
     end
 
@@ -477,7 +477,7 @@ function quad:release(full, gc)
         local layer = self.layer
         local taken = layer.taken
         table.remove(taken, space.index)
-        for i = 1, #taken do
+        for i = space.index, #taken do
             taken[i].index = i
         end
         layer.spaces[#layer.spaces + 1] = space
