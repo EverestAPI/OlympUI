@@ -150,8 +150,8 @@ uie.add("scrollhandle", {
     init = function(self)
         self.enabled = true
         self._enabled = true
-        self.style.color, self._fadeColorPrev, self._fadeColor = {}, false, false
-        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
+        self._fadeColorStyle, self._fadeColorPrev, self._fadeColor = {}, false, false
+        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
 
     layoutLateLazy = function(self)
@@ -172,8 +172,8 @@ uie.add("scrollhandle", {
         end
 
         local style = self.style
-        local color, colorPrev, colorNext = style.color, self._fadeColor, nil
-        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
+        local color, colorPrev, colorNext = self._fadeColorStyle, self._fadeColor, nil
+        local border, borderPrev, borderNext = self._fadeBorderStyle, self._fadeBorder, nil
 
         if self.dragged then
             colorNext = style.pressedColor
@@ -188,8 +188,8 @@ uie.add("scrollhandle", {
 
         local faded = false
         local fadeSwap = uiu.fadeSwap
-        faded, colorPrev, self._fadeColorPrev, self._fadeColor = fadeSwap(faded, color, self._fadeColorPrev, colorPrev, colorNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        faded, style.color, colorPrev, self._fadeColorPrev, self._fadeColor = fadeSwap(faded, color, self._fadeColorPrev, colorPrev, colorNext)
+        faded, style.border, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration

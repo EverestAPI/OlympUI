@@ -39,9 +39,9 @@ uie.add("button", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
-        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
-        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
-        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
+        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.cb = cb
     end,
 
@@ -66,9 +66,9 @@ uie.add("button", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
-        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
-        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
+        local bg, bgPrev, bgNext = self._fadeBGStyle, self._fadeBG, nil
+        local fg, fgPrev, fgNext = self._fadeFGStyle, self._fadeFG, nil
+        local border, borderPrev, borderNext = self._fadeBorderStyle, self._fadeBorder, nil
 
         if not self.enabled then
             bgNext = style.disabledBG
@@ -90,9 +90,9 @@ uie.add("button", {
 
         local faded = false
         local fadeSwap = uiu.fadeSwap
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        faded, style.bg, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, labelStyle.color, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, style.border, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -159,9 +159,9 @@ uie.add("field", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
-        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
-        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
-        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
+        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.blinkTime = false
         self._text = false
         self.placeholder = false
@@ -209,9 +209,9 @@ uie.add("field", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
-        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
-        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
+        local bg, bgPrev, bgNext = self._fadeBGStyle, self._fadeBG, nil
+        local fg, fgPrev, fgNext = self._fadeFGStyle, self._fadeFG, nil
+        local border, borderPrev, borderNext = self._fadeBorderStyle, self._fadeBorder, nil
 
         if not self.enabled then
             bgNext = style.disabledBG
@@ -229,9 +229,9 @@ uie.add("field", {
 
         local faded = false
         local fadeSwap = uiu.fadeSwap
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        faded, style.bg, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, labelStyle.color, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, style.border, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration
@@ -524,9 +524,9 @@ uie.add("listItem", {
         self.enabled = true
         self.owner = false
         self._selected = false
-        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
-        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
-        self.style.border, self._fadeBorderPrev, self._fadeBorder = {}, false, false
+        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
 
     getText = function(self)
@@ -578,9 +578,9 @@ uie.add("listItem", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
-        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
-        local border, borderPrev, borderNext = style.border, self._fadeBorder, nil
+        local bg, bgPrev, bgNext = self._fadeBGStyle, self._fadeBG, nil
+        local fg, fgPrev, fgNext = self._fadeFGStyle, self._fadeFG, nil
+        local border, borderPrev, borderNext = self._fadeBorderStyle, self._fadeBorder, nil
 
         if not self.enabled then
             bgNext = style.disabledBG
@@ -606,9 +606,9 @@ uie.add("listItem", {
 
         local faded = false
         local fadeSwap = uiu.fadeSwap
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
-        faded, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
+        faded, style.bg, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, labelStyle.color, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, style.border, borderPrev, self._fadeBorderPrev, self._fadeBorder = fadeSwap(faded, border, self._fadeBorderPrev, borderPrev, borderNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration

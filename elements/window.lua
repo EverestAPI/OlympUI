@@ -133,8 +133,8 @@ uie.add("titlebar", {
 
         self.label = label
 
-        self.style.bg, self._fadeBGPrev, self._fadeBG = {}, false, false
-        self.label.style.color, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
     end,
 
     layoutLazy = function(self)
@@ -160,8 +160,8 @@ uie.add("titlebar", {
         local style = self.style
         local label = self.label
         local labelStyle = label.style
-        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
-        local fg, fgPrev, fgNext = labelStyle.color, self._fadeFG, nil
+        local bg, bgPrev, bgNext = self._fadeBGStyle, self._fadeBG, nil
+        local fg, fgPrev, fgNext = self._fadeFGStyle, self._fadeFG, nil
 
         if (self.root and ui.root.focused) or self.parent.focused then
             bgNext = style.focusedBG
@@ -173,8 +173,8 @@ uie.add("titlebar", {
 
         local faded = false
         local fadeSwap = uiu.fadeSwap
-        faded, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
-        faded, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
+        faded, style.bg, bgPrev, self._fadeBGPrev, self._fadeBG = fadeSwap(faded, bg, self._fadeBGPrev, bgPrev, bgNext)
+        faded, labelStyle.color, fgPrev, self._fadeFGPrev, self._fadeFG = fadeSwap(faded, fg, self._fadeFGPrev, fgPrev, fgNext)
 
         local fadeTime = faded and 0 or self._fadeTime
         local fadeDuration = style.fadeDuration

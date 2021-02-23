@@ -194,10 +194,10 @@ end
 
 function uiu.fadeSwap(faded, color, colorPrev, prev, next)
     if prev == next then
-        return faded, colorPrev, colorPrev, next
+        return faded, color, colorPrev, colorPrev, next
     end
     local copy = {color[1], color[2], color[3], color[4], color[5]}
-    return true, copy, copy, next
+    return true, color, copy, copy, next
 end
 
 
