@@ -413,6 +413,68 @@ uie.add("list", {
         self.cb = cb
     end,
 
+    getSelectedIndex = function(self, children)
+        local selected = self.selected
+        if not selected then
+            return false
+        end
+
+        children = children or self.children
+        for i = 1, #children do
+            local c = children[i]
+            if c == selected then
+                return i
+            end
+        end
+
+        return false
+    end,
+
+    setSelectedIndex = function(self, value, children)
+        self.selected = (children or self.children)[value] or false
+    end,
+
+    getSelectedData = function(self, children)
+        local selected = self.selected
+        if not selected then
+            return false
+        end
+
+        children = children or self.children
+        for i = 1, #children do
+            local c = children[i]
+            if c == selected then
+                if c.data ~= nil then
+                    return c.data
+                else
+                    return c.text
+                end
+            end
+        end
+
+        return false
+    end,
+
+    setSelectedData = function(self, value, children)
+        children = children or self.children
+        for i = 1, #children do
+            local c = children[i]
+            if c.data ~= nil then
+                if c.data == value then
+                    self.selected = c
+                    return
+                end
+            else
+                if c.text == value then
+                    self.selected = c
+                    return
+                end
+            end
+        end
+
+        self.selected = false
+    end,
+
     layoutLateLazy = function(self)
         self:layoutLate()
     end,
@@ -893,12 +955,43 @@ uie.add("dropdown", {
 
     init = function(self, list, cb)
         self._itemsCache = {}
-        self.selected = self:getItemCached(list[1], 1)
-        uie.button.init(self, self.selected.text)
+        self.placeholder = list.placeholder
+        uie.button.init(self, "")
+        self.selected = self:getItemCached(list.placeholder or list[1], 1)
+        for i = 1, #list do
+            self:getItemCached(list[i], i)
+        end
         self.data = list
         self.isList = true
         self:addChild(uie.icon("ui:icons/drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
         self.cb = cb
+    end,
+
+    getSelectedIndex = function(self)
+        return uie.list.getSelectedIndex(self, self._itemsCache)
+    end,
+
+    setSelectedIndex = function(self, value)
+        return uie.list.setSelectedIndex(self, value, self._itemsCache)
+    end,
+
+    getSelectedData = function(self)
+        return uie.list.getSelectedData(self, self._itemsCache)
+    end,
+
+    setSelectedData = function(self, value)
+        return uie.list.setSelectedData(self, value, self._itemsCache)
+    end,
+
+    getSelected = function(self)
+        return self._selected
+    end,
+
+    setSelected = function(self, value, text)
+        self._selected = value
+        if text or text == nil then
+            self.text = text or (value and value.text) or self.placeholder or ""
+        end
     end,
 
     getItemCached = function(self, text, i)
