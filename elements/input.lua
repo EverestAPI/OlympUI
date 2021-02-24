@@ -147,7 +147,7 @@ uie.add("field", {
 
         focusedBG = { 1, 1, 1, 0.9 },
         focusedFG = { 0, 0, 0, 0.9, 1 },
-        focusedPlaceholder = { 0, 0, 0, 0.8, 1 },
+        focusedPlaceholder = { 0, 0, 0, 0.5, 1 },
         focusedBorder = { 0, 0, 0, 0.9, 1 },
 
         fadeDuration = 0.2
