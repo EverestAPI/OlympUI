@@ -404,7 +404,7 @@ function atlas:cleanup()
                     if not t then
                         table.remove(taken, ti)
                     end
-                while not t and ti <= #taken
+                until t or ti > #taken
                 if not t then
                     break
                 end
