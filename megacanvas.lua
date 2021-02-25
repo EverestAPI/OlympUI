@@ -395,11 +395,20 @@ function atlas:cleanup()
                 rect(0, 0, self.width, self.height)
             }
 
-            -- FIXME: taken shouldn't contain holes yet sometimes it does?!
-            cleanupList(taken)
-
             for ti = 1, #taken do
-                local t = taken[ti]
+                local t
+                -- FIXME: taken shouldn't contain holes yet sometimes it does?!
+                -- FIXME: Even with cleanupList, t can sometimes be nil (not false but NIL)?!!
+                repeat
+                    t = taken[ti]
+                    if not t then
+                        table.remove(taken, ti)
+                    end
+                while not t and ti <= #taken
+                if not t then
+                    break
+                end
+
                 t.index = ti
 
                 -- In case of debugging emergency, break glass and print(svg .. "</svg>\n")
@@ -436,7 +445,6 @@ function atlas:cleanup()
                         table.insert(spaces, result[ri])
                     end
                 end
-
             end
 
             l.spaces = spaces
