@@ -187,6 +187,13 @@ local function cleanupList(list, alive, deadMax)
         return false
     end
 
+    -- FIXME: Verify if this is enough to fix the "iterating over cleaned list can give false or nil" bug.
+    for key, _ in pairs(list) do
+        if not list[key] then
+            list[key] = nil
+        end
+    end
+
     local removed = false
     for i = #list, 1, -1 do
         if not list[i] then
