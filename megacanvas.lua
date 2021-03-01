@@ -674,7 +674,7 @@ function megacanvas.pool.cleanup()
                 entry.lifetime = lifetime
             else
                 entry.canvas:release()
-                pool[i] = false
+                table.remove(pool, i)
                 alive = alive - 1
             end
         end
