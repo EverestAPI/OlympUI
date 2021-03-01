@@ -269,8 +269,6 @@ function atlas:grow(count)
     self.canvas = canvas
 
     if copies then
-        -- FIXME: blend mode?
-
         local sX, sY, sW, sH = love.graphics.getScissor()
         local canvasPrev = love.graphics.getCanvas()
         love.graphics.push()
@@ -278,11 +276,14 @@ function atlas:grow(count)
         love.graphics.setScissor()
         love.graphics.setBlendMode("alpha", "premultiplied")
 
+        -- Apparently DPI scale agnostic images are a myth with Love2D and its embedded scaling (defaulting to system scale) needs to be undone on draw.
+        local scale = 1 / love.graphics.getDPIScale()
+
         for i = 1, countOld do
             local copyData = copies[i]
             local copy = love.graphics.newImage(copyData)
             love.graphics.setCanvas(canvas, i)
-            love.graphics.draw(copy, 0, 0)
+            love.graphics.draw(copy, 0, 0, 0, scale, scale)
             copyData:release()
             copy:release()
         end
