@@ -26,6 +26,8 @@ local megacanvas = {
     quads = setmetatable({}, { __mode = "v" }),
     quadsAlive = 0,
 
+    managedCanvases = setmetatable({}, { __mode = "k" }),
+
     marked = {},
 
     quadFastPadding = 32,
@@ -527,21 +529,23 @@ function quad:release(full, gc)
     if full then
         local canvas = self.canvas
         if canvas then
+            self.canvas = false
             if gc then
                 -- There's a very high likelihood that the canvas has been GC'd as well if we're here.
                 -- ... might as well just dispose it entirely. Whoops!
+                megacanvas.managedCanvases[canvas] = nil
                 canvas:release()
                 megacanvas.pool.free(false, self.canvasWidth, self.canvasHeight, self.canvasNew)
             else
-                megacanvas.pool.free(self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
+                megacanvas.pool.free(canvas, self.canvasWidth, self.canvasHeight, self.canvasNew)
             end
-            self.canvas = false
         end
 
+        local index = self.index
         if self.index then
+            self.index = false
             megacanvas.quads[self.index] = false
             megacanvas.quadsAlive = megacanvas.quadsAlive - 1
-            self.index = false
         end
     end
 end
@@ -601,7 +605,7 @@ function megacanvas.pool.get(width, height)
         pool[index] = false
 
         if tostring(best.canvas) == "Canvas: NULL" then
-            print(debug.traceback("GETTING A NULL CANVAS FROM THE POOL!"))
+            print(debug.traceback("GETTING A RELEASED CANVAS FROM THE POOL!"))
             goto retry
         end
 
@@ -609,7 +613,22 @@ function megacanvas.pool.get(width, height)
     end
 
     megacanvas.poolNew = megacanvas.poolNew + 1
-    return love.graphics.newCanvas(width, height), width, height, true
+    local canvas = love.graphics.newCanvas(width, height)
+
+    local mt = getmetatable(canvas)
+    if not mt.__megacanvasPoolRelease then
+        mt.__megacanvasPoolRelease = true
+        local release = mt.__index.release
+        mt.__index.release = function(self, ...)
+            if megacanvas.managedCanvases[self] then
+                print(debug.traceback("RELEASING POOL-MANAGED CANVAS THAT IS STILL IN USE! " .. tostring(canvas)))
+            end
+            return release(self, ...)
+        end
+    end
+
+    megacanvas.managedCanvases[canvas] = true
+    return canvas, width, height, true
 end
 
 function megacanvas.pool.free(canvas, width, height, new)
@@ -620,7 +639,7 @@ function megacanvas.pool.free(canvas, width, height, new)
 
     if canvas then
         if tostring(canvas) == "Canvas: NULL" then
-            print(debug.traceback("FREEING A NULL CANVAS TO THE POOL!"))
+            print(debug.traceback("FREEING A RELEASED CANVAS TO THE POOL!"))
             return
         end
 
@@ -658,8 +677,10 @@ function megacanvas.pool.cleanup()
         alive = #pool
         if alive >= max then
             table.sort(pool, megacanvas.pool.sort)
-            for i = 1, #pool - min do
-                pool[1].canvas:release()
+            for i = 1, #pool - min - 1 do
+                local canvas = pool[1].canvas
+                megacanvas.managedCanvases[canvas] = nil
+                canvas:release()
                 table.remove(pool, 1)
             end
             alive = min
@@ -673,7 +694,9 @@ function megacanvas.pool.cleanup()
             if lifetime < lifetimeMax then
                 entry.lifetime = lifetime
             else
-                entry.canvas:release()
+                local canvas = entry.canvas
+                megacanvas.managedCanvases[canvas] = nil
+                canvas:release()
                 table.remove(pool, i)
                 alive = alive - 1
             end
