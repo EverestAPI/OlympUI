@@ -163,10 +163,13 @@ uie.add("field", {
         self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
         self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.blinkTime = false
+        self.blinkX = 0
         self._text = false
         self.placeholder = false
         self.text = text
         self.cb = cb
+        self.clip = true
+        self.clipPadding = 0
     end,
 
     getEnabled = function(self)
@@ -263,6 +266,27 @@ uie.add("field", {
                 self:repaint()
             end
         end
+
+        local text = self.text or ""
+        local font = labelStyle.font
+        local padding = style:getIndex("padding", 0)
+
+        local textWidth = font:getWidth(text)
+        local innerWidth = self.innerWidth
+        local blinkX = self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))
+        local labelX = -label.x
+
+        -- Adapted from FEZMod-Legacy because YOLO.
+        if blinkX - labelX >= innerWidth * 0.9 then
+            labelX = blinkX - innerWidth * 0.9;
+        elseif blinkX - labelX <= innerWidth * 0.25 then
+            labelX = blinkX - innerWidth * 0.25;
+        end
+        labelX = math.floor(math.max(0, math.min(labelX, textWidth)));
+
+        label.x = -labelX
+        label.realX = -labelX + padding
+        self.blinkX = math.ceil(blinkX - labelX) + 0.5
     end,
 
     draw = function(self)
@@ -270,10 +294,8 @@ uie.add("field", {
         local y = self.screenY
         local w = self.width
         local h = self.height
-        local text = self.text or ""
         local padding = self.style.padding
         local labelStyle = self.label.style
-        local font = labelStyle.font
         local fg = labelStyle.color
 
         local paddingL, paddingT, paddingB
@@ -286,7 +308,7 @@ uie.add("field", {
         uie.row.draw(self)
 
         if self.focused and self.blinkTime < 0.5 and fg and fg[5] and fg[4] ~= 0 and fg[5] ~= 0 and uiu.setColor(fg) then
-            local ix = math.ceil(self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))) + 0.5
+            local ix = self.blinkX
             love.graphics.setLineWidth(fg[5] or 1)
             love.graphics.line(x + ix + paddingL, y + paddingT, x + ix + paddingL, y + h - paddingB)
         end
