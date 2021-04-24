@@ -135,6 +135,7 @@ uie.add("field", {
     style = {
         padding = 8,
         spacing = 4,
+        radius = 3,
 
         normalBG = { 0.95, 0.95, 0.95, 0.9 },
         normalFG = { 0, 0, 0, 0.8, 0 },
