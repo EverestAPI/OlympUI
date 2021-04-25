@@ -218,9 +218,14 @@ end
 
 
 function ui.draw()
+    local root = ui.root
+    if not root then
+        return
+    end
+
     ui.drawID = ui.drawID + 1
     uiu.resetColor()
-    ui.root:redraw()
+    root:redraw()
     love.graphics.setColor(1, 1, 1, 1)
     uiu.resetColor()
 
