@@ -401,8 +401,18 @@ uie.add("field", {
             self.blinkTime = 0
             self:repaint()
 
+        elseif key == "home" then
+            self.index = 0
+            self.blinkTime = 0
+            self:repaint()
+
         elseif key == "right" then
             self.index = math.min(utf8.len(text), index + 1)
+            self.blinkTime = 0
+            self:repaint()
+
+        elseif key == "end" then
+            self.index = utf8.len(text)
             self.blinkTime = 0
             self:repaint()
 
