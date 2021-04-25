@@ -803,12 +803,16 @@ uie.default = {
                 child.parent = false
                 table.remove(children, i)
                 self:reflow()
-                ui.root:recollect()
+                if ui.root then
+                    ui.root:recollect()
+                end
                 return true
             end
         end
         self:reflow()
-        ui.root:recollect()
+        if ui.root then
+            ui.root:recollect()
+        end
         return false
     end,
 
