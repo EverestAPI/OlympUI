@@ -60,6 +60,18 @@ uie.default = {
         return id
     end,
 
+    getIsRooted = function(self)
+        local root = ui.root
+        local parent = self
+        repeat
+            if parent == root then
+                return self
+            end
+            parent = parent.parent
+        until not parent
+        return false
+    end,
+
 
     is = function(self, expected)
         local types = self.__types
@@ -771,6 +783,7 @@ uie.default = {
             children[#children + 1] = child
         end
         child.__removing = false
+        child.parent = self
         self:reflow()
         if ui.root then
             ui.root:recollect()
@@ -787,6 +800,7 @@ uie.default = {
         for i = 1, #children do
             local c = children[i]
             if c == child then
+                child.parent = false
                 table.remove(children, i)
                 self:reflow()
                 ui.root:recollect()

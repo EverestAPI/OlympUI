@@ -60,12 +60,12 @@ local updateID = 0
 local prevWidth
 local prevHeight
 function ui.update()
-    ui.updateID = ui.updateID + 1
-
     local root = ui.root
     if not root then
         return
     end
+
+    ui.updateID = ui.updateID + 1
 
     ui.stats.draws = 0
     ui.stats.layouts = 0
@@ -101,6 +101,16 @@ function ui.update()
     end
     spike = spike and spike("root resize")
 
+    local dragging = ui.dragging
+    if dragging and not dragging.isRooted then
+        ui.interactiveIterate(dragging, "onRelease")
+        ui.dragging = false
+    end
+    local focusing = ui.focusing
+    if focusing and not focusing.isRooted then
+        ui.interactiveIterate(focusing, "onUnfocus")
+        ui.focusing = false
+    end
     if ui.mousePresses > 0 or love.window.hasMouseFocus() then
         ui.mouseFocus = 2
     elseif ui.mouseFocus > 0 then
