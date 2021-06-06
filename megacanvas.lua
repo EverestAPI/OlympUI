@@ -488,10 +488,14 @@ function quad:init(width, height)
         self.canvas = nil
     end
 
+    if width > megacanvas.widthMax or height > megacanvas.heightMax then
+        error(string.format("Requested pooled canvas size too large: %d x %d - maximum allowed is %d x %d", width, height, megacanvas.widthMax, megacanvas.heightMax))
+    end
+
     if not self.canvas then
         self.canvas, self.canvasWidth, self.canvasHeight, self.canvasNew = megacanvas.pool.get(
-            math.ceil(width / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding,
-            math.ceil(height / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding
+            math.min(megacanvas.widthMax, math.ceil(width / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding),
+            math.min(megacanvas.heightMax, math.ceil(height / megacanvas.quadFastPadding + 1) * megacanvas.quadFastPadding)
         )
     end
 
