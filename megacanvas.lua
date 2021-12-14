@@ -681,7 +681,7 @@ function megacanvas.pool.cleanup()
         alive = #pool
         if alive >= max then
             table.sort(pool, megacanvas.pool.sort)
-            for i = 1, #pool - min - 1 do
+            for i = #pool - min - 1, 1, -1 do
                 local canvas = pool[1].canvas
                 megacanvas.managedCanvases[canvas] = nil
                 canvas:release()
