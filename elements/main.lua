@@ -622,7 +622,11 @@ uie.default = {
 
         elseif self.consecutiveCachedDraws < 10 then
             if canvas and self.consecutiveCachedDraws < -60 * 3 then
-                canvas:release()
+                if canvas.release then
+                    canvas:release()
+                else
+                    canvas.canvas:release()
+                end
                 cached.canvas = nil
                 if ui.log.canvas then
                     print("[olympui]", "canvas unused", self)
@@ -635,17 +639,33 @@ uie.default = {
         if canvas then
             if width > canvas.canvasWidth or height > canvas.canvasHeight then
                 if width > megacanvas.widthMax or height > megacanvas.heightMax then
-                    canvas:release()
+                    if canvas.release then
+                        canvas:release()
+                    else
+                        canvas.canvas:release()
+                    end
                     canvas = nil
                     cached.canvas = nil
                     if ui.log.canvas then
                         print("[olympui]", "canvas oversized", self)
                     end
-                else
+                elseif canvas.init then
                     canvas:init(width, height)
                     repaint = true
                     if ui.log.canvas then
                         print("[olympui]", "canvas resized", self)
+                    end
+                else
+                    if canvas.release then
+                        canvas:release()
+                    else
+                        canvas.canvas:release()
+                    end
+                    canvas = nil
+                    cached.canvas = nil
+                    repaint = true
+                    if ui.log.canvas then
+                        print("[olympui]", "canvas to be recreated resized", self)
                     end
                 end
             end
@@ -660,7 +680,20 @@ uie.default = {
             if not canvas then
                 ui.stats.canvases = ui.stats.canvases + 1
             end
-            canvas = megacanvas(width, height)
+            if ui.features.megacanvas then
+                canvas = megacanvas(width, height)
+            else
+                canvas = {
+                    canvas = love.graphics.newCanvas(width, height),
+                    canvasWidth = width,
+                    canvasHeight = height,
+                    index = -1,
+                    mark = false,
+                    init = false,
+                    draw = false,
+                    release = false
+                }
+            end
             cached.canvas = canvas
             if ui.log.canvas then
                 print("[olympui]", "canvas created", self)
@@ -674,7 +707,7 @@ uie.default = {
         local y = self.screenY
 
         if not repaint and skipCache ~= 2 then
-            if self.consecutiveCachedDraws > 10 and ui.features.megacanvas then
+            if self.consecutiveCachedDraws > 10 and canvas.mark then
                 canvas:mark()
                 if canvas.marked and ui.log.canvas then
                     print("[olympui]", "canvas marked", self)
@@ -687,7 +720,9 @@ uie.default = {
 
         self.cachedCanvas = 1
 
-        canvas:init()
+        if canvas.init then
+            canvas:init()
+        end
 
         local sX, sY, sW, sH = love.graphics.getScissor()
 
@@ -713,7 +748,13 @@ uie.default = {
 
     __drawCachedCanvas = function(self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
         uiu.setColor(1, 1, 1, 1)
-        canvas:draw(x - paddingL, y - paddingT)
+        if canvas.draw then
+            canvas:draw(x - paddingL, y - paddingT)
+        else
+            love.graphics.setBlendMode("alpha", "premultiplied")
+            love.graphics.draw(canvas.canvas, x - paddingL, y - paddingT)
+            love.graphics.setBlendMode("alpha", "alphamultiply")
+        end
     end,
 
     redraw = function(self)
