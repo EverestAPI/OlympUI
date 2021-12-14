@@ -546,9 +546,9 @@ function quad:release(full, gc)
         end
 
         local index = self.index
-        if self.index then
+        if index then
             self.index = false
-            megacanvas.quads[self.index] = false
+            megacanvas.quads[index] = false
             megacanvas.quadsAlive = megacanvas.quadsAlive - 1
         end
     end
