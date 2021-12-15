@@ -80,7 +80,15 @@ function ui.update()
 
     root.focused = love.window.hasFocus()
 
-    if prevWidth ~= width or prevHeight ~= height then
+    local resized = prevWidth ~= width or prevHeight ~= height
+    local resizedFirst = false
+    if not root.all then
+        root:collect(true, false)
+        resized = true
+        resizedFirst = true
+    end
+
+    if resized then
         prevWidth = width
         prevHeight = height
 
@@ -90,8 +98,7 @@ function ui.update()
         root.innerHeight = height
         root:reflow()
 
-        if not root.all then
-            root:collect(true, false)
+        if resizedFirst then
             root:layoutLazy()
             root:layoutLateLazy()
         end
