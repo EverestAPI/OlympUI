@@ -581,9 +581,11 @@ function quad:draw(x, y, r, sx, sy, ox, oy, kx, ky)
         return
     end
 
-    love.graphics.setBlendMode("alpha", "premultiplied")
-    love.graphics.draw(self.canvas, x, y, r, sx, sy, ox, oy, kx, ky)
-    love.graphics.setBlendMode("alpha", "alphamultiply")
+    if self.canvas then
+        love.graphics.setBlendMode("alpha", "premultiplied")
+        love.graphics.draw(self.canvas, x, y, r, sx, sy, ox, oy, kx, ky)
+        love.graphics.setBlendMode("alpha", "alphamultiply")
+    end
 end
 
 function quad:mark()
