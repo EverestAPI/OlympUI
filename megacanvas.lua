@@ -6,6 +6,7 @@
 local megacanvas = {
     debug = {
         rects = true,
+        errorCanvaslessQuads = true,
     },
 
     convertBlend = true,
@@ -585,6 +586,8 @@ function quad:draw(x, y, r, sx, sy, ox, oy, kx, ky)
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(self.canvas, x, y, r, sx, sy, ox, oy, kx, ky)
         love.graphics.setBlendMode("alpha", "alphamultiply")
+    elseif megacanvas.debug.errorCanvaslessQuads then
+        error("Trying to draw a megacanvas quad without an assigned canvas")
     end
 end
 
