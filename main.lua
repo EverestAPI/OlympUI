@@ -254,26 +254,29 @@ end
 
 
 function ui.interactiveIterate(el, funcid, ...)
+    local handled = false
+
     if not el then
-        return nil
+        return nil, false
     end
 
     local parent = el.parent
     if parent then
-        parent = ui.interactiveIterate(parent, funcid, ...)
+        parent, handled = ui.interactiveIterate(parent, funcid, ...)
     end
 
     if funcid then
         local func = el[funcid]
         if func then
-            func(el, ...)
+            handled = func(el, ...)
         end
     end
 
     if el.interactive == 0 then
-        return parent
+        return parent, false
     end
-    return el
+
+    return el, handled ~= false
 end
 
 
@@ -428,7 +431,7 @@ function ui.wheelmoved(dx, dy)
 end
 
 function ui.keypressed(key, scancode, isrepeat)
-    local el = ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
+    local el, handled = ui.interactiveIterate(ui.focusing, "onKeyPress", key, scancode, isrepeat)
 
     if ui.features.inspector and key == ui.features.inspector then
         ui.globalReflowID = ui.globalReflowID + 1
@@ -445,15 +448,17 @@ function ui.keypressed(key, scancode, isrepeat)
         return true
     end
 
-    return el
+    return handled
 end
 
 function ui.keyreleased(key, scancode)
-    return ui.interactiveIterate(ui.focusing, "onKeyRelease", key, scancode)
+    local el, handled = ui.interactiveIterate(ui.focusing, "onKeyRelease", key, scancode)
+    return handled
 end
 
 function ui.textinput(text)
-    return ui.interactiveIterate(ui.focusing, "onText", text)
+    local el, handled = ui.interactiveIterate(ui.focusing, "onText", text)
+    return handled
 end
 
 
