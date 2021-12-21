@@ -1,3 +1,5 @@
+local utf8 = require("utf8")
+
 local uiu = {}
 
 
@@ -789,6 +791,29 @@ function uiu.bottombound(el, arg2)
         offs = arg2
         return apply(el)
     end
+end
+
+
+function uiu.getTextCursorOffset(font, text, index)
+    -- Returns nil if out of bounds for the text, default to 0
+    local utf8Offset = utf8.offset(text, index + 1) or 0
+    return index == 0 and 0 or font:getWidth(text:sub(1, utf8Offset - 1))
+end
+
+
+function uiu.getTextIndexForCursor(font, text, x)
+    local min = 0
+    local max = utf8.len(text) + 1
+    while max - min > 1 do
+        local mid = min + math.ceil((max - min) / 2)
+        local midx = font:getWidth(text:sub(1, utf8.offset(text, mid + 1) - 1)) - font:getWidth(text:sub(utf8.offset(text, mid), utf8.offset(text, mid + 1) - 1)) * 0.4
+        if x <= midx then
+            max = mid
+        else
+            min = mid
+        end
+    end
+    return min
 end
 
 
