@@ -217,11 +217,13 @@ uie.add("field", {
     end,
 
     -- Update the cursor and updates the selected area
-    setCursorIndex = function(self, index, updatesSelection, force)
+    -- Selecting indicates that starting/in a selection (for example holding shift)
+    -- indexOnly means this should only move the cursor, selection logic is ignored
+    setCursorIndex = function(self, index, selecting, indexOnly)
         local previousIndex = self.index
         local clearedSelection, selectionStart, selectionStop = false, -1, -1
-        if updatesSelection ~= false then
-            if force or love.keyboard.isDown("lshift", "rshift") then
+        if indexOnly ~= false then
+            if selecting then
                 self.selectionInitial = self.selectionInitial or self.index
 
                 if index < self.selectionInitial then
@@ -234,7 +236,7 @@ uie.add("field", {
             else
                 if self:hasSelection() then
                     clearedSelection, selectionStart, selectionStop = true, self.selectionStart, self.selectionStop
-                    self:clearSeleciton()
+                    self:clearSelection()
                 end
             end
         end
@@ -266,13 +268,13 @@ uie.add("field", {
             self.text = leftPart .. rightPart
             self.index = self.selectionStart
             if clearSelection ~= false then
-                self:clearSeleciton()
+                self:clearSelection()
             end
             self:repaint()
         end
     end,
 
-    clearSeleciton = function(self)
+    clearSelection = function(self)
         self.selectionInitial = nil
         self.selectionStart = nil
         self.selectionStop = nil
@@ -284,6 +286,10 @@ uie.add("field", {
         else
             return love.keyboard.isDown("rctrl", "lctrl")
         end
+    end,
+
+    selectionModifierHeld = function(self)
+        return love.keyboard.isDown("rshift", "lshift")
     end,
 
     update = function(self, dt)
@@ -422,15 +428,16 @@ uie.add("field", {
         local text = self.text or ""
         local len = utf8.len(text)
         local font = label.style.font
+        local selecting = self:selectionModifierHeld()
 
         x = x - label.screenX
         if x <= 0 then
-            self:setCursorIndex(0)
+            self:setCursorIndex(0, selecting)
         elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
-            self:setCursorIndex(len)
+            self:setCursorIndex(len, selecting)
         else
             local index = uiu.getTextIndexForCursor(font, text, x)
-            self:setCursorIndex(index)
+            self:setCursorIndex(index, selecting)
         end
 
         self.blinkTime = 0
@@ -455,7 +462,7 @@ uie.add("field", {
             else
                 index = uiu.getTextIndexForCursor(font, text, x)
             end
-            if self:setCursorIndex(index, true, true) then
+            if self:setCursorIndex(index, true) then
                 self:repaint()
             end
         end
@@ -470,7 +477,7 @@ uie.add("field", {
     onUnfocus = function(self)
         love.keyboard.setKeyRepeat(self.__wasKeyRepeat)
         self.blinkTime = false
-        self:clearSeleciton()
+        self:clearSelection()
     end,
 
     onText = function(self, new)
@@ -490,7 +497,8 @@ uie.add("field", {
     onKeyPress = function(self, key)
         local text = self.text or ""
         local index = self.index
-        local modifierHeld = self:hotkeyModifierHeld()
+        local hotkeyModifierHeld = self:hotkeyModifierHeld()
+        local selectionModifierHeld = self:selectionModifierHeld()
 
         if key == "backspace" then
             if self:hasSelection() then
@@ -526,7 +534,8 @@ uie.add("field", {
             self:repaint()
 
         elseif key == "left" then
-            local changed, clearedSelection, start, _ = self:setCursorIndex(math.max(0, index - 1))
+            local newIndex = math.max(0, index - 1)
+            local _, clearedSelection, start, _ = self:setCursorIndex(newIndex, selectionModifierHeld)
             if clearedSelection then
                 -- Jump cursor to start of the selection
                 self.index = start
@@ -535,12 +544,13 @@ uie.add("field", {
             self:repaint()
 
         elseif key == "home" then
-            self:setCursorIndex(0)
+            self:setCursorIndex(0, selectionModifierHeld)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "right" then
-            local changed, clearedSelection, _, stop = self:setCursorIndex(math.min(utf8.len(text), index + 1))
+            local newIndex = math.min(utf8.len(text), index + 1)
+            local _, clearedSelection, _, stop = self:setCursorIndex(newIndex, selectionModifierHeld)
             if clearedSelection then
                 -- Jump cursor to end of the selection
                 self.index = stop
@@ -549,19 +559,19 @@ uie.add("field", {
             self:repaint()
 
         elseif key == "end" then
-            self:setCursorIndex(utf8.len(text))
+            self:setCursorIndex(utf8.len(text), selectionModifierHeld)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "return" then
             self.text = text
 
-        elseif modifierHeld then
+        elseif hotkeyModifierHeld then
             if key == "a" then
                 -- Clear the current selection, set index to start of text and then select until the end
-                self:clearSeleciton()
-                self.index = 0
-                self:setCursorIndex(utf8.len(text), true, true)
+                self:clearSelection()
+                self:setCursorIndex(0, false, true)
+                self:setCursorIndex(utf8.len(text), true)
                 self:repaint()
 
             elseif key == "c" then
