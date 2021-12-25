@@ -142,6 +142,8 @@ uie.add("field", {
         normalPlaceholder = { 0, 0, 0, 0.4, 0 },
         normalBorder = { 0.08, 0.08, 0.08, 0.6, 1 },
 
+        selectionBG = { 0.2, 0.2, 0.2, 0.7 },
+
         disabledBG = { 0.5, 0.5, 0.5, 0.7 },
         disabledFG = { 0, 0, 0, 0.7, 0 },
         disabledBorder = { 0, 0, 0, 0.7, 1 },
@@ -156,6 +158,11 @@ uie.add("field", {
 
     init = function(self, text, cb)
         self.index = 0
+        self.selectionStart = false
+        self.selectionStop = false
+        self.selectionInitial = false
+        self.selectionStartX = 0
+        self.selectionStopX = 0
         local label = uie.label()
         uie.row.init(self, { label })
         self.label = label
@@ -207,6 +214,82 @@ uie.add("field", {
         if cb then
             cb(self, value or "", prev or "")
         end
+    end,
+
+    -- Update the cursor and updates the selected area
+    -- Selecting indicates that starting/in a selection (for example holding shift)
+    -- indexOnly means this should only move the cursor, selection logic is ignored
+    setCursorIndex = function(self, index, selecting, indexOnly)
+        local previousIndex = self.index
+        local clearedSelection, selectionStart, selectionStop = false, -1, -1
+        if indexOnly ~= false then
+            if selecting then
+                self.selectionInitial = self.selectionInitial or self.index
+
+                if index < self.selectionInitial then
+                    self.selectionStart = index
+                    self.selectionStop = self.selectionInitial
+                else
+                    self.selectionStart = self.selectionInitial
+                    self.selectionStop = index
+                end
+            else
+                if self:hasSelection() then
+                    clearedSelection, selectionStart, selectionStop = true, self.selectionStart, self.selectionStop
+                    self:clearSelection()
+                end
+            end
+        end
+
+        self.index = index
+
+        return previousIndex ~= index, clearedSelection, selectionStart, selectionStop
+    end,
+
+    getCursorIndex = function(self)
+        return self.index
+    end,
+
+    hasSelection = function(self)
+        return not not (self.selectionStart and self.selectionStop)
+    end,
+
+    getSelectedText = function(self)
+        local text = self.text or ""
+        local selected = text:sub(utf8.offset(text, self.selectionStart + 1), utf8.offset(text, self.selectionStop))
+        return selected
+    end,
+
+    deleteSelectedText = function(self, clearSelection)
+        if self:hasSelection() then
+            local text = self.text or ""
+            local leftPart = text:sub(1, self.selectionStart == 0 and 0 or utf8.offset(text, self.selectionStart))
+            local rightPart = text:sub(utf8.offset(text, self.selectionStop + 1))
+            self.text = leftPart .. rightPart
+            self.index = self.selectionStart
+            if clearSelection ~= false then
+                self:clearSelection()
+            end
+            self:repaint()
+        end
+    end,
+
+    clearSelection = function(self)
+        self.selectionInitial = nil
+        self.selectionStart = nil
+        self.selectionStop = nil
+    end,
+
+    hotkeyModifierHeld = function(self)
+        if love.system.getOS == "OS X" then
+            return love.keyboard.isDown("rgui", "lgui")
+        else
+            return love.keyboard.isDown("rctrl", "lctrl")
+        end
+    end,
+
+    selectionModifierHeld = function(self)
+        return love.keyboard.isDown("rshift", "lshift")
     end,
 
     update = function(self, dt)
@@ -274,7 +357,7 @@ uie.add("field", {
 
         local textWidth = font:getWidth(text)
         local innerWidth = self.innerWidth
-        local blinkX = self.index == 0 and 0 or font:getWidth(text:sub(1, utf8.offset(text, self.index + 1) - 1))
+        local blinkX = uiu.getTextCursorOffset(font, text, self.index)
         local labelX = -label.x
 
         -- Adapted from FEZMod-Legacy because YOLO.
@@ -288,6 +371,14 @@ uie.add("field", {
         label.x = -labelX
         label.realX = -labelX + padding
         self.blinkX = math.ceil(blinkX - labelX) + 0.5
+
+        if self:hasSelection() then
+            self.selectionStartX = uiu.getTextCursorOffset(font, text, self.selectionStart)
+            self.selectionStopX = uiu.getTextCursorOffset(font, text, self.selectionStop)
+
+            self.selectionStartX = math.ceil(self.selectionStartX - labelX) + 0.5
+            self.selectionStopX = math.ceil(self.selectionStopX - labelX) + 0.5
+        end
     end,
 
     draw = function(self)
@@ -298,6 +389,7 @@ uie.add("field", {
         local padding = self.style.padding
         local labelStyle = self.label.style
         local fg = labelStyle.color
+        local selectionBG = self.style.selectionBG
 
         local paddingL, paddingT, paddingB
         if type(padding) == "table" then
@@ -314,6 +406,16 @@ uie.add("field", {
             love.graphics.line(x + ix + paddingL, y + paddingT, x + ix + paddingL, y + h - paddingB)
         end
 
+        if self:hasSelection() then
+            local textStartX = self.selectionStartX
+            local textStopX = self.selectionStopX
+            local drawStart = math.max(x, x + textStartX + paddingL)
+            local drawStop = math.min(x + w, x + textStopX + paddingL)
+            if drawStop > drawStart then
+                uiu.setColor(selectionBG)
+                love.graphics.rectangle("fill", drawStart, y + paddingT, drawStop - drawStart, h - paddingT - paddingB)
+            end
+        end
     end,
 
     onPress = function(self, x, y, button)
@@ -326,37 +428,62 @@ uie.add("field", {
         local text = self.text or ""
         local len = utf8.len(text)
         local font = label.style.font
+        local selecting = self:selectionModifierHeld()
 
         x = x - label.screenX
         if x <= 0 then
-            self.index = 0
+            self:setCursorIndex(0, selecting)
         elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
-            self.index = len
+            self:setCursorIndex(len, selecting)
         else
-            local min = 0
-            local max = len
-            while max - min > 1 do
-                local mid = min + math.ceil((max - min) / 2)
-                local midx = font:getWidth(text:sub(1, utf8.offset(text, mid + 1) - 1)) - font:getWidth(text:sub(utf8.offset(text, mid), utf8.offset(text, mid + 1) - 1)) * 0.4
-                if x <= midx then
-                    max = mid
-                else
-                    min = mid
-                end
-            end
-            self.index = min
+            local index = uiu.getTextIndexForCursor(font, text, x)
+            self:setCursorIndex(index, selecting)
         end
 
         self.blinkTime = 0
         self:repaint()
+        -- Only drag on left click
+        self.mouseDrag = button == 1
+    end,
+
+    onDrag = function(self, x, y)
+        if self.mouseDrag then
+            local label = self.label
+            local text = self.text or ""
+            local font = label.style.font
+            local index = 0
+            x = x - label.screenX
+            y = y - label.screenY
+            -- TODO - Improve once fields are multiline
+            if y < 0 then
+                index = 0
+            elseif y > label.height then
+                index = utf8.len(text)
+            else
+                index = uiu.getTextIndexForCursor(font, text, x)
+            end
+            if self:setCursorIndex(index, true) then
+                self:repaint()
+            end
+        end
+    end,
+
+    onRelease = function(self, x, y, button)
+        if self.mouseDrag then
+            self.mouseDrag = false
+        end
     end,
 
     onUnfocus = function(self)
         love.keyboard.setKeyRepeat(self.__wasKeyRepeat)
         self.blinkTime = false
+        self:clearSelection()
     end,
 
     onText = function(self, new)
+        if self:hasSelection() then
+            self:deleteSelectedText()
+        end
         local text = self.text or ""
         local index = self.index
         if index == 0 then
@@ -370,54 +497,101 @@ uie.add("field", {
     onKeyPress = function(self, key)
         local text = self.text or ""
         local index = self.index
+        local hotkeyModifierHeld = self:hotkeyModifierHeld()
+        local selectionModifierHeld = self:selectionModifierHeld()
 
         if key == "backspace" then
-            if index == 0 then
-                return
-            elseif index == 1 then
-                self.text = text:sub(utf8.offset(text, index + 1))
+            if self:hasSelection() then
+                self:deleteSelectedText()
             else
-                self.text = text:sub(1, utf8.offset(text, index) - 1) .. text:sub(utf8.offset(text, index + 1))
+                if index == 0 then
+                    return
+                elseif index == 1 then
+                    self.text = text:sub(utf8.offset(text, index + 1))
+                else
+                    self.text = text:sub(1, utf8.offset(text, index) - 1) .. text:sub(utf8.offset(text, index + 1))
+                end
+                self.index = math.max(0, index - 1)
             end
-            self.index = math.max(0, index - 1)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "delete" then
-            if index == utf8.len(text) then
-                return
-            end
-            if index == 0 then
-                self.text = text:sub(utf8.offset(text, index + 2))
+            if self:hasSelection() then
+                self:deleteSelectedText()
             else
-                self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. text:sub(utf8.offset(text, index + 2))
+                if index == utf8.len(text) then
+                    return
+                end
+                if index == 0 then
+                    self.text = text:sub(utf8.offset(text, index + 2))
+                else
+                    self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. text:sub(utf8.offset(text, index + 2))
+                end
+                self.index = math.min(utf8.len(text), index)
             end
-            self.index = math.min(utf8.len(text), index)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "left" then
-            self.index = math.max(0, index - 1)
+            local newIndex = math.max(0, index - 1)
+            local _, clearedSelection, start, _ = self:setCursorIndex(newIndex, selectionModifierHeld)
+            if clearedSelection then
+                -- Jump cursor to start of the selection
+                self.index = start
+            end
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "home" then
-            self.index = 0
+            self:setCursorIndex(0, selectionModifierHeld)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "right" then
-            self.index = math.min(utf8.len(text), index + 1)
+            local newIndex = math.min(utf8.len(text), index + 1)
+            local _, clearedSelection, _, stop = self:setCursorIndex(newIndex, selectionModifierHeld)
+            if clearedSelection then
+                -- Jump cursor to end of the selection
+                self.index = stop
+            end
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "end" then
-            self.index = utf8.len(text)
+            self:setCursorIndex(utf8.len(text), selectionModifierHeld)
             self.blinkTime = 0
             self:repaint()
 
         elseif key == "return" then
             self.text = text
+
+        elseif hotkeyModifierHeld then
+            if key == "a" then
+                -- Clear the current selection, set index to start of text and then select until the end
+                self:clearSelection()
+                self:setCursorIndex(0, false, true)
+                self:setCursorIndex(utf8.len(text), true)
+                self:repaint()
+
+            elseif key == "c" then
+                if self:hasSelection() then
+                    love.system.setClipboardText(self:getSelectedText())
+                end
+
+            elseif key == "v" then
+                local clipboard = love.system.getClipboardText()
+                if clipboard then
+                    self:deleteSelectedText()
+                    self:onText(clipboard)
+                end
+
+            elseif key == "x" then
+                if self:hasSelection() then
+                    love.system.setClipboardText(self:getSelectedText())
+                    self:deleteSelectedText()
+                end
+            end
         end
     end
 })
