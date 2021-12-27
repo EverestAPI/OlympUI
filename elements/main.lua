@@ -748,13 +748,7 @@ uie.default = {
 
     __drawCachedCanvas = function(self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
         uiu.setColor(1, 1, 1, 1)
-        if canvas.draw then
-            canvas:draw(x - paddingL, y - paddingT)
-        else
-            love.graphics.setBlendMode("alpha", "premultiplied")
-            love.graphics.draw(canvas.canvas, x - paddingL, y - paddingT)
-            love.graphics.setBlendMode("alpha", "alphamultiply")
-        end
+        uiu.drawCanvas(canvas, x - paddingL, y - paddingT)
     end,
 
     redraw = function(self)

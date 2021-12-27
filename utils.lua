@@ -366,6 +366,17 @@ function uiu.setColor(r, g, b, a)
 end
 
 
+function uiu.drawCanvas(canvas, x, y, r, sx, sy, ox, oy, kx, ky)
+    if canvas.draw then
+        canvas:draw(x, y, r, sx, sy, ox, oy, kx, ky)
+    else
+        love.graphics.setBlendMode("alpha", "premultiplied")
+        love.graphics.draw(canvas.canvas, x, y, r, sx, sy, ox, oy, kx, ky)
+        love.graphics.setBlendMode("alpha", "alphamultiply")
+    end
+end
+
+
 function uiu.magic(fn, ...)
     local magic = uiu.magic
     local mask = { ... }
