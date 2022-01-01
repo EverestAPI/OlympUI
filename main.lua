@@ -153,6 +153,7 @@ function ui.update()
         local c = all[i]
 
         if c.__updateID ~= updateID then
+            local revived = c.__updateID ~= updateID - 1
             c.__updateID = updateID
             local cb
             local forceUpdate = false
@@ -164,6 +165,14 @@ function ui.update()
                     cb(c)
                 else
                     forceUpdate = true
+                end
+                cb = nil
+            end
+
+            if revived then
+                cb = c.revive
+                if cb then
+                    cb(c)
                 end
                 cb = nil
             end

@@ -39,10 +39,13 @@ uie.add("button", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
+        self.cb = cb
+    end,
+
+    revive = function(self)
         self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
         self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
         self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
-        self.cb = cb
     end,
 
     getEnabled = function(self)
@@ -167,9 +170,6 @@ uie.add("field", {
         uie.row.init(self, { label })
         self.label = label
         self.enabled = true
-        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
-        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
-        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
         self.blinkTime = false
         self.blinkX = 0
         self._text = false
@@ -178,6 +178,12 @@ uie.add("field", {
         self.cb = cb
         self.clip = true
         self.clipPadding = 0
+    end,
+
+    revive = function(self)
+        self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
+        self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
+        self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,
 
     getEnabled = function(self)
@@ -793,6 +799,9 @@ uie.add("listItem", {
         self.enabled = true
         self.owner = false
         self._selected = false
+    end,
+
+    revive = function(self)
         self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
         self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
         self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false

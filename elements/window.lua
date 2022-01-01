@@ -132,7 +132,9 @@ uie.add("titlebar", {
         uie.row.init(self, children)
 
         self.label = label
+    end,
 
+    revive = function(self)
         self._fadeBGStyle, self._fadeBGPrev, self._fadeBG = {}, false, false
         self._fadeFGStyle, self._fadeFGPrev, self._fadeFG = {}, false, false
     end,

@@ -150,6 +150,9 @@ uie.add("scrollhandle", {
     init = function(self)
         self.enabled = true
         self._enabled = true
+    end,
+
+    revive = function(self)
         self._fadeColorStyle, self._fadeColorPrev, self._fadeColor = {}, false, false
         self._fadeBorderStyle, self._fadeBorderPrev, self._fadeBorder = {}, false, false
     end,

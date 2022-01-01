@@ -356,6 +356,9 @@ uie.default = {
     awake = false,
     __awakened = false,
 
+    -- revive = function(self) end,
+    revive = false,
+
     -- update = function(self, dt) end,
     update = false,
     -- updateHidden = function(self) end,
