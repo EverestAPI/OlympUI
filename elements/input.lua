@@ -1030,23 +1030,25 @@ uie.add("menuItem", {
         end
 
         local parent = self.parent
-
         local submenu = parent.submenu
+        local spawnNewMenu = true
         if submenu then
+            -- Submenu might still exist if it was closed by clicking one of the options
+            -- In which case we should spawn a new menu
+            spawnNewMenu = not submenu.alive
             submenu:removeSelf()
         end
-
-        local x, y
-
-        if parent:is("topbar") then
-            x = self.screenX
-            y = self.screenY + self.height + parent.style.spacing
-        else
-            x = self.screenX + self.width + parent.style.spacing
-            y = self.screenY
+        if spawnNewMenu then
+            local x, y
+            if parent:is("topbar") then
+                x = self.screenX
+                y = self.screenY + self.height + parent.style.spacing
+            else
+                x = self.screenX + self.width + parent.style.spacing
+                y = self.screenY
+            end
+            parent.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(data, uie.menuItem.map))
         end
-
-        parent.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(data, uie.menuItem.map))
     end,
 
     onClick = function(self, x, y, button)
@@ -1181,6 +1183,7 @@ uie.add("dropdown", {
         self.isList = true
         self:addChild(uie.icon("ui:icons/drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
         self.cb = cb
+        self.submenuParent = self
     end,
 
     getSelectedIndex = function(self)
@@ -1244,20 +1247,26 @@ uie.add("dropdown", {
     onClick = function(self, x, y, button)
         if self.enabled and button == 1 then
             local submenu = self.submenu
+            local spawnNewMenu = true
             if submenu then
+                -- Submenu might still exist if it was closed by clicking one of the options
+                -- In which case we should spawn a new menu
+                spawnNewMenu = not submenu.alive
                 submenu:removeSelf()
             end
-
-            x = self.screenX
-            y = self.screenY + self.height + self.parent.style.spacing
-
-            self.submenu = uie.menuItemSubmenu.spawn(self, x, y, uiu.map(self.data, function(data, i)
-                local item = self:getItemCached(data, i)
-                item.width = false
-                item.height = false
-                item:layout()
-                return item
-            end))
+            if spawnNewMenu then
+                local submenuParent = self.submenuParent or self
+                local submenuData = uiu.map(self.data, function(data, i)
+                    local item = self:getItemCached(data, i)
+                    item.width = false
+                    item.height = false
+                    item:layout()
+                    return item
+                end)
+                x = submenuParent.screenX
+                y = submenuParent.screenY + submenuParent.height + submenuParent.parent.style.spacing
+                self.submenu = uie.menuItemSubmenu.spawn(submenuParent, x, y, submenuData)
+            end
         end
     end
 })
