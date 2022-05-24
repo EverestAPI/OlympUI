@@ -257,7 +257,7 @@ uie.default = {
             cb = self[funcOrID]
         end
 
-        if cb then
+        if uiu.isCallback(cb) then
             local rv = {cb(self, ...)}
             if #rv ~= 0 then
                 return table.unpack(rv)
