@@ -1097,8 +1097,25 @@ uie.add("menuItemSubmenu", {
             end
         until not submenu.reflowingLate
 
-        submenu.x = x + math.min(0, ui.root.innerWidth - (x + submenu.width))
-        submenu.y = y + math.min(0, ui.root.innerHeight - (y + submenu.height))
+        local width = submenu.width
+        local height = submenu.height
+        local rootWidth = ui.root.innerWidth
+        local rootHeight = ui.root.innerHeight
+
+        if width > rootWidth or height > rootHeight then
+            -- Pack into scrollbox if submenu is too large
+            submenu.hasScrollbox = true
+            width = math.min(width, rootWidth)
+            height = math.min(height, rootHeight)
+            submenu = uie.scrollbox(submenu):with(uiu.fillHeight(false)):with(uiu.hook({
+                calcWidth = function(orig, element)
+                    return element.inner.width
+                end
+            }))
+        end
+
+        submenu.x = x + math.min(0, rootWidth - (x + width))
+        submenu.y = y + math.min(0, rootHeight - (y + height))
 
         table.insert(ui.root.children, submenu)
         ui.root:recollect()
@@ -1114,6 +1131,9 @@ uie.add("menuItemSubmenu", {
 
     update = function(self)
         if not self.owner.alive or not self.focused then
+            if self.hasScrollbox then
+                self.parent:removeSelf()
+            end
             self:removeSelf()
             return
         end
