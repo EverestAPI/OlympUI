@@ -399,7 +399,6 @@ function ui.mousereleased(x, y, button, istouch, presses)
             if dragging == ui.interactiveIterate(root:getChildAt(x, y)) then
                 ui.interactiveIterate(dragging, "onClick", x, y, button)
             end
-            dragging = false
         else
             ui.interactiveIterate(dragging, "onRelease", x, y, button, true)
         end
