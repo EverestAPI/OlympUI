@@ -436,10 +436,11 @@ uie.add("image", {
     drawArgs = false,
     scaleRoundAuto = "auto",
 
-    init = function(self, image, quad)
+    init = function(self, image, quad, layer)
         self._image = false
         self.image = image
         self.quad = quad or false
+        self.layer = layer or false
     end,
 
     calcSize = function(self)
@@ -541,10 +542,19 @@ uie.add("image", {
 
         else
             local quad = self.quad
-            if quad then
-                love.graphics.draw(self._image, quad, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+            local layer = self.layer
+            if layer and layer >= 0 then
+                if quad then
+                    love.graphics.drawLayer(self._image, layer, quad, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+                else
+                    love.graphics.drawLayer(self._image, layer, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+                end
             else
-                love.graphics.draw(self._image, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+                if quad then
+                    love.graphics.draw(self._image, quad, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+                else
+                    love.graphics.draw(self._image, self.screenX, self.screenY, 0, self.scaleX, self.scaleY)
+                end
             end
         end
     end
