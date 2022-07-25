@@ -1292,4 +1292,172 @@ uie.add("dropdown", {
 })
 
 
+-- Basic checkbox, behaving like a row with a label.
+uie.add("checkbox", {
+    base = "row",
+
+    style = {
+        padding = 0,
+        spacing = 4,
+
+        checkboxNormalBG = { 0.8, 0.8, 0.8, 0.9 },
+        checkboxNormalFG = { 0, 0, 0, 0.8, 0 },
+        checkboxNormalBorder = { 0.08, 0.08, 0.08, 0.6, 1 },
+
+        checkboxDisabledBG = { 0.5, 0.5, 0.5, 0.7 },
+        checkboxDisabledFG = { 0, 0, 0, 0.7, 0 },
+        checkboxDisabledBorder = { 0, 0, 0, 0.7, 1 },
+
+        checkboxHoveredBG = { 1, 1, 1, 0.9 },
+        checkboxHoveredFG = { 0, 0, 0, 0.9, 1 },
+        checkboxHoveredBorder = { 0, 0, 0, 0.9, 1 },
+
+        checkboxPressedBG = { 0.95, 0.95, 0.95, 0.9 },
+        checkboxPressedFG = { 0, 0, 0, 0.9, 1 },
+        checkboxPressedBorder = { 0, 0, 0, 0.9, 1 },
+
+        activeIconColor = { 0.33, 0.33, 0.33, 1.0 },
+        mixedIconColor = { 0.33, 0.33, 0.33, 1.0 },
+        inactiveIconColor = { 0.33, 0.33, 0.33, 1.0 }
+    },
+
+    init = function(self, label, value, cb)
+        if not label or not label.__ui then
+            label = uie.label(label)
+        end
+
+        local checkbox = uie.button():hook({
+            layout = function(orig, self)
+                local label = self.parent.label
+                local checkbox = self
+                local height = label.height
+                local heightRounded = math.ceil(label.height / 2) * 2
+
+                orig(self)
+
+                checkbox.width = heightRounded
+                checkbox.height = heightRounded
+                checkbox.realWidth = heightRounded
+                checkbox.realHeight = heightRounded
+            end
+        })
+
+        checkbox.style.normalBG = self.style.checkboxNormalBG
+        checkbox.style.normalFG = self.style.checkboxNormalFG
+        checkbox.style.normalBorder = self.style.checkboxNormalBorder
+
+        checkbox.style.disabledBG = self.style.checkboxDisabledBG
+        checkbox.style.disabledFG = self.style.checkboxDisabledFG
+        checkbox.style.disabledBorder = self.style.checkboxDisabledBorder
+
+        checkbox.style.hoveredBG = self.style.checkboxHoveredBG
+        checkbox.style.hoveredFG = self.style.checkboxHoveredFG
+        checkbox.style.hoveredBorder = self.style.checkboxHoveredBorder
+
+        checkbox.style.pressedBG = self.style.checkboxPressedBG
+        checkbox.style.pressedFG = self.style.checkboxPressedFG
+        checkbox.style.pressedBorder = self.style.checkboxPressedBorder
+
+        -- Make sure the label has its height set, checkbox needs this
+        label:layout()
+
+        uie.row.init(self, { checkbox, label })
+
+        self.checkbox = checkbox
+        self.label = label
+        self.enabled = true
+        self.cb = cb
+        self.value = value
+        self.activeIcon = "ui:icons/checkboxCheckmark"
+        self.mixedIcon = "ui:icons/checkboxMixed"
+        self.inactiveIcon = false
+
+        self:layout()
+        self:updateIcon()
+    end,
+
+    getEnabled = function(self)
+        return self._enabled
+    end,
+
+    setEnabled = function(self, value)
+        self.checkbox:setEnabled(value)
+        self._enabled = value
+        self.interactive = value and 1 or -1
+    end,
+
+    getText = function(self)
+        return self.label.text
+    end,
+
+    setText = function(self, value)
+        self.label.text = value
+    end,
+
+    getValue = function(self)
+        return self._value
+    end,
+
+    setValue = function(self, value)
+        self._value = value
+        self:updateIcon()
+    end,
+
+    centerIcon = function(self, icon)
+        local width, height = icon.image:getDimensions()
+
+        return icon:with(uiu.at(-0.5 - width / 2, -0.5 - height / 2))
+    end,
+
+    updateIcon = function(self)
+        local checkbox = self.checkbox
+        local children = checkbox.children or {}
+        local value = self.value
+        local previousValue = self._previousIconValue
+
+        if value ~= previousValue then
+            while #children > 0 do
+                table.remove(children, 1)
+            end
+        end
+
+        local icon
+        local iconColor
+        if value and self.activeIcon then
+            icon = self.activeIcon
+            color = self.style.activeIconColor
+        elseif value == nil and self.mixedIcon then
+            icon = self.mixedIcon
+            color = self.style.mixedIconColor
+        elseif value == false and self.inactiveIcon then
+            icon = self.inactiveIcon
+            color = self.style.inactiveIconColor
+        end
+
+        if icon then
+            if type(icon) == "string" then
+                icon = uie.icon(icon)
+            end
+
+            icon = self:centerIcon(icon)
+            icon.style.color = color
+            checkbox:addChild(icon)
+        end
+
+        self._previousIconValue = value
+
+        checkbox:reflow()
+    end,
+
+    onClick = function(self, x, y, button)
+        if self.enabled and button == 1 then
+            self:setValue(not self:getValue())
+
+            if self.cb then
+                self:cb(self.value)
+            end
+        end
+    end
+})
+
 return uie
