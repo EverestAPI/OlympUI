@@ -88,6 +88,7 @@ uie.add("scrollbox", {
             return
         end
 
+        local wiggleroom = self.wiggleroom
         local inner = self.inner
 
         if not raw then
@@ -103,8 +104,8 @@ uie.add("scrollbox", {
         x = x + dx
         if x < 0 then
             x = 0
-        elseif innerWidth < x + boxWidth then
-            x = innerWidth - boxWidth
+        elseif innerWidth < x + boxWidth + wiggleroom then
+            x = innerWidth - boxWidth - wiggleroom
         end
         inner.x = uiu.round(-x)
 
@@ -114,8 +115,8 @@ uie.add("scrollbox", {
         y = y + dy
         if y < 0 then
             y = 0
-        elseif innerHeight < y + boxHeight then
-            y = innerHeight - boxHeight
+        elseif innerHeight < y + boxHeight + wiggleroom then
+            y = innerHeight - boxHeight - wiggleroom
         end
         inner.y = uiu.round(-y)
 
