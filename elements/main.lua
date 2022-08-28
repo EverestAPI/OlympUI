@@ -503,14 +503,19 @@ uie.default = {
 
             local padding = self.style:get("padding")
             if padding and padding ~= 0 then
+                local paddingL, paddingT, paddingR, paddingB = padding, padding, padding, padding
+                if type(padding) == "table" then
+                    paddingL, paddingT, paddingR, paddingB = unpack(padding)
+                end
+
                 uiu.setColor(0.75, 0, 0, 0.5)
                 love.graphics.rectangle("line", x + 0.5, y + 0.5, width - 1, height - 1)
 
                 uiu.setColor(0, 0, 0.25, 0.25)
-                love.graphics.rectangle("line", x + 0.5, y + 0.5, padding - 1, padding - 1)
+                love.graphics.rectangle("line", x + 0.5, y + 0.5, paddingL - 1, paddingT - 1)
 
                 uiu.setColor(0, 0.125, 0, 0.125)
-                love.graphics.rectangle("line", x + 0.5 + padding, y + 0.5 + padding, width - padding * 2 - 1, height - padding * 2 - 1)
+                love.graphics.rectangle("line", x + 0.5 + paddingL, y + 0.5 + paddingT, width - paddingR * 2 - 1, height - paddingB * 2 - 1)
 
             else
                 uiu.setColor(0.75, 0.75, 0, 0.5)
