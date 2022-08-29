@@ -98,27 +98,35 @@ uie.add("scrollbox", {
             self.__dy = self.__dy + dy
         end
 
-        local x = -inner.x
-        local boxWidth = self.width
-        local innerWidth = inner.width
-        x = x + dx
-        if x < 0 then
-            x = 0
-        elseif innerWidth < x + boxWidth + wiggleroom then
-            x = innerWidth - boxWidth - wiggleroom
+        if self.handleX.isNeeded then
+            local x = -inner.x
+            local boxWidth = self.width
+            local innerWidth = inner.width
+            x = x + dx
+            if x < 0 then
+                x = 0
+            elseif innerWidth < x + boxWidth + wiggleroom then
+                x = innerWidth - boxWidth - wiggleroom
+            end
+            inner.x = uiu.round(-x)
+        else
+            inner.x = 0
         end
-        inner.x = uiu.round(-x)
 
-        local y = -inner.y
-        local boxHeight = self.height
-        local innerHeight = inner.height
-        y = y + dy
-        if y < 0 then
-            y = 0
-        elseif innerHeight < y + boxHeight + wiggleroom then
-            y = innerHeight - boxHeight - wiggleroom
+        if self.handleY.isNeeded then
+            local y = -inner.y
+            local boxHeight = self.height
+            local innerHeight = inner.height
+            y = y + dy
+            if y < 0 then
+                y = 0
+            elseif innerHeight < y + boxHeight then
+                y = innerHeight - boxHeight
+            end
+            inner.y = uiu.round(-y)
+        else
+            inner.y = 0
         end
-        inner.y = uiu.round(-y)
 
         self:afterScroll()
     end
