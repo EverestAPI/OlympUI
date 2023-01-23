@@ -804,6 +804,37 @@ function uiu.bottombound(el, arg2)
     end
 end
 
+-- Word "jumping" typically allows underscores as part of words
+function uiu.isWordCharacter(char, allowUnderscore)
+    if allowUnderscore ~= false and char == "_" then
+        return true
+    end
+
+    -- Punctuation characters
+    if string.match(char, "%p") then
+        return false
+    end
+
+    return true
+end
+
+function uiu.findWordBorder(text, index, direction)
+    local len = utf8.len(text)
+    local start = index
+    local stop = direction > 0 and len or 1
+
+    for i = start, stop, direction do
+        local offset = utf8.offset(text, i)
+        local char = utf8.char(utf8.codepoint(text, offset, offset))
+        local wordChar = uiu.isWordCharacter(char)
+
+        if not wordChar then
+            return i - direction
+        end
+    end
+
+    return stop
+end
 
 function uiu.getTextCursorOffset(font, text, index)
     -- Returns nil if out of bounds for the text, default to 0

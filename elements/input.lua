@@ -424,7 +424,7 @@ uie.add("field", {
         end
     end,
 
-    onPress = function(self, x, y, button)
+    onPress = function(self, x, y, button, dragging, presses)
         if not self.focusing then
             self.__wasKeyRepeat = love.keyboard.hasKeyRepeat()
             love.keyboard.setKeyRepeat(true)
@@ -435,14 +435,46 @@ uie.add("field", {
         local len = utf8.len(text)
         local font = label.style.font
         local selecting = self:selectionModifierHeld()
+        local index
 
         x = x - label.screenX
         if x <= 0 then
-            self:setCursorIndex(0, selecting)
+            index = 0
         elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
-            self:setCursorIndex(len, selecting)
+            index = len
         else
-            local index = uiu.getTextIndexForCursor(font, text, x)
+            index = uiu.getTextIndexForCursor(font, text, x)
+        end
+
+        if button == 1 and presses > 1 and index == self._lastClickIndex then
+            local startIndex
+            local stopIndex
+
+            if presses == 2 then
+                -- Select word
+                startIndex = uiu.findWordBorder(text, index, 1)
+                stopIndex = uiu.findWordBorder(text, index, -1)
+
+                startIndex = math.max(startIndex, 0)
+                stopIndex = math.min(stopIndex - 1, len)
+
+            elseif presses == 3 then
+                -- Select line
+                -- TODO - Improve once multiline textfields exist
+                startIndex = 0
+                stopIndex = len
+
+            else
+                -- Select everything
+                startIndex = 0
+                stopIndex = len
+            end
+
+            self:setCursorIndex(startIndex, false)
+            self:setCursorIndex(stopIndex, true)
+
+        else
+            self._lastClickIndex = index
             self:setCursorIndex(index, selecting)
         end
 

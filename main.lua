@@ -365,11 +365,11 @@ function ui.mousepressed(x, y, button, istouch, presses)
     local hovering = root:getChildAt(x, y)
     if not ui.dragging or ui.dragging == hovering then
         ui.interactiveIterate(ui.focusing, "onUnfocus", x, y, button, true)
-        local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
+        local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true, presses)
         ui.dragging = el or false
         ui.focusing = el or false
     else
-        ui.interactiveIterate(hovering, "onPress", x, y, button, false)
+        ui.interactiveIterate(hovering, "onPress", x, y, button, false, presses)
     end
 
     return hovering or ui.dragging
