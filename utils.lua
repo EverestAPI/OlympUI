@@ -820,6 +820,11 @@ end
 
 function uiu.findWordBorder(text, index, direction)
     local len = utf8.len(text)
+
+    if len == 0 then
+        return 0
+    end
+
     local start = index
     local stop = direction > 0 and len or 1
 
