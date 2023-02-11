@@ -3,6 +3,31 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
+local function releaseCanvasCacheAll(el)
+    local children = el.children
+    if children then
+        for i = 1, #children do
+            local c = children[i]
+            local cached = c.__cached
+            local canvas = cached.canvas
+
+            if canvas then
+                if canvas.release then
+                    canvas:release()
+                else
+                    canvas.canvas:release()
+                end
+                cached.canvas = nil
+                if ui.log.canvas then
+                    print("[olympui]", "canvas offscreen", c)
+                end
+            end
+
+            releaseCanvasCacheAll(c)
+        end
+    end
+end
+
 local function collectAll(all, el, collection)
     el.__collection = collection
     local children = el.children
@@ -73,6 +98,10 @@ local function collectAllInteractive(all, el, prl, prt, pbl, pbt, pbr, pbb, pi)
                 -- Doesn't need to be set false recursively.
                 -- Anything that has an offscreen parent is already ignored elsewhere.
                 -- Anything that was offscreen before will get its children rechecked later.
+
+                if ui.features.clearOffScreenCanvas then
+                    releaseCanvasCacheAll(c)
+                end
             end
         end
     end

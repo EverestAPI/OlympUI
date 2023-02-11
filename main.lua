@@ -28,6 +28,7 @@ local ui = {
         eventProxies = false,
         inspector = "f12",
         megacanvas = false,
+        clearOffScreenCanvas = false,
     },
 
     eventProxyCache = {},
