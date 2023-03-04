@@ -645,6 +645,7 @@ uie.add("list", {
     cacheable = false,
 
     isList = true,
+    cbOnItemClick = true,
     grow = true,
 
     style = {
@@ -750,6 +751,7 @@ uie.add("listH", {
     cacheable = false,
 
     isList = true,
+    cbOnItemClick = true,
     grow = true,
 
     style = uie.list.__default.style,
@@ -962,8 +964,11 @@ uie.add("listItem", {
             if owner.isList then
                 self.selected = true
             end
+            -- Ideally the list owner should be the one to call cb when the selection changes.
+            -- Sadly I'm not sure if it's safe to change this behavior without breaking any user code at this point...
+            -- -jade
             local cb = owner.cb
-            if cb then
+            if cb and owner.cbOnItemClick then
                 if self.data ~= nil then
                     cb(owner, self.data)
                 else

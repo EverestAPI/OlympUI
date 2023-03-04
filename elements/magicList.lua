@@ -10,11 +10,12 @@ local listCommon = {
     cacheable = false,
 
     isList = true,
+    cbOnItemClick = false,
     grow = true,
 
     style = {
         spacing = 1,
-        offscreen = 4,
+        offscreen = 16,
         elementSize = false
     },
 
@@ -32,12 +33,13 @@ local listCommon = {
         uie.column.init(self, {self._padStart, self._padEnd})
 
         self.enabled = true
-        self.selectedIndex = 0
+        self._selectedIndex = 0
         self.data = data
         self.dataToElement = dataToElement or self.dataToElement
         self.cb = cb
         self.currentFirst = 0
         self.currentLast = 0
+        self.recycledMax = 32
 
         self._rendering = {}
         self._recycled = {}
@@ -71,6 +73,21 @@ local listCommon = {
         end
 
         self.selectedIndex = 0
+    end,
+
+    getSelectedIndex = function(self)
+        return self._selectedIndex
+    end,
+
+    setSelectedIndex = function(self, value, callCb)
+        self._selectedIndex = value
+
+        if callCb ~= false --[[ and not nil ]] then
+            local cb = self.cb
+            if cb then
+                cb(self, self.data[value])
+            end
+        end
     end,
 
     getIsSelected = function(self, element)
@@ -110,11 +127,40 @@ local listCommon = {
         self.style.elementSize = value
     end,
 
+    addChild = function(self, child, index)
+        uie.default.addChild(self, child, index)
+
+        if child._magicIndex then
+            self._rendering[child._magicIndex] = child
+        end
+    end,
+
+    removeChild = function(self, child)
+        uie.default.removeChild(self, child)
+
+        if child._magicIndex then
+            self._rendering[child._magicIndex] = nil
+
+            if #self._recycled < self.recycledMax then
+                self._recycled[#self._recycled + 1] = child
+            end
+        end
+    end,
+
     updateView = function(self)
-        local rendering = self._rendering
-        local recycled = self._recycled
-        local children = self.children
         local data = self.data
+        local children = self.children
+        local recycled = self._recycled
+
+        if #data == 0 then
+            while #children > 2 do
+                self:removeChild(children[2])
+            end
+
+            return
+        end
+
+        local rendering = self._rendering
         local dataToElement = self.dataToElement
 
         local visibleFirst, visibleLast = self:getVisibleFirstLast()
@@ -137,8 +183,6 @@ local listCommon = {
 
             if el then
                 self:removeChild(el)
-                rendering[i] = nil
-                recycled[#recycled + 1] = el
             end
         end
 
@@ -147,8 +191,6 @@ local listCommon = {
 
             if el then
                 self:removeChild(el)
-                rendering[i] = nil
-                recycled[#recycled + 1] = el
             end
         end
 
@@ -188,8 +230,6 @@ local listCommon = {
                         self:addChild(el, max + 1)
                     end
                 end
-
-                rendering[i] = el
             end
         end
 
