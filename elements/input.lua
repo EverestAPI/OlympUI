@@ -869,6 +869,12 @@ uie.add("listItem", {
 
     getSelected = function(self)
         local owner = self.owner or self.parent
+
+        local getIsSelected = owner.getIsSelected
+        if getIsSelected then
+            return getIsSelected(owner, self)
+        end
+
         if not owner.isList then
             return self._selected
         end
@@ -877,10 +883,17 @@ uie.add("listItem", {
 
     setSelected = function(self, value)
         local owner = self.owner or self.parent
+
+        local setIsSelected = owner.setIsSelected
+        if setIsSelected then
+            return setIsSelected(owner, self, value)
+        end
+
         if not owner.isList then
             self._selected = value
             return
         end
+
         owner.selected = value and self or false
     end,
 

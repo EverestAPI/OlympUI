@@ -10,4 +10,6 @@ require("ui.elements.window")
 require("ui.elements.scroll")
 require("ui.elements.progress")
 
+require("ui.elements.magicList")
+
 return uie
