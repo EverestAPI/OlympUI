@@ -37,13 +37,15 @@ local listCommon = {
         self.data = data
         self.dataToElement = dataToElement or self.dataToElement
         self.cb = cb
+        self.recycledMax = 32
         self.currentFirst = 0
         self.currentLast = 0
-        self.recycledMax = 32
 
         self._rendering = {}
         self._recycled = {}
         self._dummy = false
+
+        self:invalidate()
     end,
 
     dataToElement = function(self, data, el)
@@ -145,6 +147,20 @@ local listCommon = {
                 self._recycled[#self._recycled + 1] = child
             end
         end
+    end,
+
+    invalidate = function(self)
+        local children = self.children
+
+        while #children > 2 do
+            self:removeChild(children[2])
+        end
+
+        self.currentFirst = 0
+        self.currentLast = 0
+
+        self._padStart.height = self.innerHeight
+        self._padEnd.height = 0
     end,
 
     updateView = function(self)
