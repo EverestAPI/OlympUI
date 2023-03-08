@@ -1241,6 +1241,9 @@ uie.add("dropdown", {
     clip = false,
     interactive = 1,
 
+    isList = true,
+    cbOnItemClick = true,
+
     init = function(self, list, cb)
         self._itemsCache = {}
         self.placeholder = list.placeholder
@@ -1250,7 +1253,6 @@ uie.add("dropdown", {
             self:getItemCached(list[i], i)
         end
         self.data = list
-        self.isList = true
         self:addChild(uie.icon("ui:icons/drop"):with(uiu.at(0.999 + 1, 0.5 + 5)))
         self.cb = cb
         self.submenuParent = self

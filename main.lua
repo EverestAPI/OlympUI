@@ -199,7 +199,7 @@ function ui.update()
             end
         end
 
-        iLast = i + 1
+        iLast = i
         if root:collect() then
             goto reupdate
         end

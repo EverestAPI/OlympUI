@@ -12,10 +12,11 @@ local listCommon = {
     isList = true,
     cbOnItemClick = false,
     grow = true,
+    recycledMax = 64,
 
     style = {
         spacing = 1,
-        offscreen = 16,
+        offscreen = 32,
         elementSize = false
     },
 
@@ -37,7 +38,6 @@ local listCommon = {
         self.data = data
         self.dataToElement = dataToElement or self.dataToElement
         self.cb = cb
-        self.recycledMax = 32
         self.currentFirst = 0
         self.currentLast = 0
 
