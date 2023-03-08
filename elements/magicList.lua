@@ -298,12 +298,19 @@ uie.add("magicList", merge({
 
         local elementSize = self.elementSize
 
-        if (vb - vt) <= 0 or elementSize <= 0 then
+        if elementSize <= 0 then
             return 0, 0
         end
 
-        local elementSizeSpaced = elementSize + self.style.spacing
         local offscreen = self.style.offscreen
+
+        if (vb - vt) <= 0 then
+            -- Could return 0, 0 but that would cause problems with going from 0 items to 1.
+            -- Instead, always keep offscreen amount of elements onscreen at minimum.
+            return 1, math.min(#self.data, offscreen)
+        end
+
+        local elementSizeSpaced = elementSize + self.style.spacing
 
         return math.max(0, math.floor(vt / elementSizeSpaced) - offscreen) + 1, math.min(#self.data, math.ceil(vb / elementSizeSpaced) + offscreen)
     end,
