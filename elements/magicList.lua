@@ -40,6 +40,7 @@ local listCommon = {
         self.cb = cb
         self.currentFirst = 0
         self.currentLast = 0
+        self.shrinkOnce = false
 
         self._rendering = {}
         self._recycled = {}
@@ -161,6 +162,8 @@ local listCommon = {
 
         self._padStart.height = self.innerHeight
         self._padEnd.height = 0
+
+        self.shrinkOnce = true
     end,
 
     updateView = function(self)
@@ -333,12 +336,30 @@ uie.add("magicList", merge({
         local children = self.children
         if children then
             local width = self.innerWidth
+
+            if self.shrinkOnce then
+                for i = 1, #children do
+                    local c = children[i]
+                    c.parent = self
+                    c.width = -1
+                    c.autoWidth = -1
+                    c.reflowing = true
+                    c.reflowingLate = true
+                    c:layoutLazy()
+                    c:layoutLateLazy()
+                    c.reflowingLate = true
+                end
+                width = 0
+                self.shrinkOnce = false
+            end
+
             if self.grow then
                 for i = 1, #children do
                     local c = children[i]
                     width = math.max(width, c.width)
                 end
             end
+
             for i = 1, #children do
                 local c = children[i]
                 c.parent = self
@@ -394,12 +415,30 @@ uie.add("magicListH", merge({
         local children = self.children
         if children then
             local height = self.innerHeight
+
+            if self.shrinkOnce then
+                for i = 1, #children do
+                    local c = children[i]
+                    c.parent = self
+                    c.height = -1
+                    c.autoHeight = -1
+                    c.reflowing = true
+                    c.reflowingLate = true
+                    c:layoutLazy()
+                    c:layoutLateLazy()
+                    c.reflowingLate = true
+                end
+                height = 0
+                self.shrinkOnce = false
+            end
+
             if self.grow then
                 for i = 1, #children do
                     local c = children[i]
                     height = math.max(height, c.height)
                 end
             end
+
             for i = 1, #children do
                 local c = children[i]
                 c.parent = self
