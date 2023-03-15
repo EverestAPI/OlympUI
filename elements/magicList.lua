@@ -164,6 +164,8 @@ local listCommon = {
         self._padEnd.height = 0
 
         self.shrinkOnce = true
+
+        self:reflow()
     end,
 
     updateView = function(self)
@@ -367,6 +369,10 @@ uie.add("magicList", merge({
                 c.autoWidth = true
                 c:layoutLateLazy()
             end
+
+            if width ~= self.innerWidth then
+                self:reflow()
+            end
         end
     end,
 }, listCommon))
@@ -445,6 +451,10 @@ uie.add("magicListH", merge({
                 c.height = height
                 c.autoHeight = true
                 c:layoutLateLazy()
+            end
+
+            if height ~= self.innerHeight then
+                self:reflow()
             end
         end
     end,
