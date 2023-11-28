@@ -542,14 +542,18 @@ uie.add("field", {
             if self:hasSelection() then
                 self:deleteSelectedText()
             else
+                local from = index
                 if index == 0 then
                     return
                 elseif index == 1 then
                     self.text = text:sub(utf8.offset(text, index + 1))
                 else
-                    self.text = text:sub(1, utf8.offset(text, index) - 1) .. text:sub(utf8.offset(text, index + 1))
+                    if hotkeyModifierHeld then
+                        from = uiu.findWordBorder(text, index - 1, -1)
+                    end
+                    self.text = text:sub(1, utf8.offset(text, from) - 1) .. text:sub(utf8.offset(text, index + 1))
                 end
-                self.index = math.max(0, index - 1)
+                self.index = math.max(0, from - 1)
             end
             self.blinkTime = 0
             self:repaint()
@@ -558,13 +562,17 @@ uie.add("field", {
             if self:hasSelection() then
                 self:deleteSelectedText()
             else
+                local from = index + 1
                 if index == utf8.len(text) then
                     return
                 end
+                if hotkeyModifierHeld then
+                    from = uiu.findWordBorder(text, index + 2, 1)
+                end
                 if index == 0 then
-                    self.text = text:sub(utf8.offset(text, index + 2))
+                    self.text = text:sub(utf8.offset(text, from + 1))
                 else
-                    self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. text:sub(utf8.offset(text, index + 2))
+                    self.text = text:sub(1, utf8.offset(text, index + 1) - 1) .. text:sub(utf8.offset(text, from + 1))
                 end
                 self.index = math.min(utf8.len(text), index)
             end
