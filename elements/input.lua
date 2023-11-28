@@ -572,7 +572,11 @@ uie.add("field", {
             self:repaint()
 
         elseif key == "left" then
-            local newIndex = math.max(0, index - 1)
+            local targetIndex = index - 1
+            if hotkeyModifierHeld then
+                targetIndex = uiu.findWordBorder(text, index - 1, -1) - 1
+            end
+            local newIndex = math.max(0, targetIndex)
             local _, clearedSelection, start, _ = self:setCursorIndex(newIndex, selectionModifierHeld)
             if clearedSelection then
                 -- Jump cursor to start of the selection
@@ -587,7 +591,11 @@ uie.add("field", {
             self:repaint()
 
         elseif key == "right" then
-            local newIndex = math.min(utf8.len(text), index + 1)
+            local targetIndex = index + 1
+            if hotkeyModifierHeld then
+                targetIndex = uiu.findWordBorder(text, index + 2, 1)
+            end
+            local newIndex = math.min(utf8.len(text), targetIndex)
             local _, clearedSelection, _, stop = self:setCursorIndex(newIndex, selectionModifierHeld)
             if clearedSelection then
                 -- Jump cursor to end of the selection
