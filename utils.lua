@@ -810,6 +810,10 @@ function uiu.isWordCharacter(char, allowUnderscore)
         return true
     end
 
+    if char == " " then
+        return false
+    end
+
     -- Punctuation characters
     if string.match(char, "%p") then
         return false
