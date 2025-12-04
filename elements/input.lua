@@ -81,7 +81,7 @@ uie.add("button", {
             bgNext = style.pressedBG
             fgNext = style.pressedFG
             borderNext = style.pressedBorder
-        elseif self.hovered then
+        elseif self.hovered or self.focused then
             bgNext = style.hoveredBG
             fgNext = style.hoveredFG
             borderNext = style.hoveredBorder
@@ -124,6 +124,23 @@ uie.add("button", {
         local cb = self.cb
         if self.enabled and cb and button == 1 then
             cb(self, x, y, button)
+        end
+    end,
+
+    onKeyPress = function(self, key)
+        if self.enabled and (key == "space" or key == "return") then
+            self.pressed = true
+        end
+    end,
+
+    onKeyRelease = function(self, key)
+        local cb = self.cb
+        if self.enabled and (key == "space" or key == "return") then
+            self.pressed = false
+
+            if cb then
+                cb(self, self.screenX + self.width / 2, self.screenY + self.height / 2, 1)
+            end
         end
     end
 })
