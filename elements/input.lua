@@ -1507,7 +1507,7 @@ uie.add("checkbox", {
         end
 
         local icon
-        local iconColor
+        local color
         if value and self.activeIcon then
             icon = self.activeIcon
             color = self.style.activeIconColor
@@ -1540,6 +1540,24 @@ uie.add("checkbox", {
 
             if self.cb then
                 self:cb(self.value)
+            end
+        end
+    end,
+
+    onKeyPress = function(self, key)
+        if self.enabled and (key == "space" or key == "return") then
+            self.pressed = true
+        end
+    end,
+
+    onKeyRelease = function(self, key)
+        local cb = self.cb
+        if self.enabled and (key == "space" or key == "return") then
+            self.pressed = false
+            self:setValue(not self:getValue())
+
+            if cb then
+                cb(self, self.value)
             end
         end
     end
