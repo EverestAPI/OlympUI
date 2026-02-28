@@ -817,7 +817,7 @@ function megacanvas.process()
     love.graphics.setBlendMode("alpha", "premultiplied")
     local shaderPrev
     if megacanvas.convertBlend then
-        love.graphics.getShader()
+        shaderPrev = love.graphics.getShader()
         love.graphics.setShader(megacanvas.convertBlendShader)
     end
     love.graphics.setColor(1, 1, 1, 1)
