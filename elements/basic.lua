@@ -1,7 +1,7 @@
 local ui = require("ui.main")
 local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
-
+local cursor = require("ui.cursor")
 
 -- Basic panel with children elements.
 uie.add("panel", {
@@ -557,6 +557,32 @@ uie.add("image", {
                 end
             end
         end
+    end,
+})
+
+-- Clickable image.
+uie.add("clickableImage", {
+    base = "image",
+    cb = nil,
+    interactive = 1,
+
+    init = function(self, cb, ...)
+        uie.image.init(self, ...)
+        self.cb = cb
+    end,
+
+    onClick = function(self)
+        if self.cb then
+            self.cb()
+        end
+    end,
+
+    onEnter = function(self, _)
+        cursor.hand()
+    end,
+
+    onLeave = function(self, _)
+        cursor.default()
     end
 })
 
