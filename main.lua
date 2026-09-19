@@ -52,8 +52,75 @@ local ui = {
     mouseX = false,
     mouseY = false,
     mouseEvent = false,
-    mouseFocus = 0
+    mouseFocus = 0,
+
+    -- UI-wide scaling (1 = unscaled). When set to a value other than 1, the
+    -- whole UI is laid out and rendered in a virtual resolution of
+    -- windowSize / scale, which is then blitted back scaled to the window.
+    scale = 1,
+    realWidth = 0,
+    realHeight = 0,
+    virtualWidth = 0,
+    virtualHeight = 0
 }
+
+
+local getWidthOrig = love.graphics.getWidth
+local getHeightOrig = love.graphics.getHeight
+local getMousePosOrig = love.mouse.getPosition
+
+local scaleApplied = false
+
+function ui.applyScale()
+    local scale = ui.scale
+    if scale <= 0 then
+        scale = 1
+    end
+
+    -- Keep olympui's text metric compensation in sync with the raster scale
+    -- (fonts rasterize at the on-screen size when scaling up, and at the base
+    -- size when scaling down, so the compensation factor is max(1, scale)).
+    uiu.scale = math.max(1, scale)
+
+    local canvas = love.graphics.getCanvas()
+    local vw, vh
+    if canvas then
+        -- A host is already rendering the UI into a scaled canvas (e.g. its own
+        -- virtual-resolution framebuffer): the canvas's size is the virtual size
+        -- the elements should lay out against.
+        vw, vh = canvas:getDimensions()
+    else
+        local realWidth, realHeight = love.graphics.getDimensions()
+        ui.realWidth = realWidth
+        ui.realHeight = realHeight
+        vw = math.max(1, math.floor(realWidth / scale))
+        vh = math.max(1, math.floor(realHeight / scale))
+    end
+    ui.virtualWidth = vw
+    ui.virtualHeight = vh
+
+    if scale == 1 or scaleApplied then
+        return
+    end
+    scaleApplied = true
+
+    love.graphics.getWidth = function() return vw end
+    love.graphics.getHeight = function() return vh end
+    love.mouse.getPosition = function()
+        local x, y = getMousePosOrig()
+        return x / scale, y / scale
+    end
+end
+
+function ui.unapplyScale()
+    if not scaleApplied then
+        return
+    end
+    scaleApplied = false
+    love.graphics.getWidth = getWidthOrig
+    love.graphics.getHeight = getHeightOrig
+    love.mouse.getPosition = getMousePosOrig
+end
 
 
 local updateID = 0
@@ -64,6 +131,8 @@ function ui.update()
     if not root then
         return
     end
+
+    ui.applyScale()
 
     ui.updateID = ui.updateID + 1
 
@@ -230,6 +299,8 @@ function ui.update()
 
     updateID = updateID + 1
     spike = spike and spiker(spike)
+
+    ui.unapplyScale()
 end
 
 
@@ -239,6 +310,8 @@ function ui.draw()
         return
     end
 
+    ui.applyScale()
+
     ui.drawID = ui.drawID + 1
     uiu.resetColor()
     root:redraw()
@@ -246,6 +319,83 @@ function ui.draw()
     uiu.resetColor()
 
     megacanvas.process()
+
+    ui.unapplyScale()
+end
+
+
+-- ui.draw() renders with virtual (scaled) coordinates. When the host isn't
+-- already providing a scaled render target, draw the whole UI to the backbuffer
+-- wrapped in a graphical scale. Fonts rasterize at the on-screen size when
+-- scaling up, and at the base size when scaling down (supersampled by the
+-- graphical scale); images rasterize at base size. Either way there is no
+-- canvas roundtrip, so the UI stays sharp at device resolution.
+-- olympui's scissor calls are NOT affected by graphical transforms, so its
+-- virtual-coordinate scissors are translated to real screen pixels here while
+-- the UI is drawn.
+local function uiDrawScaled(scale)
+    local setScissorOrig = love.graphics.setScissor
+    local getScissorOrig = love.graphics.getScissor
+
+    local shadowScissor = { 0, 0, 0, 0 }
+    local shadowActive = false
+
+    love.graphics.setScissor = function(x, y, w, h)
+        if x == nil then
+            shadowActive = false
+            return setScissorOrig()
+        end
+
+        shadowActive = true
+        shadowScissor[1], shadowScissor[2], shadowScissor[3], shadowScissor[4] = x, y, w, h
+
+        -- Rendering into a (virtual-resolution) element canvas: the scissor is
+        -- already in the canvas's pixel space. On the screen it has to be
+        -- expressed in real pixels.
+        if love.graphics.getCanvas() then
+            setScissorOrig(x, y, w, h)
+        else
+            setScissorOrig(x * scale, y * scale, w * scale, h * scale)
+        end
+    end
+
+    love.graphics.getScissor = function()
+        if not shadowActive then
+            return
+        end
+
+        return shadowScissor[1], shadowScissor[2], shadowScissor[3], shadowScissor[4]
+    end
+
+    love.graphics.push()
+    love.graphics.scale(scale, scale)
+    ui.draw()
+    love.graphics.pop()
+
+    love.graphics.setScissor = setScissorOrig
+    love.graphics.getScissor = getScissorOrig
+end
+
+function ui.drawScaled()
+    ui.applyScale()
+
+    local scale = ui.scale or 1
+
+    if scale == 1 then
+        -- Re-enable element canvas caching once back at the unscaled UI.
+        ui.repaintAll = false
+        ui.draw()
+        ui.unapplyScale()
+        return
+    end
+
+    -- Render everything fresh every frame: cached element canvases are stored
+    -- at virtual resolution and would be upscaled (soft) under the graphical
+    -- scale, so bypass them to keep all UI elements sharp at device resolution.
+    ui.repaintAll = true
+    uiDrawScaled(scale)
+
+    ui.unapplyScale()
 end
 
 
@@ -342,13 +492,26 @@ function ui.__mousemoved(x, y, dx, dy)
     return ui.dragging or hoveringNext
 end
 
-function ui.mousemoved(...)
+function ui.mousemoved(x, y, dx, dy)
+    if ui.scale and ui.scale ~= 1 and x then
+        x, y = x / ui.scale, y / ui.scale
+        if dx then
+            dx = dx / ui.scale
+        end
+        if dy then
+            dy = dy / ui.scale
+        end
+    end
     ui.mouseEvent = true
-    return ui.__mousemoved(...)
+    return ui.__mousemoved(x, y, dx, dy)
 end
 
 function ui.mousepressed(x, y, button, istouch, presses)
     local ui = ui
+
+    if ui.scale and ui.scale ~= 1 then
+        x, y = x / ui.scale, y / ui.scale
+    end
 
     if ui.mousePresses == 0 and uin then
         uin.captureMouse(true)
@@ -377,6 +540,10 @@ end
 
 function ui.mousereleased(x, y, button, istouch, presses)
     local ui = ui
+
+    if ui.scale and ui.scale ~= 1 then
+        x, y = x / ui.scale, y / ui.scale
+    end
 
     ui.mousePresses = ui.mousePresses - presses
     if ui.mousePresses == 0 and uin then
@@ -485,7 +652,13 @@ function ui.hookLove(hookUpdateDraw, hookInput)
 
             draw = function(orig, ...)
                 local rv = orig(...)
-                ui.draw(...)
+
+                if ui.scale and ui.scale ~= 1 and not love.graphics.getCanvas() then
+                    ui.drawScaled()
+                else
+                    ui.draw(...)
+                end
+
                 return rv
             end
         })

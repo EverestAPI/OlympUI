@@ -10,6 +10,13 @@ end
 
 uiu.patchy = patchy
 
+-- Fonts are rasterized at ui.scale times their logical size for crisp 1:1
+-- text at every scale; layout still works in logical pixels, so all text
+-- metrics have to be divided by this factor. Set by the UI scaling code
+-- (ui.main.applyScale), defaults to 1 (unscaled) so standalone usage is
+-- unaffected.
+uiu.scale = 1
+
 
 function uiu.nop()
 end
@@ -253,7 +260,8 @@ end
 function uiu.getWrap(font, input, width)
     local wrap = {}
 
-    _, wrap = font:getWrap(input, width)
+    local scale = uiu.scale or 1
+    _, wrap = font:getWrap(input, width * scale)
 
     if type(input) == "string" then
         return table.concat(wrap, "\n")
@@ -848,16 +856,18 @@ end
 function uiu.getTextCursorOffset(font, text, index)
     -- Returns nil if out of bounds for the text, default to 0
     local utf8Offset = utf8.offset(text, index + 1) or 0
-    return index == 0 and 0 or font:getWidth(text:sub(1, utf8Offset - 1))
+    local scale = uiu.scale or 1
+    return (index == 0 and 0 or font:getWidth(text:sub(1, utf8Offset - 1))) / scale
 end
 
 
 function uiu.getTextIndexForCursor(font, text, x)
     local min = 0
     local max = utf8.len(text) + 1
+    local scale = uiu.scale or 1
     while max - min > 1 do
         local mid = min + math.ceil((max - min) / 2)
-        local midx = font:getWidth(text:sub(1, utf8.offset(text, mid + 1) - 1)) - font:getWidth(text:sub(utf8.offset(text, mid), utf8.offset(text, mid + 1) - 1)) * 0.4
+        local midx = (font:getWidth(text:sub(1, utf8.offset(text, mid + 1) - 1)) - font:getWidth(text:sub(utf8.offset(text, mid), utf8.offset(text, mid + 1) - 1)) * 0.4) / scale
         if x <= midx then
             max = mid
         else

@@ -5,6 +5,12 @@ local utf8 = require("utf8")
 require("ui.elements.basic")
 require("ui.elements.layout")
 
+-- Fonts are rasterized at max(1, ui.scale) times their logical size (see
+-- basic.lua); caret and cursor metrics are compensated by the same factor.
+local function rasterScale()
+    return math.max(1, ui.scale or 1)
+end
+
 -- Basic button, behaving like a row with a label.
 uie.add("button", {
     base = "row",
@@ -378,7 +384,7 @@ uie.add("field", {
         local font = labelStyle.font
         local padding = style:getIndex("padding", 0)
 
-        local textWidth = font:getWidth(text)
+        local textWidth = font:getWidth(text) / rasterScale()
         local innerWidth = self.innerWidth
         local blinkX = uiu.getTextCursorOffset(font, text, self.index)
         local labelX = -label.x
@@ -457,7 +463,7 @@ uie.add("field", {
         x = x - label.screenX
         if x <= 0 then
             index = 0
-        elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 then
+        elseif len == 0 or x >= label.width - font:getWidth(text:sub(utf8.offset(text, len - 1), utf8.offset(text, len) - 1)) * 0.4 / rasterScale() then
             index = len
         else
             index = uiu.getTextIndexForCursor(font, text, x)

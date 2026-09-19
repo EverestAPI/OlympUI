@@ -3,6 +3,18 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
+-- Fonts are rasterized at max(1, ui.scale) times their logical size: at the
+-- exact on-screen size when scaling up (glyphs sample 1:1 to real pixels),
+-- and at the base size when scaling down (the graphical transform then
+-- supersamples the bitmap down, so the shapes stay true to the base raster
+-- instead of being re-hinted at a tiny size). The label draw divides by this
+-- factor to keep the text at its logical size (see _drawScaleX/Y below); all
+-- text metrics are divided by it as well.
+local function rasterScale()
+    return math.max(1, ui.scale or 1)
+end
+
+
 -- Basic panel with children elements.
 uie.add("panel", {
     interactive = 1,
@@ -194,8 +206,14 @@ uie.add("panel", {
                 else
                     paddingL, paddingT, paddingR, paddingB = padding, padding, padding, padding
                 end
-                local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                love.graphics.intersectScissor(scissorX - paddingL, scissorY - paddingT, w + paddingL + paddingR, h + paddingT + paddingB)
+                -- Transform both corners through the current graphics transform
+                -- (uiScale != 1 renders the UI under push/scale, so the clip rect
+                -- has to be expressed in final screen pixels -- the position AND
+                -- the size). Previously only the position was transformed, which
+                -- cropped clipped elements to ~1/uiScale of their real size.
+                local scissorX, scissorY = love.graphics.transformPoint(x - paddingL, y - paddingT)
+                local scissorX2, scissorY2 = love.graphics.transformPoint(x + w + paddingR, y + h + paddingB)
+                love.graphics.intersectScissor(scissorX, scissorY, scissorX2 - scissorX, scissorY2 - scissorY)
             end
 
             local children = self.children
@@ -327,7 +345,7 @@ uie.add("label", {
 
         self:forceText(value)
 
-        if not self.dynamic and (self.width ~= math.ceil(self._text:getWidth()) or self.height ~= math.ceil(self._text:getHeight())) then
+        if not self.dynamic and (self.width ~= math.ceil(self._text:getWidth() / rasterScale()) or self.height ~= math.ceil(self._text:getHeight() / rasterScale())) then
             self:reflow()
         else
             self:repaint()
@@ -380,24 +398,54 @@ uie.add("label", {
     end,
 
     calcWidth = function(self)
-        return math.ceil(self._text:getWidth())
+        return math.ceil(self._text:getWidth() / rasterScale())
     end,
 
     calcHeight = function(self)
-        local height = math.ceil(self._text:getHeight())
+        local height = math.ceil(self._text:getHeight() / rasterScale())
         if height == 0 then
-            return math.ceil(self.style.font:getHeight(" "))
+            return math.ceil(self.style.font:getHeight(" ") / rasterScale())
         end
         return height
     end,
 
     draw = function(self)
+        -- The font may have been re-rasterized at a new UI scale after this
+        -- label's cached glyphs were created; re-render them on the fly.
+        if self._text and self._text:getFont() ~= self.style.font then
+            self._text = love.graphics.newText(self.style.font, self:recolor(self._textStr))
+        end
+
+        -- The raster is scaled by rasterScale (max(1, ui.scale)) for
+        -- crispness, so undo that scale here to keep the text occupying its
+        -- logical (virtual) footprint.
+        local uiScale = rasterScale()
+        if uiScale ~= 1 then
+            self._drawScaleX = 1 / uiScale
+            self._drawScaleY = 1 / uiScale
+        else
+            self._drawScaleX = 1
+            self._drawScaleY = 1
+        end
+
+        -- When the whole UI is drawn under a graphical scale, a logical layout
+        -- position maps to a fractional device position, which blurs the glyph
+        -- sampling. Snap the draw position to whole device pixels (both when
+        -- scaling up and when downscaling): text stays crisp, and the <=0.5px
+        -- deviation is invisible next to the (1:1) raster resolution.
+        local scale = ui.scale or 1
+        local drawX, drawY = self.screenX, self.screenY
+        if scale ~= 1 then
+            drawX = math.floor(self.screenX * scale + 0.5) / scale
+            drawY = math.floor(self.screenY * scale + 0.5) / scale
+        end
+
         if self._error then
             uiu.setColor(1, 0, 0, 1)
             love.graphics.rectangle("fill", self.screenX - 2, self.screenY - 2, self.width + 4, self.height + 4)
 
             uiu.setColor(1, 1, 1, 1)
-            return love.graphics.draw(self._text, self.screenX, self.screenY)
+            return love.graphics.draw(self._text, drawX, drawY, 0, self._drawScaleX, self._drawScaleY)
         end
 
         local color = self.style.color
@@ -417,7 +465,7 @@ uie.add("label", {
         end
 
         uiu.setColor(1, 1, 1, 1)
-        return love.graphics.draw(self._text, self.screenX, self.screenY)
+        return love.graphics.draw(self._text, drawX, drawY, 0, self._drawScaleX, self._drawScaleY)
     end
 })
 
