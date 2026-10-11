@@ -304,7 +304,7 @@ uie.add("field", {
     end,
 
     hotkeyModifierHeld = function(self)
-        if love.system.getOS == "OS X" then
+        if love.system.getOS() == "OS X" then
             return love.keyboard.isDown("rgui", "lgui")
         else
             return love.keyboard.isDown("rctrl", "lctrl")
